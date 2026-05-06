@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OCEAN REALMS · LIVING WORLD</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: #001529; /* Deep Ocean Blue */
+            font-family: sans-serif;
+        }
+        canvas {
+            display: block;
+        }
+        #ui {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #00d4ff;
+            text-shadow: 0 0 5px #000;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="ui">
+        <h1>OCEAN REALMS</h1>
+        <p>Tap or Click to move the Ocean Soul</p>
+    </div>
+    <canvas id="gameCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Make canvas full screen
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        // Player object
+        const player = {
+            x: canvas.width / 2,
+            y: canvas.height / 2,
+            targetX: canvas.width / 2,
+            targetY: canvas.height / 2,
+            size: 20,
+            speed: 0.05,
+            color: '#00fbff'
+        };
+
+        // Handle touch/mouse input
+        function setTarget(e) {
+            player.targetX = e.clientX || e.touches[0].clientX;
+            player.targetY = e.clientY || e.touches[0].clientY;
+        }
+
+        window.addEventListener('mousedown', setTarget);
+        window.addEventListener('touchstart', (e) => {
+            setTarget(e);
+            e.preventDefault();
+        }, {passive: false});
+
+        function update() {
+            // Smooth movement toward target
+            player.x += (player.targetX - player.x) * player.speed;
+            player.y += (player.targetY - player.y) * player.speed;
+        }
+
+        function draw() {
+            // Draw background
+            ctx.fillStyle = '#001529';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw "bubbles" or particles
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+            for(let i = 0; i < 50; i++) {
+                ctx.beginPath();
+                ctx.arc((i * 137) % canvas.width, (i * 256) % canvas.height, 2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // Draw player (Ocean Soul)
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = player.color;
+            ctx.fillStyle = player.color;
+            ctx.beginPath();
+            ctx.arc(player.x, player.y, player.size, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+
+            requestAnimationFrame(() => {
+                update();
+                draw();
+            });
+        }
+
+        draw();
+    </script>
+</body>
+</html>
