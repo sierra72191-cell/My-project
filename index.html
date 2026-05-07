@@ -5,207 +5,141 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>OCEAN REALMS · LIVING WORLD</title>
     <style>
-        body { margin: 0; overflow: hidden; background: #000b1a; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { margin: 0; overflow: hidden; background: #000814; font-family: sans-serif; touch-action: none; }
         canvas { display: block; }
-        #ui-layer {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
+        #ui {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; display: flex; flex-direction: column; justify-content: space-between;
         }
-        #stats {
-            padding: 20px;
-            color: #00fbff;
-            text-shadow: 0 0 10px rgba(0,251,255,0.5);
-        }
+        #stats { padding: 15px; color: #00fbff; text-shadow: 0 0 8px #00fbff; font-weight: bold; background: rgba(0,0,0,0.3); }
         #controls {
-            padding: 20px;
-            display: flex;
-            gap: 10px;
-            pointer-events: auto;
-            background: rgba(0, 21, 41, 0.8);
-            border-top: 1px solid #00fbff;
+            padding: 15px; display: flex; gap: 10px; pointer-events: auto;
+            background: linear-gradient(transparent, #001529);
         }
         .btn {
-            background: #003366;
-            color: white;
-            border: 1px solid #00fbff;
-            padding: 15px;
-            border-radius: 10px;
-            font-weight: bold;
-            flex: 1;
-            text-align: center;
-            active { background: #00fbff; color: #000; }
+            background: rgba(0, 51, 102, 0.9); color: white; border: 2px solid #00fbff;
+            padding: 20px 10px; border-radius: 12px; flex: 1; text-align: center;
+            font-size: 14px; font-weight: bold; text-transform: uppercase;
         }
+        .btn:active { background: #00fbff; color: #000; }
     </style>
 </head>
 <body>
-
     <canvas id="gameCanvas"></canvas>
-    
-    <div id="ui-layer">
+    <div id="ui">
         <div id="stats">
-            <div>HEALTH: <span id="hp">100%</span></div>
-            <div>COINS: <span id="coinCount">0</span></div>
-            <div>CREATURES: <span id="petCount">0</span></div>
+            HEALTH: <span id="hp">100%</span> | COINS: <span id="coins">0</span> | FRIENDS: <span id="fcount">0</span>
         </div>
-        
         <div id="controls">
-            <div class="btn" onclick="spawnPet('Protector', 5)">Summon Protector (5 coins)</div>
-            <div class="btn" onclick="spawnPet('Scout', 10)">Summon Scout (10 coins)</div>
+            <div class="btn" onclick="spawnPet('Protector', 5)">Summon Protector (5c)</div>
+            <div class="btn" onclick="spawnPet('Scout', 10)">Summon Scout (10c)</div>
         </div>
     </div>
 
-    <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        let coins = 0;
-        let pets = [];
-        let items = [];
+<script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    let world = { width: 5000, height: 5000 };
+    let cam = { x: 0, y: 0 };
+    let coins = 0;
+    let fish = { x: 2500, y: 2500, tx: 2500, ty: 2500, angle: 0, size: 18, hp: 100 };
+    let entities = []; // Coins, Enemies, Pets
 
-        function resize() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
+    function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+    window.addEventListener('resize', resize); resize();
+
+    function spawnPet(type, cost) {
+        if (coins >= cost) {
+            coins -= cost;
+            entities.push({ type: 'pet', x: fish.x, y: fish.y, petType: type, v: 0 });
+            updateUI();
         }
-        window.addEventListener('resize', resize);
-        resize();
+    }
 
-        const fish = {
-            x: canvas.width / 2,
-            y: canvas.height / 2,
-            targetX: canvas.width / 2,
-            targetY: canvas.height / 2,
-            angle: 0,
-            size: 15,
-            wiggle: 0,
-            idleTimer: 0
-        };
-
-        // Spawn a coin every 3 seconds
-        setInterval(() => {
-            items.push({
-                x: Math.random() * canvas.width,
-                y: Math.random() * canvas.height,
-                size: 5
-            });
-        }, 3000);
-
-        function spawnPet(type, cost) {
-            if (coins >= cost) {
-                coins -= cost;
-                document.getElementById('coinCount').innerText = coins;
-                pets.push({ x: fish.x, y: fish.y, type: type, offset: pets.length + 1 });
-                document.getElementById('petCount').innerText = pets.length;
+    // Input Handling
+    function handleInput(e) {
+        let x = (e.clientX || e.touches[0].clientX) + cam.x;
+        let y = (e.clientY || e.touches[0].clientY) + cam.y;
+        
+        // Check if clicking enemy
+        let hitEnemy = false;
+        entities.forEach(en => {
+            if(en.type === 'enemy' && Math.hypot(en.x - x, en.y - y) < 40) {
+                en.dead = true;
+                hitEnemy = true;
+                coins += 2;
             }
+        });
+
+        if(!hitEnemy) { fish.tx = x; fish.ty = y; }
+        updateUI();
+    }
+
+    window.addEventListener('touchstart', (e) => { handleInput(e); e.preventDefault(); }, {passive: false});
+    window.addEventListener('mousedown', handleInput);
+
+    function updateUI() {
+        document.getElementById('coins').innerText = coins;
+        document.getElementById('fcount').innerText = entities.filter(e => e.type === 'pet').length;
+    }
+
+    // Main Game Loop
+    function loop() {
+        // Camera follows fish
+        cam.x = fish.x - canvas.width/2;
+        cam.y = fish.y - canvas.height/2;
+
+        // Fish Movement
+        fish.x += (fish.tx - fish.x) * 0.04;
+        fish.y += (fish.ty - fish.y) * 0.04;
+        fish.angle = Math.atan2(fish.ty - fish.y, fish.tx - fish.x);
+
+        // Spawn logic
+        if(Math.random() < 0.02 && entities.length < 100) {
+            let rx = fish.x + (Math.random()-0.5) * 1500;
+            let ry = fish.y + (Math.random()-0.5) * 1500;
+            entities.push({ type: Math.random() < 0.3 ? 'enemy' : 'coin', x: rx, y: ry });
         }
 
-        function setTarget(e) {
-            const clientX = e.clientX || (e.touches ? e.touches[0].clientX : fish.x);
-            const clientY = e.clientY || (e.touches ? e.touches[0].clientY : fish.y);
-            fish.targetX = clientX;
-            fish.targetY = clientY;
-            fish.idleTimer = 0; 
+        ctx.fillStyle = '#000814';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Draw World Grid
+        ctx.strokeStyle = 'rgba(0, 251, 255, 0.05)';
+        for(let i=0; i<world.width; i+=200) {
+            ctx.beginPath(); ctx.moveTo(i-cam.x, 0-cam.y); ctx.lineTo(i-cam.x, world.height-cam.y); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(0-cam.x, i-cam.y); ctx.lineTo(world.width-cam.x, i-cam.y); ctx.stroke();
         }
 
-        window.addEventListener('touchstart', (e) => { setTarget(e); e.preventDefault(); }, {passive: false});
-        window.addEventListener('mousedown', setTarget);
-
-        function update() {
-            // Autonomous Drift
-            fish.idleTimer++;
-            if (fish.idleTimer > 100) {
-                fish.targetX += Math.sin(Date.now() / 1000) * 2;
-                fish.targetY += Math.cos(Date.now() / 1000) * 2;
+        entities = entities.filter(en => {
+            let dist = Math.hypot(fish.x - en.x, fish.y - en.y);
+            
+            if(en.type === 'coin' && dist < 40) { coins++; updateUI(); return false; }
+            
+            if(en.type === 'pet') {
+                let target = fish;
+                // If enemy nearby, protectors attack!
+                let enemy = entities.find(e => e.type === 'enemy' && Math.hypot(e.x - en.x, e.y - en.y) < 300);
+                if(enemy && en.petType === 'Protector') target = enemy;
+                
+                en.x += (target.x - en.x) * 0.06;
+                en.y += (target.y - en.y) * 0.06;
+                if(enemy && Math.hypot(en.x - enemy.x, en.y - enemy.y) < 30) enemy.dead = true;
             }
 
-            // Move Fish
-            const dx = fish.targetX - fish.x;
-            const dy = fish.targetY - fish.y;
-            fish.angle = Math.atan2(dy, dx);
-            fish.x += dx * 0.03;
-            fish.y += dy * 0.03;
-            fish.wiggle = Math.sin(Date.now() / 150) * 5;
+            if(en.type === 'enemy') {
+                if(en.dead) return false;
+                en.x += Math.sin(Date.now()/500) * 2; // Drifting
+            }
 
-            // Follower Logic
-            pets.forEach((pet, i) => {
-                const target = i === 0 ? fish : pets[i-1];
-                pet.x += (target.x - pet.x) * 0.05;
-                pet.y += (target.y - pet.y) * 0.05;
-            });
-
-            // Coin Collection
-            items = items.filter(item => {
-                const dist = Math.hypot(fish.x - item.x, fish.y - item.y);
-                if (dist < 30) {
-                    coins++;
-                    document.getElementById('coinCount').innerText = coins;
-                    return false;
-                }
-                return true;
-            });
-        }
-
-        function drawFish(x, y, angle, size, color, isPlayer) {
+            // Drawing
             ctx.save();
-            ctx.translate(x, y);
-            ctx.rotate(angle);
-
-            // Tail
-            ctx.fillStyle = color;
-            ctx.beginPath();
-            ctx.moveTo(-size, 0);
-            ctx.lineTo(-size - 15, fish.wiggle);
-            ctx.lineTo(-size - 15, -fish.wiggle);
-            ctx.fill();
-
-            // Body
-            ctx.beginPath();
-            ctx.ellipse(0, 0, size + 5, size, 0, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Eye
-            if(isPlayer) {
-                ctx.fillStyle = "white";
-                ctx.beginPath();
-                ctx.arc(size / 2, -size / 3, 4, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.fillStyle = "black";
-                ctx.beginPath();
-                ctx.arc(size / 2 + 1, -size / 3, 2, 0, Math.PI * 2);
-                ctx.fill();
-            }
-            ctx.restore();
-        }
-
-        function animate() {
-            ctx.fillStyle = '#000b1a';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // Draw Coins
-            items.forEach(item => {
-                ctx.fillStyle = '#ffd700';
-                ctx.shadowBlur = 10;
-                ctx.shadowColor = '#ffd700';
-                ctx.beginPath();
-                ctx.arc(item.x, item.y, item.size, 0, Math.PI * 2);
-                ctx.fill();
-            });
-
-            // Draw Pets
-            pets.forEach(pet => {
-                drawFish(pet.x, pet.y, fish.angle, 8, pet.type === 'Protector' ? '#ff4d4d' : '#4dff88', false);
-            });
-
-            // Draw Player
-            drawFish(fish.x, fish.y, fish.angle, 15, '#00fbff', true);
-
-            update();
-            requestAnimationFrame(animate);
-        }
-
-        animate();
-    </script>
-</body>
-</html>
+            ctx.translate(en.x - cam.x, en.y - cam.y);
+            if(en.type === 'coin') {
+                ctx.fillStyle = '#ffd700'; ctx.shadowBlur = 10; ctx.shadowColor = 'gold';
+                ctx.beginPath(); ctx.arc(0,0, 6, 0, 7); ctx.fill();
+            } else if(en.type === 'enemy') {
+                ctx.fillStyle = '#ff3300'; ctx.beginPath();
+                for(let i=0; i<6; i++) { ctx.lineTo(Math.cos(i)*15, Math.sin(i)*15);
+                                        
