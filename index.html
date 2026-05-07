@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>OCEAN REALMS · THE BEHEMOTH</title>
+    <title>OCEAN REALMS · EVOLUTION</title>
     <style>
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { margin: 0; overflow: hidden; background: #000408; font-family: 'Courier New', monospace; height: 100vh; display: flex; flex-direction: column; }
@@ -14,16 +14,15 @@
             position: absolute; top: 12px; left: 12px; color: #00fbff; 
             font-size: 10px; pointer-events: none;
             background: rgba(0, 10, 20, 0.9); padding: 15px; border: 1px solid #00fbff; 
-            border-radius: 12px; z-index: 10; min-width: 210px;
+            border-radius: 12px; z-index: 10; min-width: 220px;
         }
         .depth-highlight { color: #fff; font-size: 14px; text-shadow: 0 0 10px #00fbff; font-weight: bold; display: block; margin-top: 5px; }
-        .hp-bar-bg { width: 100%; height: 8px; background: #200; margin: 6px 0; border-radius: 4px; border: 1px solid #ff0055; }
-        #hp-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #ff0055, #ff00ff); }
+        .hp-bar-bg { width: 100%; height: 100%; background: #200; margin: 6px 0; border-radius: 4px; border: 1px solid #ff0055; height: 10px;}
+        #hp-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #ff0055, #ff00ff); transition: width 0.3s; }
 
         #controls { height: 140px; background: #00070e; border-top: 2px solid #00fbff; display: flex; gap: 8px; padding: 10px; z-index: 100; padding-bottom: 35px; }
-        .btn { flex: 1; background: #001a33; color: #00fbff; border: 1px solid #00fbff; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 9px; font-weight: bold; transition: 0.1s; }
-        .icon-box { font-size: 22px; margin-bottom: 4px; filter: drop-shadow(0 0 5px #00fbff); }
-        .btn:active { background: #00fbff; color: #000; transform: scale(0.95); }
+        .btn { flex: 1; background: #001a33; color: #00fbff; border: 1px solid #00fbff; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 9px; font-weight: bold; }
+        .icon-box { font-size: 22px; margin-bottom: 4px; }
         
         #start-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; z-index: 1000; color: #00fbff; cursor: pointer; text-align: center; }
     </style>
@@ -31,15 +30,15 @@
 <body>
 
     <div id="start-overlay" onclick="initGame()">
-        <h1>[ INITIALIZE SOUL ]<br><small style="font-size: 14px; color: #ff00ff;">Slow the Flow · Release Fishy</small></h1>
+        <h1>[ BEGIN EVOLUTION ]<br><small style="font-size: 14px; color: #ff00ff;">Grow • Survive • Explore</small></h1>
     </div>
 
     <div id="game-container">
         <div id="stats-panel">
-            <b style="color: #ff00ff;">NEON SOUL LVL <span id="lvlUI">1</span></b>
+            <b style="color: #ff00ff;">SURVIVAL TIME: <span id="timeUI">0:00</span></b>
             <div class="hp-bar-bg"><div id="hp-fill"></div></div>
             <span class="depth-highlight">DEPTH: <span id="depthUI">0</span>m</span>
-            BIOMASS: <span id="coinUI">0</span> | ARMY: <span id="friendUI">0</span>
+            BIOMASS: <span id="coinUI">0</span> | SIZE: <span id="sizeUI">1.0</span>x
         </div>
         <canvas id="gameCanvas"></canvas>
     </div>
@@ -54,215 +53,154 @@
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     
-    let coins = 0, kills = 0, exp = 0, lvl = 1, friends = [], entities = [];
-    let cam = { x: 0, y: 0 }, audioCtx, pianoGain, bassGain;
-    let lastBossDepth = 0;
+    let coins = 0, friends = [], entities = [], startTime = 0;
+    let cam = { x: 0, y: 0 }, audioCtx, pianoGain;
     
-    // SLOW THE FLOW: Lowered acceleration (0.04 -> 0.025)
-    let fish = { x: 0, y: 0, tx: 0, ty: 0, angle: 0, hp: 20000, maxHp: 20000, shield: 0, scale: 0.5, wiggle: 0, flinchX: 0, flinchY: 0, wanderTimer: 0, isTouching: false };
+    let fish = { 
+        x: 0, y: 0, tx: 0, ty: 0, angle: 0, 
+        hp: 15000, maxHp: 15000, 
+        scale: 0.2, // Starts small
+        wiggle: 0, flinchX: 0, flinchY: 0, isTouching: false 
+    };
 
     function initAudio() {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        pianoGain = audioCtx.createGain(); pianoGain.gain.value = 0.12;
-        bassGain = audioCtx.createGain(); bassGain.gain.value = 0.18;
-        pianoGain.connect(audioCtx.destination); bassGain.connect(audioCtx.destination);
-        setInterval(() => playNote(220 + Math.random()*220, 3, pianoGain), 5000);
-        setInterval(() => playNote(40, 1.5, bassGain, 'triangle'), 10000);
+        pianoGain = audioCtx.createGain(); pianoGain.gain.value = 0.1;
+        pianoGain.connect(audioCtx.destination);
+        setInterval(() => playNote(220 + Math.random()*220, 4, pianoGain), 6000);
     }
 
-    function playNote(freq, dur, gainNode, type='sine') {
+    function playNote(freq, dur, gainNode) {
         if(!audioCtx) return;
         const osc = audioCtx.createOscillator();
         const g = audioCtx.createGain();
-        osc.type = type; osc.frequency.value = freq;
+        osc.frequency.value = freq;
         g.gain.setValueAtTime(gainNode.gain.value, audioCtx.currentTime);
         g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + dur);
         osc.connect(g); g.connect(audioCtx.destination);
         osc.start(); osc.stop(audioCtx.currentTime + dur);
     }
 
-    function playSFX(freq, type='square', vol=0.08) {
-        if(!audioCtx) return;
-        playNote(freq, 0.2, {gain: {value: vol}}, type);
-    }
-
     function initGame() {
         document.getElementById('start-overlay').style.display = 'none';
+        startTime = Date.now();
         initAudio();
-        fish.tx = 400; fish.ty = 400;
         resize(); loop();
     }
 
     function resize() { canvas.width = canvas.parentElement.clientWidth; canvas.height = canvas.parentElement.clientHeight; }
     window.addEventListener('resize', resize);
 
+    // Controls
     const setupBtn = (id, type) => {
         document.getElementById(id).addEventListener('touchstart', (e) => {
-            let costs = {Shrimp:10, Scout:20, Turtle:40}; // Increased cost for balance
+            let costs = {Shrimp:15, Scout:30, Turtle:60};
             if(coins >= costs[type]) { 
                 coins -= costs[type]; 
-                friends.push({x:fish.x, y:fish.y, type, lunge:0, angle:0}); 
-                playSFX(600, 'sine', 0.04); updateUI(); 
+                friends.push({x:fish.x, y:fish.y, type, lunge:0}); 
             }
             e.stopPropagation();
         });
     };
     setupBtn('buyShrimp', 'Shrimp'); setupBtn('buyScout', 'Scout'); setupBtn('buyTurtle', 'Turtle');
 
-    function updateUI() {
-        document.getElementById('coinUI').innerText = coins;
-        document.getElementById('hp-fill').style.width = (fish.hp/fish.maxHp)*100 + "%";
-        document.getElementById('lvlUI').innerText = lvl;
-        document.getElementById('depthUI').innerText = Math.max(0, Math.floor(fish.y / 10));
-        document.getElementById('friendUI').innerText = friends.length;
-    }
-
-    function drawEye(x, y, size) {
-        ctx.fillStyle = 'white'; ctx.beginPath(); ctx.arc(x, y, size, 0, 7); ctx.fill();
-        ctx.fillStyle = 'black'; ctx.beginPath(); ctx.arc(x + size*0.4, y, size*0.5, 0, 7); ctx.fill();
-    }
-
-    function drawEnemyHP(en) {
-        if(en.type === 'coin') return;
-        let w = 40; let h = 4;
-        ctx.fillStyle = 'rgba(0,0,0,0.5)';
-        ctx.fillRect(en.x - cam.x - w/2, en.y - cam.y - 40, w, h);
-        ctx.fillStyle = '#ff0055';
-        ctx.fillRect(en.x - cam.x - w/2, en.y - cam.y - 40, w * (en.hp/en.maxHp), h);
-    }
-
     canvas.addEventListener('touchstart', (e) => {
         const rect = canvas.getBoundingClientRect();
         fish.tx = e.touches[0].clientX - rect.left + cam.x;
         fish.ty = e.touches[0].clientY - rect.top + cam.y;
-        fish.isTouching = true; fish.wanderTimer = 800;
+        fish.isTouching = true;
     });
     canvas.addEventListener('touchmove', (e) => {
         const rect = canvas.getBoundingClientRect();
         fish.tx = e.touches[0].clientX - rect.left + cam.x;
         fish.ty = e.touches[0].clientY - rect.top + cam.y;
     });
-    canvas.addEventListener('touchend', () => { fish.isTouching = false; });
+    canvas.addEventListener('touchend', () => fish.isTouching = false);
 
     function loop() {
-        let depth = Math.max(0, Math.floor(fish.y / 10));
-        let diff = 1 + (depth / 350); // Harder scaling
-
-        // BOSS SPAWN LOGIC (Every 2000m)
-        if (depth > 0 && depth % 2000 < 50 && depth > lastBossDepth + 500) {
-            lastBossDepth = depth;
-            entities.push({
-                x: fish.x + 1000, y: fish.y, type: 'boss', 
-                hp: 5000 * diff, maxHp: 5000 * diff, 
-                speed: 1.0, stun: 0, dead: false, angle: 0 
-            });
-            playSFX(100, 'triangle', 0.5);
-        }
-
-        if(!fish.isTouching) {
-            fish.wanderTimer--;
-            if(fish.wanderTimer <= 0 || Math.hypot(fish.tx - fish.x, fish.ty - fish.y) < 50) {
-                let target = entities.find(e => e.type==='coin' && Math.hypot(e.x-fish.x, e.y-fish.y) < 600);
-                if(target) { fish.tx = target.x; fish.ty = target.y; }
-                else {
-                    let angle = Math.random() * Math.PI * 2;
-                    fish.tx = fish.x + Math.cos(angle) * 500;
-                    fish.ty = fish.y + Math.sin(angle) * 500;
-                }
-                fish.wanderTimer = 500;
-            }
-        }
-
-        cam.x += (fish.x - canvas.width/2 - cam.x) * 0.03;
-        cam.y += (fish.y - canvas.height/2 - cam.y) * 0.03;
+        const elapsed = Math.floor((Date.now() - startTime) / 1000);
+        const mins = Math.floor(elapsed / 60);
+        const secs = (elapsed % 60).toString().padStart(2, '0');
         
-        // SLOW FLOW PHYSICS
-        fish.x += (fish.tx + fish.flinchX - fish.x) * 0.025;
-        fish.y += (fish.ty + fish.flinchY - fish.y) * 0.025;
+        // GROWTH LOGIC: Increase scale over time
+        fish.scale = 0.2 + (elapsed * 0.001); 
         
-        let moveAngle = Math.atan2(fish.ty-fish.y, fish.tx-fish.x);
-        fish.angle += (moveAngle - fish.angle) * 0.1; // Smooth rotation
-        fish.wiggle += 0.15; fish.flinchX *= 0.9; fish.flinchY *= 0.9;
+        document.getElementById('timeUI').innerText = `${mins}:${secs}`;
+        document.getElementById('coinUI').innerText = coins;
+        document.getElementById('sizeUI').innerText = fish.scale.toFixed(2);
+        document.getElementById('hp-fill').style.width = (fish.hp/fish.maxHp)*100 + "%";
+        document.getElementById('depthUI').innerText = Math.floor(fish.y / 10);
+
+        // Slow camera and fish movement
+        cam.x += (fish.x - canvas.width/2 - cam.x) * 0.02;
+        cam.y += (fish.y - canvas.height/2 - cam.y) * 0.02;
+        fish.x += (fish.tx - fish.x) * 0.02;
+        fish.y += (fish.ty - fish.y) * 0.02;
+        fish.angle = Math.atan2(fish.ty-fish.y, fish.tx-fish.x);
+        fish.wiggle += 0.1;
 
         ctx.clearRect(0,0, canvas.width, canvas.height);
 
+        // Update Entities
         entities = entities.filter(en => {
             let d = Math.hypot(fish.x - en.x, fish.y - en.y);
-            if(en.type === 'coin' && d < 65) { coins += Math.floor(5 * diff); playSFX(1200, 'sine', 0.05); updateUI(); return false; }
             
-            if(en.stun > 0) { en.stun--; ctx.globalAlpha = 0.4; }
-            else if(d < 500 * diff) {
+            // SWARM LOGIC: Drift unless fish is near (400px)
+            if (d < 400 && en.type !== 'coin') {
                 en.angle = Math.atan2(fish.y - en.y, fish.x - en.x);
-                en.x += Math.cos(en.angle) * en.speed * diff; en.y += Math.sin(en.angle) * en.speed * diff;
+                en.x += Math.cos(en.angle) * 1.5;
+                en.y += Math.sin(en.angle) * 1.5;
+                // Damage: 1dmg per second (roughly 0.016 per frame)
+                fish.hp -= 0.15; 
+            } else if (en.type !== 'coin') {
+                en.x += Math.cos(en.drift) * 0.5;
+                en.y += Math.sin(en.drift) * 0.5;
             }
-            
+
+            if(en.type === 'coin' && d < 50) { coins += 5; return false; }
+
             ctx.save(); ctx.translate(en.x-cam.x, en.y-cam.y); ctx.rotate(en.angle);
-            if(en.type === 'boss') {
-                ctx.fillStyle = '#111'; ctx.beginPath(); ctx.ellipse(0,0,120,40,0,0,7); ctx.fill();
-                drawEye(60, -10, 15);
-            } else {
-                ctx.fillStyle = en.type==='shark'?'#080808':(en.type==='coin'?'#ffd700':'#ff4a00');
-                ctx.beginPath(); ctx.ellipse(0,0,en.type==='shark'?55:18, en.type==='shark'?18:10, 0,0,7); ctx.fill();
+            ctx.fillStyle = en.type==='coin'?'#ffd700':'#ff4a00';
+            ctx.beginPath(); ctx.ellipse(0,0,en.type==='coin'?8:20, en.type==='coin'?8:10, 0,0,7); ctx.fill();
+            if(en.type !== 'coin') {
+                ctx.fillStyle='rgba(0,0,0,0.5)'; ctx.fillRect(-15,-20,30,3);
+                ctx.fillStyle='#ff0055'; ctx.fillRect(-15,-20,30*(en.hp/100),3);
             }
-            ctx.restore(); ctx.globalAlpha = 1.0;
-            
-            drawEnemyHP(en);
-
-            if(d < 65 && en.stun <= 0 && en.type !== 'coin') {
-                playSFX(60, 'triangle', 0.2);
-                let dmg = (en.type === 'boss' ? 50 : 20) * diff;
-                if(fish.shield > 0) fish.shield -= 5; else fish.hp -= dmg;
-                fish.flinchX += (fish.x-en.x)*0.2;
-            }
-            return d < 3000 && !en.dead;
+            ctx.restore();
+            return d < 2000 && en.hp > 0;
         });
 
-        fish.shield = 0;
+        // Companions Tethered Close
         friends.forEach((fr, i) => {
-            // TIGHTER COMPANION TETHER: Max orbit reduced
-            let orbitX = fish.x + Math.cos(Date.now()/1200 + i) * 80;
-            let orbitY = fish.y + Math.sin(Date.now()/1200 + i) * 80;
+            let orbitX = fish.x + Math.cos(Date.now()/1000 + i) * 60;
+            let orbitY = fish.y + Math.sin(Date.now()/1000 + i) * 60;
+            fr.x += (orbitX - fr.x) * 0.05;
+            fr.y += (orbitY - fr.y) * 0.05;
             
-            let target = entities.find(e => e.type !== 'coin' && Math.hypot(e.x-fish.x, e.y-fish.y) < 300) || {x: orbitX, y: orbitY};
-            fr.lunge = Math.max(0, fr.lunge - 0.1);
-            
-            fr.x += (target.x - fr.x) * 0.06; fr.y += (target.y - fr.y) * 0.06;
-            let ang = Math.atan2(target.y-fr.y, target.x-fr.x);
+            // Combat
+            let target = entities.find(e => e.type !== 'coin' && Math.hypot(e.x-fr.x, e.y-fr.y) < 150);
+            if(target) target.hp -= 0.5;
 
-            if(fr.type === 'Shrimp') {
-                if(target.hp && Math.hypot(fr.x-target.x, fr.y-target.y) < 70 && fr.lunge <= 0) {
-                    fr.lunge = 1.0; playSFX(300, 'square', 0.03);
-                    target.hp -= 25; if(target.hp <= 0) { target.dead = true; coins += 10; }
-                }
-                ctx.save(); ctx.translate(fr.x-cam.x, fr.y-cam.y); ctx.rotate(ang);
-                ctx.fillStyle='#ff7f50'; for(let j=0; j<3; j++) { ctx.beginPath(); ctx.ellipse(fr.lunge*15-(j*6), 0, 6-j, 3, 0, 0, 7); ctx.fill(); }
-                ctx.restore();
-            } else if(fr.type === 'Turtle') {
-                fish.shield = Math.min(100, fish.shield + 20);
-                ctx.save(); ctx.translate(fr.x-cam.x, fr.y-cam.y); ctx.rotate(ang);
-                ctx.fillStyle='#1e3d24'; ctx.beginPath(); ctx.ellipse(0,0,18,14,0,0,7); ctx.fill();
-                ctx.restore();
-            } else { // Starfish
-                ctx.save(); ctx.translate(fr.x-cam.x, fr.y-cam.y); ctx.rotate(Date.now()/500); ctx.fillStyle='#f8ff44';
-                ctx.beginPath(); for(let j=0; j<5; j++) { ctx.rotate(Math.PI*2/5); ctx.lineTo(10,0); ctx.lineTo(5,3); } ctx.fill(); ctx.restore();
-                if(target.type && Math.hypot(fr.x-target.x, fr.y-target.y) < 60) target.stun = 100;
-            }
+            ctx.fillStyle = fr.type === 'Shrimp' ? '#ff7f50' : '#1e3d24';
+            ctx.beginPath(); ctx.arc(fr.x-cam.x, fr.y-cam.y, 8, 0, 7); ctx.fill();
         });
 
-        // The Soul
+        // Draw Fishy
         ctx.save(); ctx.translate(fish.x-cam.x, fish.y-cam.y); ctx.rotate(fish.angle); ctx.scale(fish.scale, fish.scale);
-        if(fish.shield > 0) { ctx.strokeStyle='#00fbff'; ctx.lineWidth=4; ctx.beginPath(); ctx.arc(0,0,48,0,7); ctx.stroke(); }
-        ctx.shadowBlur=30; ctx.shadowColor='#ff00ff'; ctx.fillStyle='#cc00ff';
-        ctx.beginPath(); ctx.ellipse(0,0,32,18,0,0,7); ctx.fill();
-        ctx.fillStyle='#ff00ff'; ctx.beginPath(); ctx.moveTo(-15,0); ctx.lineTo(-45, 18*Math.sin(fish.wiggle)); ctx.lineTo(-45, -18*Math.sin(fish.wiggle)); ctx.fill();
-        drawEye(18, -6, 5); ctx.restore();
+        ctx.shadowBlur=20; ctx.shadowColor='#ff00ff'; ctx.fillStyle='#cc00ff';
+        ctx.beginPath(); ctx.ellipse(0,0,40,20,0,0,7); ctx.fill();
+        ctx.fillStyle='#ff00ff'; ctx.beginPath(); ctx.moveTo(-20,0); ctx.lineTo(-50, 20*Math.sin(fish.wiggle)); ctx.lineTo(-50, -20*Math.sin(fish.wiggle)); ctx.fill();
+        ctx.restore();
 
-        if(Math.random() < 0.04 * diff && entities.length < 35) {
+        if(Math.random() < 0.03 && entities.length < 40) {
             let a = Math.random()*7;
-            let t = Math.random() < 0.1 ? 'shark' : (Math.random() < 0.5 ? 'enemyFish' : 'coin');
-            entities.push({x: fish.x+Math.cos(a)*1000, y: fish.y+Math.sin(a)*1000, type: t, maxHp: 150*diff, hp: 150*diff, speed: 1.2, stun:0, dead:false, angle:0});
+            entities.push({
+                x: fish.x+Math.cos(a)*1000, y: fish.y+Math.sin(a)*1000, 
+                type: Math.random()<0.3?'coin':'enemy', hp: 100, angle: 0, drift: Math.random()*7
+            });
         }
-        updateUI(); requestAnimationFrame(loop);
+
+        requestAnimationFrame(loop);
     }
 </script>
 </body>
