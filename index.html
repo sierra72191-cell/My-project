@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-    <title>SURVIVAL REALMS · FARM & FIGHT</title>
+    <title>SURVIVAL REALMS · BUILD & HARVEST</title>
     <style>
         * {
             margin: 0;
@@ -13,7 +13,7 @@
             user-select: none;
         }
         body {
-            background: #0a1f0a;
+            background: #0a1a0a;
             overflow: hidden;
             font-family: 'Courier New', monospace;
             touch-action: none;
@@ -27,13 +27,12 @@
             height: 100%;
             cursor: crosshair;
         }
-        /* HUD */
         .hud {
             position: fixed;
             top: 8px;
             left: 8px;
-            background: rgba(0,0,0,0.8);
-            backdrop-filter: blur(8px);
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(10px);
             padding: 6px 12px;
             border-radius: 16px;
             color: #0f0;
@@ -48,8 +47,8 @@
             position: fixed;
             top: 8px;
             right: 8px;
-            background: rgba(0,0,0,0.8);
-            backdrop-filter: blur(8px);
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(10px);
             padding: 6px 12px;
             border-radius: 16px;
             color: #ffaa44;
@@ -64,12 +63,12 @@
             bottom: 20px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(0,0,0,0.85);
+            background: rgba(0,0,0,0.9);
             backdrop-filter: blur(12px);
-            padding: 10px 16px;
+            padding: 8px 12px;
             border-radius: 40px;
             display: flex;
-            gap: 12px;
+            gap: 8px;
             z-index: 30;
             border: 1px solid gold;
             overflow-x: auto;
@@ -77,13 +76,13 @@
         }
         .inv-slot {
             background: #2a2a2a;
-            padding: 8px 12px;
+            padding: 6px 10px;
             border-radius: 20px;
             text-align: center;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: bold;
             color: white;
-            min-width: 70px;
+            min-width: 65px;
             cursor: pointer;
             transition: 0.05s linear;
             border: 1px solid #555;
@@ -95,31 +94,55 @@
             bottom: 100px;
             right: 20px;
             background: rgba(0,0,0,0.7);
-            padding: 6px 14px;
+            padding: 5px 12px;
             border-radius: 30px;
             font-family: monospace;
             font-weight: bold;
             z-index: 20;
             pointer-events: none;
-            font-size: 12px;
+            font-size: 11px;
         }
         .action-buttons {
             position: fixed;
             bottom: 100px;
             left: 20px;
             display: flex;
-            gap: 10px;
+            gap: 8px;
             z-index: 30;
+            flex-wrap: wrap;
         }
         .action-btn {
             background: #2a3a2a;
             border: none;
-            padding: 8px 16px;
+            padding: 6px 14px;
             border-radius: 30px;
             color: white;
             font-weight: bold;
             cursor: pointer;
             font-family: monospace;
+            font-size: 11px;
+        }
+        .build-menu {
+            position: fixed;
+            bottom: 160px;
+            left: 20px;
+            background: #1a2a1aee;
+            backdrop-filter: blur(12px);
+            padding: 8px 12px;
+            border-radius: 20px;
+            display: none;
+            gap: 8px;
+            z-index: 30;
+            flex-wrap: wrap;
+        }
+        .build-btn {
+            background: #3a4a3a;
+            border: none;
+            padding: 5px 12px;
+            border-radius: 20px;
+            color: gold;
+            font-size: 10px;
+            cursor: pointer;
         }
         .start-overlay {
             position: fixed;
@@ -135,7 +158,8 @@
             z-index: 200;
             font-family: monospace;
         }
-        .start-title { font-size: 44px; color: #0f0; text-shadow: 0 0 20px green; margin-bottom: 20px; }
+        .start-title { font-size: 42px; color: #0f0; text-shadow: 0 0 20px green; margin-bottom: 10px; letter-spacing: 4px; }
+        .start-sub { color: #aaa; margin-bottom: 30px; font-size: 12px; text-align: center; padding: 0 20px; }
         .start-btn { background: #2a6a2a; border: none; padding: 14px 28px; border-radius: 40px; color: white; font-size: 18px; font-weight: bold; cursor: pointer; }
         .event-toast {
             position: fixed;
@@ -154,21 +178,39 @@
             font-size: 12px;
         }
         @keyframes fadeUp { 0% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%,-80%); } }
+        .mode-indicator {
+            position: fixed;
+            top: 80px;
+            left: 8px;
+            background: rgba(0,0,0,0.7);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 10px;
+            color: cyan;
+            z-index: 20;
+        }
     </style>
 </head>
 <body>
 <canvas id="gameCanvas"></canvas>
-<div class="hud" id="hudStats">❤️ 500/500 | ⚔️ DMG 1 | 🧪 LVL 1 | ✨ 0/100</div>
+<div class="hud" id="hudStats">❤️ 500/500 | ⚔️ DMG 1 | 🧪 L1 | ✨ 0/100</div>
 <div class="stats-right" id="statsRight">🪙 10 | 🪵 0 | 🪨 0</div>
 <div class="inventory-bar" id="inventoryBar"></div>
 <div class="day-cycle" id="dayCycle">🌞 DAY 1</div>
 <div class="action-buttons">
-    <button class="action-btn" id="tillBtn">🌾 TILL SOIL</button>
+    <button class="action-btn" id="tillBtn">🌾 TILL</button>
+    <button class="action-btn" id="buildBtn">🏗️ BUILD</button>
     <button class="action-btn" id="shopBtn">🛒 SHOP</button>
 </div>
+<div class="build-menu" id="buildMenu">
+    <button class="build-btn" data-type="wall">🧱 WALL (15🪵 10🪨)</button>
+    <button class="build-btn" data-type="campfire">🔥 CAMPFIRE (10🪵 5🪨)</button>
+    <button class="build-btn" data-type="storage">📦 STORAGE (20🪵 15🪨)</button>
+</div>
+<div class="mode-indicator" id="modeIndicator">📍 MOVE MODE</div>
 <div class="start-overlay" id="startOverlay">
     <div class="start-title">⚙️ SURVIVAL REALMS ⚙️</div>
-    <div style="margin-bottom: 20px; text-align:center;">tap to move | select seed → tap tilled soil to plant</div>
+    <div class="start-sub">tap to move | tap trees/rocks to harvest | build your base</div>
     <button class="start-btn" id="startBtn">▶ BEGIN</button>
 </div>
 
@@ -192,19 +234,25 @@
             wood: 0, stone: 0
         };
         
-        // Inventory system
+        // Inventory (seeds)
         let inventory = {
-            seeds: { Pumpkin: 3, Apple: 2, Corn: 5, Wheat: 4, Carrot: 3 },
+            seeds: { Pumpkin: 5, Apple: 3, Corn: 6, Wheat: 4, Carrot: 5 },
             selectedCrop: "Pumpkin"
         };
         
         // World objects
-        let trees = [], rocks = [], enemies = [];
-        let tilledSoil = []; // { x, y }
-        let crops = [];      // { x, y, type, growth }
+        let trees = [];      // { x, y, tapsNeeded, tapsRemaining }
+        let rocks = [];      // { x, y, tapsNeeded, tapsRemaining }
+        let tilledSoil = [];
+        let crops = [];
+        let structures = [];  // { x, y, type, hp }
+        
+        let enemies = [];
+        let particles = [];
         
         let targetX = null, targetY = null;
-        let actionMode = "move"; // "till" or "move"
+        let actionMode = "move"; // move, till, build
+        let selectedBuild = null;
         
         // Day/night
         let dayCount = 1;
@@ -213,7 +261,6 @@
         let campfireX = player.x, campfireY = player.y;
         
         let eventTimer = 0;
-        let particles = [];
         
         function resize() { width = window.innerWidth; height = window.innerHeight; canvas.width = width; canvas.height = height; }
         function updateCamera() { camera.x = player.x - width/2; camera.y = player.y - height/2; camera.x = Math.min(Math.max(camera.x, 0), WORLD_SIZE - width); camera.y = Math.min(Math.max(camera.y, 0), WORLD_SIZE - height); }
@@ -222,10 +269,9 @@
         function showToast(msg) { let div = document.createElement('div'); div.className = 'event-toast'; div.innerText = msg; document.body.appendChild(div); setTimeout(()=>div.remove(), 2000); }
         
         function updateUI() {
-            document.getElementById('hudStats').innerHTML = `❤️ ${Math.floor(player.hp)}/${player.maxHp} | ⚔️ DMG ${player.damage} | 🧪 LVL ${player.level} | ✨ ${player.xp}/${player.xpNeeded}`;
+            document.getElementById('hudStats').innerHTML = `❤️ ${Math.floor(player.hp)}/${player.maxHp} | ⚔️ DMG ${player.damage} | 🧪 L${player.level} | ✨ ${player.xp}/${player.xpNeeded}`;
             document.getElementById('statsRight').innerHTML = `🪙 ${Math.floor(player.coins)} | 🪵 ${player.wood} | 🪨 ${player.stone}`;
             document.getElementById('dayCycle').innerHTML = isNight ? `🌙 NIGHT ${dayCount} 🔥` : `🌞 DAY ${dayCount}`;
-            // render inventory bar
             let bar = document.getElementById('inventoryBar');
             bar.innerHTML = '';
             for(let [crop, amount] of Object.entries(inventory.seeds)) {
@@ -246,36 +292,34 @@
                 player.maxHp += 25;
                 player.hp = player.maxHp;
                 player.xpNeeded = Math.floor(100 + player.level * 15);
-                showToast(`⚡ LVL UP! +DMG +HP`);
+                showToast(`⚡ LEVEL UP! L${player.level} +DMG +HP`);
             }
             updateUI();
         }
         
         function spawnWorld() {
-            for(let i=0;i<100;i++) { trees.push({ x: Math.random() * WORLD_SIZE, y: Math.random() * WORLD_SIZE, hp: 5 }); rocks.push({ x: Math.random() * WORLD_SIZE, y: Math.random() * WORLD_SIZE, hp: 8 }); }
-            // random seed drops
-            for(let i=0;i<30;i++) {
-                let cropsList = Object.keys(inventory.seeds);
-                let randCrop = cropsList[Math.floor(Math.random()*cropsList.length)];
-                inventory.seeds[randCrop] += 1;
+            for(let i=0;i<80;i++) {
+                trees.push({ x: Math.random() * WORLD_SIZE, y: Math.random() * WORLD_SIZE, tapsNeeded: 10, tapsRemaining: 10 });
+                rocks.push({ x: Math.random() * WORLD_SIZE, y: Math.random() * WORLD_SIZE, tapsNeeded: 10, tapsRemaining: 10 });
             }
             updateUI();
         }
         
         function spawnEnemy() {
             let angle = Math.random() * Math.PI * 2;
-            let dist = 350 + Math.random() * 250;
+            let dist = 400 + Math.random() * 300;
             let x = player.x + Math.cos(angle)*dist, y = player.y + Math.sin(angle)*dist;
             x = Math.min(Math.max(x, 50), WORLD_SIZE-50); y = Math.min(Math.max(y, 50), WORLD_SIZE-50);
             let types = ["GOBLIN", "WOLF", "SLIME"];
             let type = types[Math.floor(Math.random()*3)];
-            enemies.push({ x, y, hp: 6+player.level, maxHp: 6+player.level, damage: 1, radius: 22, speed: 42, attackCooldown: 0, type: type });
+            enemies.push({ x, y, hp: 8+player.level, maxHp: 8+player.level, damage: 1, radius: 22, speed: 45, attackCooldown: 0, type });
         }
         
         function tillSoil(tx, ty) {
-            // check if already tilled
-            for(let t of tilledSoil) if(Math.hypot(t.x - tx, t.y - ty) < 25) return false;
-            tilledSoil.push({ x: tx, y: ty });
+            let gridX = Math.floor(tx / 40) * 40;
+            let gridY = Math.floor(ty / 40) * 40;
+            for(let t of tilledSoil) if(Math.abs(t.x - gridX) < 5 && Math.abs(t.y - gridY) < 5) return false;
+            tilledSoil.push({ x: gridX, y: gridY });
             showToast("🌾 Tilled soil");
             return true;
         }
@@ -286,13 +330,61 @@
             if(!foundTill) { showToast("❌ Need tilled soil first!"); return false; }
             let cropType = inventory.selectedCrop;
             if(inventory.seeds[cropType] <= 0) { showToast(`❌ No ${cropType} seeds!`); return false; }
-            // check if crop already there
-            for(let c of crops) if(Math.hypot(c.x - tx, c.y - ty) < 25) { showToast("❌ Crop already here"); return false; }
+            for(let c of crops) if(Math.hypot(c.x - foundTill.x, c.y - foundTill.y) < 25) { showToast("❌ Crop already here"); return false; }
             inventory.seeds[cropType]--;
-            crops.push({ x: tx, y: ty, type: cropType, growth: 0, maxGrowth: 8 });
+            crops.push({ x: foundTill.x, y: foundTill.y, type: cropType, growth: 0, maxGrowth: 8 });
             showToast(`🌱 Planted ${cropType}`);
             updateUI();
             return true;
+        }
+        
+        function buildStructure(tx, ty, type) {
+            let cost = { wall: { wood: 15, stone: 10 }, campfire: { wood: 10, stone: 5 }, storage: { wood: 20, stone: 15 } };
+            let c = cost[type];
+            if(player.wood >= c.wood && player.stone >= c.stone) {
+                player.wood -= c.wood;
+                player.stone -= c.stone;
+                structures.push({ x: tx, y: ty, type: type, hp: type==='wall'?50:100 });
+                showToast(`🏗️ Built ${type}`);
+                if(type === 'campfire') { campfireX = tx; campfireY = ty; }
+                updateUI();
+            } else { showToast(`❌ Need ${c.wood}🪵 ${c.stone}🪨`); }
+        }
+        
+        function interactWithTile(tx, ty) {
+            // harvest trees
+            for(let i=0;i<trees.length;i++) {
+                let t = trees[i];
+                if(Math.hypot(tx - t.x, ty - t.y) < 45) {
+                    t.tapsRemaining -= player.damage;
+                    showToast(`🌲 Tree ${t.tapsRemaining}/${t.tapsNeeded}`);
+                    if(t.tapsRemaining <= 0) {
+                        trees.splice(i,1);
+                        player.wood += 5 + Math.floor(Math.random()*4);
+                        showToast(`+${5}🪵 wood`);
+                        updateUI();
+                    }
+                    return true;
+                }
+            }
+            // mine rocks
+            for(let i=0;i<rocks.length;i++) {
+                let r = rocks[i];
+                if(Math.hypot(tx - r.x, ty - r.y) < 45) {
+                    r.tapsRemaining -= player.damage;
+                    showToast(`🪨 Rock ${r.tapsRemaining}/${r.tapsNeeded}`);
+                    if(r.tapsRemaining <= 0) {
+                        rocks.splice(i,1);
+                        player.stone += 3 + Math.floor(Math.random()*3);
+                        showToast(`+${3}🪨 stone`);
+                        updateUI();
+                    }
+                    return true;
+                }
+            }
+            if(actionMode === "till") { tillSoil(tx, ty); return true; }
+            if(actionMode === "build" && selectedBuild) { buildStructure(tx, ty, selectedBuild); return true; }
+            return false;
         }
         
         function updateGame(delta) {
@@ -303,18 +395,18 @@
             if(timeOfDay >= 1) { timeOfDay = 0; dayCount++; isNight = false; showToast("🌅 DAYBREAK"); updateUI(); }
             isNight = timeOfDay > 0.55;
             
-            let nearCampfire = Math.hypot(player.x - campfireX, player.y - campfireY) < 130;
+            let nearCampfire = false;
+            for(let s of structures) if(s.type === 'campfire' && Math.hypot(player.x - s.x, player.y - s.y) < 130) nearCampfire = true;
             
             // movement
             if(targetX !== null && targetY !== null) {
                 let dx = targetX - player.x, dy = targetY - player.y;
-                if(Math.hypot(dx,dy) < 20) {
-                    if(actionMode === "till") tillSoil(targetX, targetY);
-                    else if(actionMode === "move") { /* just move */ }
+                if(Math.hypot(dx,dy) < 25) {
+                    interactWithTile(targetX, targetY);
                     targetX = null; targetY = null;
                 } else {
                     let angle = Math.atan2(dy,dx);
-                    let speed = 190;
+                    let speed = 200;
                     player.x += Math.cos(angle) * speed * delta;
                     player.y += Math.sin(angle) * speed * delta;
                     player.x = Math.min(Math.max(player.x, 35), WORLD_SIZE-35);
@@ -323,36 +415,37 @@
             }
             
             // crop growth
-            for(let c of crops) { c.growth += delta * 0.25; if(c.growth >= c.maxGrowth && Math.random()<0.02) { let reward = 2 + Math.floor(Math.random()*3); inventory.seeds[c.type] += reward; showToast(`🍅 Harvested ${c.type} +${reward} seeds`); crops.splice(crops.indexOf(c),1); updateUI(); } }
+            for(let c of crops) { c.growth += delta * 0.3; if(c.growth >= c.maxGrowth && Math.random()<0.02) { let reward = 2+Math.floor(Math.random()*3); inventory.seeds[c.type] += reward; showToast(`🍅 Harvested ${c.type} +${reward}`); crops.splice(crops.indexOf(c),1); updateUI(); } }
             
             // enemies
             for(let i=0;i<enemies.length;i++) {
                 let e = enemies[i];
                 let dist = Math.hypot(e.x - player.x, e.y - player.y);
-                if(dist < 220 && !(nearCampfire && isNight)) {
+                if(dist < 250 && !(nearCampfire && isNight)) {
                     let angle = Math.atan2(player.y - e.y, player.x - e.x);
                     e.x += Math.cos(angle) * e.speed * delta;
                     e.y += Math.sin(angle) * e.speed * delta;
-                    if(dist < 32) {
+                    if(dist < 35) {
                         if(e.attackCooldown <= 0) { player.hp -= e.damage; e.attackCooldown = 0.8; if(player.hp <= 0) { gameRunning = false; alert("GAME OVER"); location.reload(); } updateUI(); }
                     }
                     if(dist < 55) {
                         e.hp -= player.damage * delta * 3.5;
-                        if(e.hp <= 0) { enemies.splice(i,1); i--; let gain = 12+player.level*2; addXP(gain); player.coins += 2+Math.floor(Math.random()*4); updateUI(); showToast(`+${gain} XP +🪙`); }
+                        if(e.hp <= 0) { enemies.splice(i,1); i--; let gain = 12+player.level*2; addXP(gain); player.coins += 2+Math.floor(Math.random()*4); updateUI(); showToast(`+${gain} XP`); }
                     }
                 }
                 if(e.attackCooldown > 0) e.attackCooldown -= delta;
             }
             
-            let spawnRate = isNight ? 1.2 : 0.35;
-            if(Math.random() < spawnRate * delta && enemies.length < (isNight ? 12 : 5)) { if(!(nearCampfire && isNight)) spawnEnemy(); }
+            let spawnRate = isNight ? 1.0 : 0.3;
+            if(Math.random() < spawnRate * delta && enemies.length < (isNight ? 10 : 5)) { if(!(nearCampfire && isNight)) spawnEnemy(); }
             
             eventTimer += delta;
-            if(eventTimer > 50 && gameRunning) {
+            if(eventTimer > 45 && gameRunning) {
                 eventTimer = 0;
-                if(Math.random()<0.4) { player.coins += 8; showToast("💰 TRAVELING MERCHANT +8 coins"); updateUI(); }
-                else if(Math.random()<0.7) { addXP(20); showToast("✨ MYSTIC SHRINE +20 XP"); }
-                else { for(let i=0;i<2;i++) spawnEnemy(); showToast("💀 RAIDERS!"); }
+                let r = Math.random();
+                if(r<0.3) { player.coins += 10; showToast("💰 TRAVELING MERCHANT +10 coins"); updateUI(); }
+                else if(r<0.6) { addXP(25); showToast("✨ MYSTIC SHRINE +25 XP"); }
+                else { for(let i=0;i<2;i++) spawnEnemy(); showToast("💀 WILD PACK!"); }
             }
         }
         
@@ -360,46 +453,49 @@
             ctx.clearRect(0,0,width,height);
             let bgColor = isNight ? "#0a1f2a" : "#5a9e4e";
             ctx.fillStyle = bgColor; ctx.fillRect(0,0,width,height);
-            // ground texture
-            for(let i=0;i<400;i++) { ctx.fillStyle = isNight ? "#1a4a3a" : "#7cbd5c"; ctx.fillRect((i*137)%width, (i*89)%height, 3,3); }
+            // ground texture - now moves with camera properly
+            let offX = camera.x % 40, offY = camera.y % 40;
+            for(let i=0;i<200;i++) { ctx.fillStyle = isNight ? "#1a4a3a" : "#7cbd5c"; ctx.fillRect(((i*131)%width), ((i*57)%height), 4,4); }
+            
             // trees
-            for(let t of trees) { let s=worldToScreen(t.x,t.y); ctx.fillStyle="#4a3a2a"; ctx.fillRect(s.x-8,s.y-15,16,30); ctx.fillStyle="#2a8c2a"; ctx.beginPath(); ctx.arc(s.x,s.y-18,14,0,Math.PI*2); ctx.fill(); }
+            for(let t of trees) { let s=worldToScreen(t.x,t.y); ctx.fillStyle="#4a3a2a"; ctx.fillRect(s.x-8,s.y-15,16,30); ctx.fillStyle="#2a8c2a"; ctx.beginPath(); ctx.arc(s.x,s.y-18,14,0,Math.PI*2); ctx.fill(); ctx.fillStyle="white"; ctx.font="10px monospace"; ctx.fillText(`${t.tapsRemaining}`, s.x-5,s.y-25); }
             // rocks
-            for(let r of rocks) { let s=worldToScreen(r.x,r.y); ctx.fillStyle="#888"; ctx.fillRect(s.x-10,s.y-7,20,14); }
-            // tilled soil
-            for(let t of tilledSoil) { let s=worldToScreen(t.x,t.y); ctx.fillStyle="#8b5a2b"; ctx.fillRect(s.x-12,s.y-8,24,16); ctx.fillStyle="#c97e3a"; ctx.fillRect(s.x-10,s.y-6,20,12); }
+            for(let r of rocks) { let s=worldToScreen(r.x,r.y); ctx.fillStyle="#888"; ctx.fillRect(s.x-10,s.y-7,20,14); ctx.fillStyle="white"; ctx.fillText(`${r.tapsRemaining}`, s.x-5,s.y-12); }
+            // tilled soil (tight squares)
+            for(let t of tilledSoil) { let s=worldToScreen(t.x,t.y); ctx.fillStyle="#8b5a2b"; ctx.fillRect(s.x-18,s.y-12,36,24); ctx.fillStyle="#c97e3a"; ctx.fillRect(s.x-15,s.y-9,30,18); }
             // crops
-            for(let c of crops) { let s=worldToScreen(c.x,c.y); let size = 6 + (c.growth/c.maxGrowth)*10; ctx.fillStyle = "#aaff77"; ctx.fillRect(s.x-size/2,s.y-size,size,size*1.5); ctx.fillStyle="yellow"; ctx.font="10px monospace"; ctx.fillText(c.type[0], s.x-3,s.y-3); }
+            for(let c of crops) { let s=worldToScreen(c.x,c.y); let size = 6+(c.growth/c.maxGrowth)*12; ctx.fillStyle="#aaff77"; ctx.fillRect(s.x-size/2,s.y-size,size,size*1.5); ctx.fillStyle="yellow"; ctx.font="10px monospace"; ctx.fillText(c.type[0], s.x-3,s.y-3); }
+            // structures
+            for(let s of structures) { let scr=worldToScreen(s.x,s.y); if(s.type==='wall'){ ctx.fillStyle="#aa8866"; ctx.fillRect(scr.x-15,scr.y-10,30,20); } else if(s.type==='campfire'){ ctx.fillStyle="#ff6600"; ctx.beginPath(); ctx.arc(scr.x,scr.y,18,0,Math.PI*2); ctx.fill(); } else if(s.type==='storage'){ ctx.fillStyle="#8a6a4a"; ctx.fillRect(scr.x-14,scr.y-12,28,24); } }
             // enemies
             for(let e of enemies) { let s=worldToScreen(e.x,e.y); ctx.fillStyle = e.type==="GOBLIN"?"#aa5533": e.type==="WOLF"?"#886666":"#55aa77"; ctx.beginPath(); ctx.ellipse(s.x,s.y,18,22,0,0,Math.PI*2); ctx.fill(); ctx.fillStyle="white"; ctx.fillText(e.type[0], s.x-6,s.y-5); }
             // campfire aura
             let campPos = worldToScreen(campfireX, campfireY);
-            ctx.globalAlpha=0.25; ctx.fillStyle="orange"; ctx.beginPath(); ctx.arc(campPos.x,campPos.y,85,0,Math.PI*2); ctx.fill(); ctx.globalAlpha=1;
+            ctx.globalAlpha=0.25; ctx.fillStyle="orange"; ctx.beginPath(); ctx.arc(campPos.x,campPos.y,110,0,Math.PI*2); ctx.fill(); ctx.globalAlpha=1;
             // player robot
             let ps = worldToScreen(player.x, player.y);
             ctx.fillStyle="#77ccff"; ctx.fillRect(ps.x-14,ps.y-18,28,34); ctx.fillStyle="#aaa"; ctx.fillRect(ps.x-8,ps.y-30,16,14); ctx.fillStyle="cyan"; ctx.fillRect(ps.x-6,ps.y-26,5,7); ctx.fillRect(ps.x+2,ps.y-26,5,7);
-            ctx.fillStyle="white"; ctx.font="bold 12px monospace"; ctx.fillText("🤖", ps.x-4, ps.y-18);
-            // particles
-            for(let p of particles) { let s=worldToScreen(p.x,p.y); ctx.fillStyle=`rgba(255,100,0,${p.life})`; ctx.fillRect(s.x-2,s.y-2,4,4); }
-            if(actionMode === "till") { ctx.fillStyle="white"; ctx.font="bold 14px monospace"; ctx.fillText("🌾 TILL MODE", 20, 80); }
+            ctx.fillStyle="white"; ctx.font="bold 14px monospace"; ctx.fillText("🤖", ps.x-6, ps.y-18);
         }
         
         function handleTap(e) {
             if(!gameRunning) return;
             e.preventDefault();
             let rect = canvas.getBoundingClientRect();
-            let sx, sy;
-            if(e.touches) { sx=e.touches[0].clientX; sy=e.touches[0].clientY; }
-            else { sx=e.clientX; sy=e.clientY; }
+            let sx = (e.touches ? e.touches[0].clientX : e.clientX);
+            let sy = (e.touches ? e.touches[0].clientY : e.clientY);
             let wx = camera.x + sx, wy = camera.y + sy;
-            // if planting mode: plant crop on tilled soil
             if(actionMode === "move") { targetX = wx; targetY = wy; }
             else if(actionMode === "till") { tillSoil(wx, wy); }
+            else if(actionMode === "build" && selectedBuild) { buildStructure(wx, wy, selectedBuild); }
+            else { targetX = wx; targetY = wy; }
         }
         
-        document.getElementById('tillBtn').onclick = () => { actionMode = "till"; showToast("🔨 TILL MODE: tap soil to till"); };
+        document.getElementById('tillBtn').onclick = () => { actionMode = "till"; document.getElementById('modeIndicator').innerHTML = "🌾 TILL MODE"; showToast("TILL MODE: tap soil to till"); };
+        document.getElementById('buildBtn').onclick = () => { let menu = document.getElementById('buildMenu'); menu.style.display = menu.style.display === 'flex' ? 'none' : 'flex'; };
         document.getElementById('shopBtn').onclick = () => { showToast("🛒 SHOP coming soon!"); };
-        document.getElementById('startBtn').onclick = () => { gameRunning = true; document.getElementById('startOverlay').style.display = 'none'; spawnWorld(); for(let i=0;i<3;i++) spawnEnemy(); updateUI(); };
+        document.querySelectorAll('.build-btn').forEach(btn => { btn.onclick = () => { actionMode = "build"; selectedBuild = btn.dataset.type; document.getElementById('modeIndicator').innerHTML = `🏗️ BUILD: ${selectedBuild}`; document.getElementById('buildMenu').style.display = 'none'; showToast(`Tap to place ${selectedBuild}`); }; });
+        document.getElementById('startBtn').onclick = () => { gameRunning = true; document.getElementById('startOverlay').style.display = 'none'; spawnWorld(); for(let i=0;i<2;i++) spawnEnemy(); updateUI(); };
         
         canvas.addEventListener('touchstart', handleTap);
         canvas.addEventListener('mousedown', handleTap);
