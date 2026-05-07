@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-    <title>SURVIVAL REALMS · BUILD & HARVEST</title>
+    <title>SURVIVAL REALMS · HUMAN SURVIVOR</title>
     <style>
         * {
             margin: 0;
@@ -122,6 +122,11 @@
             font-family: monospace;
             font-size: 11px;
         }
+        .action-btn.active {
+            background: #3a8a3a;
+            border: 1px solid gold;
+            box-shadow: 0 0 8px gold;
+        }
         .build-menu {
             position: fixed;
             bottom: 160px;
@@ -189,6 +194,19 @@
             color: cyan;
             z-index: 20;
         }
+        .exit-btn {
+            position: fixed;
+            bottom: 160px;
+            left: 120px;
+            background: #8a2a2a;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 10px;
+            color: white;
+            z-index: 30;
+            cursor: pointer;
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -208,9 +226,10 @@
     <button class="build-btn" data-type="storage">📦 STORAGE (20🪵 15🪨)</button>
 </div>
 <div class="mode-indicator" id="modeIndicator">📍 MOVE MODE</div>
+<div class="exit-btn" id="exitModeBtn">❌ EXIT MODE</div>
 <div class="start-overlay" id="startOverlay">
     <div class="start-title">⚙️ SURVIVAL REALMS ⚙️</div>
-    <div class="start-sub">tap to move | tap trees/rocks to harvest | build your base</div>
+    <div class="start-sub">tap to move | tap trees/rocks to harvest | select seed → tap tilled soil</div>
     <button class="start-btn" id="startBtn">▶ BEGIN</button>
 </div>
 
@@ -224,7 +243,7 @@
         const WORLD_SIZE = 5000;
         let camera = { x: 0, y: 0 };
         
-        // Player
+        // Player - HUMAN CHARACTER
         let player = {
             x: WORLD_SIZE/2, y: WORLD_SIZE/2,
             hp: 500, maxHp: 500,
@@ -241,11 +260,11 @@
         };
         
         // World objects
-        let trees = [];      // { x, y, tapsNeeded, tapsRemaining }
-        let rocks = [];      // { x, y, tapsNeeded, tapsRemaining }
+        let trees = [];
+        let rocks = [];
         let tilledSoil = [];
         let crops = [];
-        let structures = [];  // { x, y, type, hp }
+        let structures = [];
         
         let enemies = [];
         let particles = [];
@@ -254,7 +273,7 @@
         let actionMode = "move"; // move, till, build
         let selectedBuild = null;
         
-        // Day/night
+        // Day/night - slower cycle
         let dayCount = 1;
         let timeOfDay = 0;
         let isNight = false;
@@ -326,8 +345,8 @@
         
         function plantCrop(tx, ty) {
             let foundTill = null;
-            for(let t of tilledSoil) if(Math.hypot(t.x - tx, t.y - ty) < 30) { foundTill = t; break; }
-            if(!foundTill) { showToast("❌ Need tilled soil first!"); return false; }
+            for(let t of tilledSoil) if(Math.hypot(t.x - tx, t.y - ty) < 35) { foundTill = t; break; }
+            if(!foundTill) { showToast("❌ Need tilled soil first! Select seed then tap brown soil"); return false; }
             let cropType = inventory.selectedCrop;
             if(inventory.seeds[cropType] <= 0) { showToast(`❌ No ${cropType} seeds!`); return false; }
             for(let c of crops) if(Math.hypot(c.x - foundTill.x, c.y - foundTill.y) < 25) { showToast("❌ Crop already here"); return false; }
@@ -352,6 +371,17 @@
         }
         
         function interactWithTile(tx, ty) {
+            // First check planting if in move mode with a seed selected
+            if(actionMode === "move") {
+                // Try planting on tilled soil
+                for(let t of tilledSoil) {
+                    if(Math.hypot(t.x - tx, t.y - ty) < 35) {
+                        plantCrop(tx, ty);
+                        return true;
+                    }
+                }
+            }
+            
             // harvest trees
             for(let i=0;i<trees.length;i++) {
                 let t = trees[i];
@@ -387,11 +417,22 @@
             return false;
         }
         
+        function exitMode() {
+            actionMode = "move";
+            selectedBuild = null;
+            document.getElementById('modeIndicator').innerHTML = "📍 MOVE MODE";
+            document.getElementById('tillBtn').classList.remove('active');
+            document.getElementById('buildBtn').classList.remove('active');
+            document.getElementById('exitModeBtn').style.display = 'none';
+            showToast("Returned to MOVE mode");
+        }
+        
         function updateGame(delta) {
             if(!gameRunning) return;
             if(delta > 0.033) delta = 0.033;
             
-            timeOfDay += delta / 90;
+            // Slower day/night cycle (120 seconds full day)
+            timeOfDay += delta / 120;
             if(timeOfDay >= 1) { timeOfDay = 0; dayCount++; isNight = false; showToast("🌅 DAYBREAK"); updateUI(); }
             isNight = timeOfDay > 0.55;
             
@@ -415,7 +456,7 @@
             }
             
             // crop growth
-            for(let c of crops) { c.growth += delta * 0.3; if(c.growth >= c.maxGrowth && Math.random()<0.02) { let reward = 2+Math.floor(Math.random()*3); inventory.seeds[c.type] += reward; showToast(`🍅 Harvested ${c.type} +${reward}`); crops.splice(crops.indexOf(c),1); updateUI(); } }
+            for(let c of crops) { c.growth += delta * 0.25; if(c.growth >= c.maxGrowth && Math.random()<0.015) { let reward = 2+Math.floor(Math.random()*3); inventory.seeds[c.type] += reward; showToast(`🍅 Harvested ${c.type} +${reward}`); crops.splice(crops.indexOf(c),1); updateUI(); } }
             
             // enemies
             for(let i=0;i<enemies.length;i++) {
@@ -436,11 +477,11 @@
                 if(e.attackCooldown > 0) e.attackCooldown -= delta;
             }
             
-            let spawnRate = isNight ? 1.0 : 0.3;
+            let spawnRate = isNight ? 0.9 : 0.25;
             if(Math.random() < spawnRate * delta && enemies.length < (isNight ? 10 : 5)) { if(!(nearCampfire && isNight)) spawnEnemy(); }
             
             eventTimer += delta;
-            if(eventTimer > 45 && gameRunning) {
+            if(eventTimer > 50 && gameRunning) {
                 eventTimer = 0;
                 let r = Math.random();
                 if(r<0.3) { player.coins += 10; showToast("💰 TRAVELING MERCHANT +10 coins"); updateUI(); }
@@ -453,29 +494,52 @@
             ctx.clearRect(0,0,width,height);
             let bgColor = isNight ? "#0a1f2a" : "#5a9e4e";
             ctx.fillStyle = bgColor; ctx.fillRect(0,0,width,height);
-            // ground texture - now moves with camera properly
-            let offX = camera.x % 40, offY = camera.y % 40;
-            for(let i=0;i<200;i++) { ctx.fillStyle = isNight ? "#1a4a3a" : "#7cbd5c"; ctx.fillRect(((i*131)%width), ((i*57)%height), 4,4); }
+            
+            // ground texture - grass patches
+            for(let i=0;i<300;i++) { ctx.fillStyle = isNight ? "#1a4a3a" : "#7cbd5c"; ctx.fillRect(((i*131)%width), ((i*57)%height), 4,4); }
+            // flower dots
+            for(let i=0;i<100;i++) { ctx.fillStyle = isNight ? "#3355aa" : "#ffcc88"; ctx.fillRect(((i*173)%width), ((i*89)%height), 2,2); }
             
             // trees
-            for(let t of trees) { let s=worldToScreen(t.x,t.y); ctx.fillStyle="#4a3a2a"; ctx.fillRect(s.x-8,s.y-15,16,30); ctx.fillStyle="#2a8c2a"; ctx.beginPath(); ctx.arc(s.x,s.y-18,14,0,Math.PI*2); ctx.fill(); ctx.fillStyle="white"; ctx.font="10px monospace"; ctx.fillText(`${t.tapsRemaining}`, s.x-5,s.y-25); }
+            for(let t of trees) { let s=worldToScreen(t.x,t.y); ctx.fillStyle="#4a3a2a"; ctx.fillRect(s.x-8,s.y-15,16,30); ctx.fillStyle="#2a8c2a"; ctx.beginPath(); ctx.arc(s.x,s.y-18,14,0,Math.PI*2); ctx.fill(); ctx.fillStyle="white"; ctx.font="9px monospace"; ctx.fillText(`${t.tapsRemaining}`, s.x-4,s.y-26); }
             // rocks
-            for(let r of rocks) { let s=worldToScreen(r.x,r.y); ctx.fillStyle="#888"; ctx.fillRect(s.x-10,s.y-7,20,14); ctx.fillStyle="white"; ctx.fillText(`${r.tapsRemaining}`, s.x-5,s.y-12); }
-            // tilled soil (tight squares)
+            for(let r of rocks) { let s=worldToScreen(r.x,r.y); ctx.fillStyle="#888"; ctx.fillRect(s.x-10,s.y-7,20,14); ctx.fillStyle="#aaa"; ctx.fillRect(s.x-8,s.y-5,16,10); ctx.fillStyle="white"; ctx.fillText(`${r.tapsRemaining}`, s.x-4,s.y-12); }
+            // tilled soil
             for(let t of tilledSoil) { let s=worldToScreen(t.x,t.y); ctx.fillStyle="#8b5a2b"; ctx.fillRect(s.x-18,s.y-12,36,24); ctx.fillStyle="#c97e3a"; ctx.fillRect(s.x-15,s.y-9,30,18); }
             // crops
-            for(let c of crops) { let s=worldToScreen(c.x,c.y); let size = 6+(c.growth/c.maxGrowth)*12; ctx.fillStyle="#aaff77"; ctx.fillRect(s.x-size/2,s.y-size,size,size*1.5); ctx.fillStyle="yellow"; ctx.font="10px monospace"; ctx.fillText(c.type[0], s.x-3,s.y-3); }
+            for(let c of crops) { let s=worldToScreen(c.x,c.y); let size = 6+(c.growth/c.maxGrowth)*12; ctx.fillStyle="#aaff77"; ctx.fillRect(s.x-size/2,s.y-size,size,size*1.5); ctx.fillStyle="#ffcc44"; ctx.font="10px monospace"; ctx.fillText(c.type[0], s.x-3,s.y-3); }
             // structures
-            for(let s of structures) { let scr=worldToScreen(s.x,s.y); if(s.type==='wall'){ ctx.fillStyle="#aa8866"; ctx.fillRect(scr.x-15,scr.y-10,30,20); } else if(s.type==='campfire'){ ctx.fillStyle="#ff6600"; ctx.beginPath(); ctx.arc(scr.x,scr.y,18,0,Math.PI*2); ctx.fill(); } else if(s.type==='storage'){ ctx.fillStyle="#8a6a4a"; ctx.fillRect(scr.x-14,scr.y-12,28,24); } }
+            for(let s of structures) { let scr=worldToScreen(s.x,s.y); if(s.type==='wall'){ ctx.fillStyle="#aa8866"; ctx.fillRect(scr.x-15,scr.y-10,30,20); ctx.fillStyle="#ccaa88"; ctx.fillRect(scr.x-12,scr.y-7,24,14); } else if(s.type==='campfire'){ ctx.fillStyle="#ff6600"; ctx.beginPath(); ctx.arc(scr.x,scr.y,18,0,Math.PI*2); ctx.fill(); ctx.fillStyle="#ffcc44"; ctx.beginPath(); ctx.arc(scr.x,scr.y,8,0,Math.PI*2); ctx.fill(); } else if(s.type==='storage'){ ctx.fillStyle="#8a6a4a"; ctx.fillRect(scr.x-14,scr.y-12,28,24); ctx.fillStyle="#aa8866"; ctx.fillRect(scr.x-10,scr.y-8,20,16); } }
             // enemies
-            for(let e of enemies) { let s=worldToScreen(e.x,e.y); ctx.fillStyle = e.type==="GOBLIN"?"#aa5533": e.type==="WOLF"?"#886666":"#55aa77"; ctx.beginPath(); ctx.ellipse(s.x,s.y,18,22,0,0,Math.PI*2); ctx.fill(); ctx.fillStyle="white"; ctx.fillText(e.type[0], s.x-6,s.y-5); }
+            for(let e of enemies) { let s=worldToScreen(e.x,e.y); ctx.fillStyle = e.type==="GOBLIN"?"#aa5533": e.type==="WOLF"?"#886666":"#55aa77"; ctx.beginPath(); ctx.ellipse(s.x,s.y,18,22,0,0,Math.PI*2); ctx.fill(); ctx.fillStyle="white"; ctx.font="bold 12px monospace"; ctx.fillText(e.type[0], s.x-6,s.y-5); ctx.fillStyle="red"; ctx.fillRect(s.x-15,s.y-15, (e.hp/e.maxHp)*30,4); }
             // campfire aura
             let campPos = worldToScreen(campfireX, campfireY);
-            ctx.globalAlpha=0.25; ctx.fillStyle="orange"; ctx.beginPath(); ctx.arc(campPos.x,campPos.y,110,0,Math.PI*2); ctx.fill(); ctx.globalAlpha=1;
-            // player robot
+            ctx.globalAlpha=0.2; ctx.fillStyle="orange"; ctx.beginPath(); ctx.arc(campPos.x,campPos.y,110,0,Math.PI*2); ctx.fill(); ctx.globalAlpha=1;
+            
+            // HUMAN CHARACTER - detailed
             let ps = worldToScreen(player.x, player.y);
-            ctx.fillStyle="#77ccff"; ctx.fillRect(ps.x-14,ps.y-18,28,34); ctx.fillStyle="#aaa"; ctx.fillRect(ps.x-8,ps.y-30,16,14); ctx.fillStyle="cyan"; ctx.fillRect(ps.x-6,ps.y-26,5,7); ctx.fillRect(ps.x+2,ps.y-26,5,7);
-            ctx.fillStyle="white"; ctx.font="bold 14px monospace"; ctx.fillText("🤖", ps.x-6, ps.y-18);
+            // body
+            ctx.fillStyle="#3a6ea5"; ctx.fillRect(ps.x-10,ps.y-6,20,28);
+            ctx.fillStyle="#2a4e85"; ctx.fillRect(ps.x-8,ps.y-4,16,24);
+            // head
+            ctx.fillStyle="#e8c8a0"; ctx.beginPath(); ctx.arc(ps.x,ps.y-12,12,0,Math.PI*2); ctx.fill();
+            // hair
+            ctx.fillStyle="#5a3a2a"; ctx.fillRect(ps.x-10,ps.y-22,20,12);
+            // eyes
+            ctx.fillStyle="white"; ctx.beginPath(); ctx.arc(ps.x-5,ps.y-15,3,0,Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(ps.x+5,ps.y-15,3,0,Math.PI*2); ctx.fill();
+            ctx.fillStyle="#2a3a5a"; ctx.beginPath(); ctx.arc(ps.x-5,ps.y-15,1.5,0,Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(ps.x+5,ps.y-15,1.5,0,Math.PI*2); ctx.fill();
+            // mouth
+            ctx.beginPath(); ctx.arc(ps.x,ps.y-9,4,0.1,Math.PI-0.1); ctx.stroke();
+            // backpack
+            ctx.fillStyle="#8a6a4a"; ctx.fillRect(ps.x+8,ps.y-8,8,18);
+            // arms
+            ctx.fillStyle="#3a6ea5"; ctx.fillRect(ps.x-18,ps.y-4,10,8); ctx.fillRect(ps.x+8,ps.y-4,10,8);
+            ctx.fillStyle="#e8c8a0"; ctx.fillRect(ps.x-18,ps.y-3,8,6); ctx.fillRect(ps.x+10,ps.y-3,8,6);
+            // legs
+            ctx.fillStyle="#2a4e6a"; ctx.fillRect(ps.x-8,ps.y+20,8,12); ctx.fillRect(ps.x+0,ps.y+20,8,12);
+            
+            // name tag
+            ctx.fillStyle="white"; ctx.font="bold 10px monospace"; ctx.fillText("SURVIVOR", ps.x-18, ps.y-28);
         }
         
         function handleTap(e) {
@@ -491,10 +555,35 @@
             else { targetX = wx; targetY = wy; }
         }
         
-        document.getElementById('tillBtn').onclick = () => { actionMode = "till"; document.getElementById('modeIndicator').innerHTML = "🌾 TILL MODE"; showToast("TILL MODE: tap soil to till"); };
-        document.getElementById('buildBtn').onclick = () => { let menu = document.getElementById('buildMenu'); menu.style.display = menu.style.display === 'flex' ? 'none' : 'flex'; };
+        document.getElementById('tillBtn').onclick = () => { 
+            actionMode = "till"; 
+            selectedBuild = null;
+            document.getElementById('modeIndicator').innerHTML = "🌾 TILL MODE (tap soil)";
+            document.getElementById('tillBtn').classList.add('active');
+            document.getElementById('buildBtn').classList.remove('active');
+            document.getElementById('exitModeBtn').style.display = 'block';
+            showToast("TILL MODE: tap ground to till soil");
+        };
+        document.getElementById('buildBtn').onclick = () => { 
+            let menu = document.getElementById('buildMenu'); 
+            menu.style.display = menu.style.display === 'flex' ? 'none' : 'flex';
+        };
         document.getElementById('shopBtn').onclick = () => { showToast("🛒 SHOP coming soon!"); };
-        document.querySelectorAll('.build-btn').forEach(btn => { btn.onclick = () => { actionMode = "build"; selectedBuild = btn.dataset.type; document.getElementById('modeIndicator').innerHTML = `🏗️ BUILD: ${selectedBuild}`; document.getElementById('buildMenu').style.display = 'none'; showToast(`Tap to place ${selectedBuild}`); }; });
+        document.getElementById('exitModeBtn').onclick = () => { exitMode(); document.getElementById('buildMenu').style.display = 'none'; };
+        
+        document.querySelectorAll('.build-btn').forEach(btn => { 
+            btn.onclick = () => { 
+                actionMode = "build"; 
+                selectedBuild = btn.dataset.type; 
+                document.getElementById('modeIndicator').innerHTML = `🏗️ BUILD: ${selectedBuild} (tap to place)`;
+                document.getElementById('buildBtn').classList.add('active');
+                document.getElementById('tillBtn').classList.remove('active');
+                document.getElementById('buildMenu').style.display = 'none';
+                document.getElementById('exitModeBtn').style.display = 'block';
+                showToast(`Tap ground to place ${selectedBuild}`);
+            }; 
+        });
+        
         document.getElementById('startBtn').onclick = () => { gameRunning = true; document.getElementById('startOverlay').style.display = 'none'; spawnWorld(); for(let i=0;i<2;i++) spawnEnemy(); updateUI(); };
         
         canvas.addEventListener('touchstart', handleTap);
