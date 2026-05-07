@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-    <title>SURVIVAL REALMS · FISH & HUNGER</title>
+    <title>SURVIVAL REALMS · SPIDER INFESTATION</title>
     <style>
         * {
             margin: 0;
@@ -13,7 +13,7 @@
             user-select: none;
         }
         body {
-            background: #0a1a0a;
+            background: #1a1a1a;
             overflow: hidden;
             font-family: 'Courier New', monospace;
             touch-action: none;
@@ -127,26 +127,29 @@
             border: 1px solid gold;
             box-shadow: 0 0 8px gold;
         }
-        .build-menu {
+        .shop-panel {
             position: fixed;
-            bottom: 160px;
-            left: 20px;
-            background: #1a2a1aee;
-            backdrop-filter: blur(12px);
-            padding: 8px 12px;
-            border-radius: 20px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #1a1a1aee;
+            backdrop-filter: blur(20px);
+            padding: 20px;
+            border-radius: 30px;
             display: none;
-            gap: 8px;
-            z-index: 30;
-            flex-wrap: wrap;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 100;
+            border: 2px solid gold;
+            min-width: 200px;
         }
-        .build-btn {
+        .shop-panel button {
             background: #3a4a3a;
             border: none;
-            padding: 5px 12px;
+            padding: 10px;
             border-radius: 20px;
             color: gold;
-            font-size: 10px;
+            font-weight: bold;
             cursor: pointer;
         }
         .start-overlay {
@@ -155,7 +158,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: radial-gradient(circle, #0a2a0a, #020a02);
+            background: radial-gradient(circle, #1a1a1a, #0a0a0a);
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -196,19 +199,6 @@
             color: cyan;
             z-index: 20;
         }
-        .exit-btn {
-            position: fixed;
-            bottom: 160px;
-            left: 120px;
-            background: #8a2a2a;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 10px;
-            color: white;
-            z-index: 30;
-            cursor: pointer;
-            display: none;
-        }
         .hunger-bar {
             position: fixed;
             top: 55px;
@@ -220,6 +210,17 @@
             color: #ffaa66;
             z-index: 20;
         }
+        .weapon-slot {
+            position: fixed;
+            bottom: 80px;
+            left: 20px;
+            background: rgba(0,0,0,0.7);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            color: gold;
+            z-index: 20;
+        }
     </style>
 </head>
 <body>
@@ -227,24 +228,25 @@
 <div class="hud" id="hudStats">❤️ 500/500 | ⚔️ DMG 1 | 🧪 L1 | ✨ 0/100</div>
 <div class="stats-right" id="statsRight">🪙 10 | 🪵 0 | 🪨 0</div>
 <div class="hunger-bar" id="hungerBar">🍗 HUNGER: 100%</div>
+<div class="weapon-slot" id="weaponSlot">🗡️ WEAPON: Fists</div>
 <div class="inventory-bar" id="inventoryBar"></div>
 <div class="day-cycle" id="dayCycle">🌞 DAY 1</div>
 <div class="action-buttons">
-    <button class="action-btn" id="tillBtn">🌾 TILL</button>
+    <button class="action-btn" id="shopWeaponBtn">🛒 WEAPONS</button>
     <button class="action-btn" id="buildBtn">🏗️ BUILD</button>
     <button class="action-btn" id="fishBtn">🎣 FISH</button>
     <button class="action-btn" id="saveBtn">💾 SAVE</button>
 </div>
-<div class="build-menu" id="buildMenu">
-    <button class="build-btn" data-type="wall">🧱 WALL (15🪵 10🪨)</button>
-    <button class="build-btn" data-type="campfire">🔥 CAMPFIRE (10🪵 5🪨)</button>
-    <button class="build-btn" data-type="storage">📦 STORAGE (20🪵 15🪨)</button>
+<div class="shop-panel" id="weaponShop">
+    <button id="buySpear">🗡️ SPEAR (50🪙) +5 DMG</button>
+    <button id="buySword">⚔️ SWORD (100🪙) +12 DMG</button>
+    <button id="buyCrossbow">🏹 CROSSBOW (200🪙) +25 DMG</button>
+    <button id="closeShop">❌ CLOSE</button>
 </div>
 <div class="mode-indicator" id="modeIndicator">📍 MOVE MODE</div>
-<div class="exit-btn" id="exitModeBtn">❌ EXIT MODE</div>
 <div class="start-overlay" id="startOverlay">
     <div class="start-title">⚙️ SURVIVAL REALMS ⚙️</div>
-    <div class="start-sub">tap to move | harvest | build | fish | survive</div>
+    <div class="start-sub">spiders everywhere | buy weapons | fight to survive</div>
     <div class="start-btns">
         <button class="start-btn" id="startBtn">▶ NEW GAME</button>
         <button class="load-btn" id="loadBtn">📀 LOAD SAVE</button>
@@ -258,87 +260,61 @@
         let width, height;
         let gameRunning = false;
         
-        const WORLD_SIZE = 6000;  // bigger world
+        const WORLD_SIZE = 6000;
         let camera = { x: 0, y: 0 };
+        let attackAnimation = 0;
+        let currentWeapon = { name: "Fists", damage: 0, bonus: 0 };
         
-        // Player
         let player = {
             x: WORLD_SIZE/2, y: WORLD_SIZE/2,
             hp: 500, maxHp: 500,
-            damage: 1,
+            baseDamage: 1,
             level: 1, xp: 0, xpNeeded: 100,
-            coins: 10,
+            coins: 15,
             wood: 0, stone: 0,
             hunger: 100,
-            food: { Fish: 3, Berry: 5 }
+            food: { Fish: 4, Berry: 8 }
         };
         
-        // Inventory
         let inventory = {
             seeds: { Pumpkin: 5, Apple: 3, Corn: 6, Wheat: 4, Carrot: 5 },
             selectedCrop: "Pumpkin"
         };
         
-        // World objects
         let trees = [];
         let rocks = [];
-        let tilledSoil = [];
-        let crops = [];
-        let structures = [];
         let enemies = [];
-        let fishSpots = [];
-        
+        let structures = [];
         let particles = [];
-        let fishingActive = false;
-        let fishingTimer = 0;
-        let fishBite = false;
         
         let targetX = null, targetY = null;
-        let actionMode = "move";
-        let selectedBuild = null;
-        
         let dayCount = 1;
         let timeOfDay = 0;
         let isNight = false;
         let campfireX = player.x, campfireY = player.y;
-        
-        let eventTimer = 0;
         let enemyRespawnTimer = 0;
+        let eventTimer = 0;
+        
+        function getTotalDamage() { return player.baseDamage + currentWeapon.bonus; }
         
         function resize() { width = window.innerWidth; height = window.innerHeight; canvas.width = width; canvas.height = height; }
-        function updateCamera() { 
-            camera.x = player.x - width/2.5;  // zoomed out
-            camera.y = player.y - height/2.5;
-            camera.x = Math.min(Math.max(camera.x, 0), WORLD_SIZE - width);
-            camera.y = Math.min(Math.max(camera.y, 0), WORLD_SIZE - height);
-        }
+        function updateCamera() { camera.x = player.x - width/2.5; camera.y = player.y - height/2.5; camera.x = Math.min(Math.max(camera.x, 0), WORLD_SIZE - width); camera.y = Math.min(Math.max(camera.y, 0), WORLD_SIZE - height); }
         function worldToScreen(wx, wy) { return { x: wx - camera.x, y: wy - camera.y }; }
         
         function showToast(msg) { let div = document.createElement('div'); div.className = 'event-toast'; div.innerText = msg; document.body.appendChild(div); setTimeout(()=>div.remove(), 2000); }
         
         function updateUI() {
-            document.getElementById('hudStats').innerHTML = `❤️ ${Math.floor(player.hp)}/${player.maxHp} | ⚔️ DMG ${player.damage} | 🧪 L${player.level} | ✨ ${player.xp}/${player.xpNeeded}`;
+            document.getElementById('hudStats').innerHTML = `❤️ ${Math.floor(player.hp)}/${player.maxHp} | ⚔️ DMG ${getTotalDamage()} | 🧪 L${player.level} | ✨ ${player.xp}/${player.xpNeeded}`;
             document.getElementById('statsRight').innerHTML = `🪙 ${Math.floor(player.coins)} | 🪵 ${player.wood} | 🪨 ${player.stone}`;
             document.getElementById('hungerBar').innerHTML = `🍗 HUNGER: ${Math.floor(player.hunger)}%`;
+            document.getElementById('weaponSlot').innerHTML = `🗡️ WEAPON: ${currentWeapon.name} (+${currentWeapon.bonus} DMG)`;
             document.getElementById('dayCycle').innerHTML = isNight ? `🌙 NIGHT ${dayCount} 🔥` : `🌞 DAY ${dayCount}`;
             let bar = document.getElementById('inventoryBar');
             bar.innerHTML = '';
-            // food items
-            let foodSlot = document.createElement('div');
-            foodSlot.className = `inv-slot`;
-            foodSlot.innerHTML = `🐟 Fish<br>${player.food.Fish}`;
-            foodSlot.onclick = () => { if(player.food.Fish > 0) { player.food.Fish--; player.hunger = Math.min(100, player.hunger+20); showToast("🍽️ Ate Fish +20 Hunger"); updateUI(); } };
-            bar.appendChild(foodSlot);
-            let berrySlot = document.createElement('div');
-            berrySlot.className = `inv-slot`;
-            berrySlot.innerHTML = `🍓 Berry<br>${player.food.Berry}`;
-            berrySlot.onclick = () => { if(player.food.Berry > 0) { player.food.Berry--; player.hunger = Math.min(100, player.hunger+10); showToast("🍓 Ate Berry +10 Hunger"); updateUI(); } };
-            bar.appendChild(berrySlot);
-            // seeds
+            let foodSlot = document.createElement('div'); foodSlot.className = `inv-slot`; foodSlot.innerHTML = `🐟 Fish<br>${player.food.Fish}`; foodSlot.onclick = () => { if(player.food.Fish > 0) { player.food.Fish--; player.hunger = Math.min(100, player.hunger+20); updateUI(); } }; bar.appendChild(foodSlot);
+            let berrySlot = document.createElement('div'); berrySlot.className = `inv-slot`; berrySlot.innerHTML = `🍓 Berry<br>${player.food.Berry}`; berrySlot.onclick = () => { if(player.food.Berry > 0) { player.food.Berry--; player.hunger = Math.min(100, player.hunger+10); updateUI(); } }; bar.appendChild(berrySlot);
             for(let [crop, amount] of Object.entries(inventory.seeds)) {
-                let slot = document.createElement('div');
-                slot.className = `inv-slot ${inventory.selectedCrop === crop ? 'selected' : ''}`;
-                slot.innerHTML = `🌱 ${crop}<br>${amount}`;
+                let slot = document.createElement('div'); slot.className = `inv-slot ${inventory.selectedCrop === crop ? 'selected' : ''}`; slot.innerHTML = `🌱 ${crop}<br>${amount}`;
                 slot.onclick = (e) => { e.stopPropagation(); inventory.selectedCrop = crop; updateUI(); showToast(`Selected ${crop} seeds`); };
                 bar.appendChild(slot);
             }
@@ -349,7 +325,7 @@
             while(player.xp >= player.xpNeeded) {
                 player.xp -= player.xpNeeded;
                 player.level++;
-                player.damage++;
+                player.baseDamage++;
                 player.maxHp += 25;
                 player.hp = player.maxHp;
                 player.xpNeeded = Math.floor(100 + player.level * 15);
@@ -359,14 +335,7 @@
         }
         
         function saveGame() {
-            let save = {
-                player: { x: player.x, y: player.y, hp: player.hp, maxHp: player.maxHp, damage: player.damage, level: player.level, xp: player.xp, coins: player.coins, wood: player.wood, stone: player.stone, hunger: player.hunger, food: player.food },
-                inventory: inventory,
-                dayCount: dayCount, timeOfDay: timeOfDay,
-                structures: structures,
-                tilledSoil: tilledSoil,
-                crops: crops.map(c => ({ x: c.x, y: c.y, type: c.type, growth: c.growth }))
-            };
+            let save = { player: { x: player.x, y: player.y, hp: player.hp, maxHp: player.maxHp, baseDamage: player.baseDamage, level: player.level, xp: player.xp, coins: player.coins, wood: player.wood, stone: player.stone, hunger: player.hunger, food: player.food }, inventory: inventory, dayCount: dayCount, timeOfDay: timeOfDay, structures: structures, currentWeapon: currentWeapon };
             localStorage.setItem('survivalRealmSave', JSON.stringify(save));
             showToast("💾 GAME SAVED!");
         }
@@ -380,8 +349,7 @@
             dayCount = save.dayCount;
             timeOfDay = save.timeOfDay;
             structures = save.structures;
-            tilledSoil = save.tilledSoil;
-            crops = save.crops;
+            if(save.currentWeapon) currentWeapon = save.currentWeapon;
             for(let s of structures) if(s.type === 'campfire') { campfireX = s.x; campfireY = s.y; }
             showToast("📀 GAME LOADED!");
             updateUI();
@@ -389,116 +357,29 @@
         }
         
         function spawnWorld() {
-            for(let i=0;i<100;i++) {
-                trees.push({ x: Math.random() * WORLD_SIZE, y: Math.random() * WORLD_SIZE, tapsNeeded: 10, tapsRemaining: 10 });
-                rocks.push({ x: Math.random() * WORLD_SIZE, y: Math.random() * WORLD_SIZE, tapsNeeded: 10, tapsRemaining: 10 });
-            }
-            for(let i=0;i<30;i++) fishSpots.push({ x: Math.random() * WORLD_SIZE, y: Math.random() * WORLD_SIZE });
+            for(let i=0;i<120;i++) { trees.push({ x: Math.random() * WORLD_SIZE, y: Math.random() * WORLD_SIZE, tapsNeeded: 8, tapsRemaining: 8 }); rocks.push({ x: Math.random() * WORLD_SIZE, y: Math.random() * WORLD_SIZE, tapsNeeded: 8, tapsRemaining: 8 }); }
+            for(let i=0;i<8;i++) spawnEnemy();
             updateUI();
         }
         
         function spawnEnemy() {
             let angle = Math.random() * Math.PI * 2;
-            let dist = 500 + Math.random() * 400;
+            let dist = 400 + Math.random() * 350;
             let x = player.x + Math.cos(angle)*dist, y = player.y + Math.sin(angle)*dist;
             x = Math.min(Math.max(x, 50), WORLD_SIZE-50); y = Math.min(Math.max(y, 50), WORLD_SIZE-50);
-            let types = ["GOBLIN", "WOLF", "SLIME", "SKELETON", "BAT"];
-            let type = types[Math.floor(Math.random()*types.length)];
-            enemies.push({ x, y, hp: 8+player.level, maxHp: 8+player.level, damage: 1, radius: 22, speed: 45, attackCooldown: 0, type });
+            let spiderTypes = ["BROWN SPIDER", "BLACK SPIDER", "POISON SPIDER", "FANG SPIDER"];
+            let type = spiderTypes[Math.floor(Math.random()*spiderTypes.length)];
+            enemies.push({ x, y, hp: 50, maxHp: 50, damage: 2, radius: 20, speed: 38, attackCooldown: 0, type });
         }
         
-        function startFishing() {
-            if(fishingActive) return;
-            fishingActive = true;
-            fishingTimer = 2 + Math.random() * 4;
-            fishBite = false;
-            showToast("🎣 Casting line... wait for bite!");
-        }
-        
-        function checkFishBite() {
-            if(!fishingActive) return;
-            if(fishBite) {
-                let caught = Math.random() > 0.3;
-                if(caught) {
-                    player.food.Fish += 1 + Math.floor(Math.random()*2);
-                    showToast(`🐟 Caught Fish! +${1} fish`);
-                } else { showToast("❌ Missed!"); }
-                fishingActive = false;
+        function buyWeapon(name, cost, bonus) {
+            if(player.coins >= cost) {
+                player.coins -= cost;
+                currentWeapon = { name: name, bonus: bonus, damage: bonus };
+                showToast(`🔪 Bought ${name}! +${bonus} DMG`);
                 updateUI();
-            }
-        }
-        
-        function tillSoil(tx, ty) {
-            let gridX = Math.floor(tx / 45) * 45;
-            let gridY = Math.floor(ty / 45) * 45;
-            for(let t of tilledSoil) if(Math.abs(t.x - gridX) < 5 && Math.abs(t.y - gridY) < 5) return false;
-            tilledSoil.push({ x: gridX, y: gridY });
-            showToast("🌾 Tilled soil");
-            return true;
-        }
-        
-        function plantCrop(tx, ty) {
-            let foundTill = null;
-            for(let t of tilledSoil) if(Math.hypot(t.x - tx, t.y - ty) < 40) { foundTill = t; break; }
-            if(!foundTill) { showToast("❌ Need tilled soil first!"); return false; }
-            let cropType = inventory.selectedCrop;
-            if(inventory.seeds[cropType] <= 0) { showToast(`❌ No ${cropType} seeds!`); return false; }
-            for(let c of crops) if(Math.hypot(c.x - foundTill.x, c.y - foundTill.y) < 30) { showToast("❌ Crop already here"); return false; }
-            inventory.seeds[cropType]--;
-            crops.push({ x: foundTill.x, y: foundTill.y, type: cropType, growth: 0, maxGrowth: 8 });
-            showToast(`🌱 Planted ${cropType}`);
-            updateUI();
-            return true;
-        }
-        
-        function buildStructure(tx, ty, type) {
-            let cost = { wall: { wood: 15, stone: 10 }, campfire: { wood: 10, stone: 5 }, storage: { wood: 20, stone: 15 } };
-            let c = cost[type];
-            if(player.wood >= c.wood && player.stone >= c.stone) {
-                player.wood -= c.wood;
-                player.stone -= c.stone;
-                structures.push({ x: tx, y: ty, type: type, hp: type==='wall'?50:100 });
-                showToast(`🏗️ Built ${type}`);
-                if(type === 'campfire') { campfireX = tx; campfireY = ty; }
-                updateUI();
-            } else { showToast(`❌ Need ${c.wood}🪵 ${c.stone}🪨`); }
-        }
-        
-        function interactWithTile(tx, ty) {
-            if(actionMode === "move") {
-                for(let t of tilledSoil) if(Math.hypot(t.x - tx, t.y - ty) < 40) return plantCrop(tx, ty);
-            }
-            for(let i=0;i<trees.length;i++) {
-                let t = trees[i];
-                if(Math.hypot(tx - t.x, ty - t.y) < 50) {
-                    t.tapsRemaining -= player.damage;
-                    if(t.tapsRemaining <= 0) { trees.splice(i,1); player.wood += 5+Math.floor(Math.random()*4); showToast(`+${5}🪵 wood`); updateUI(); }
-                    else showToast(`🌲 Tree ${t.tapsRemaining}/${t.tapsNeeded}`);
-                    return true;
-                }
-            }
-            for(let i=0;i<rocks.length;i++) {
-                let r = rocks[i];
-                if(Math.hypot(tx - r.x, ty - r.y) < 50) {
-                    r.tapsRemaining -= player.damage;
-                    if(r.tapsRemaining <= 0) { rocks.splice(i,1); player.stone += 3+Math.floor(Math.random()*3); showToast(`+${3}🪨 stone`); updateUI(); }
-                    else showToast(`🪨 Rock ${r.tapsRemaining}/${r.tapsNeeded}`);
-                    return true;
-                }
-            }
-            if(actionMode === "till") { tillSoil(tx, ty); return true; }
-            if(actionMode === "build" && selectedBuild) { buildStructure(tx, ty, selectedBuild); return true; }
-            if(fishingActive) { checkFishBite(); return true; }
-            return false;
-        }
-        
-        function exitMode() {
-            actionMode = "move";
-            selectedBuild = null;
-            document.getElementById('modeIndicator').innerHTML = "📍 MOVE MODE";
-            document.getElementById('tillBtn').classList.remove('active');
-            document.getElementById('buildBtn').classList.remove('active');
-            document.getElementById('exitModeBtn').style.display = 'none';
+                document.getElementById('weaponShop').style.display = 'none';
+            } else { showToast(`Need ${cost} coins!`); }
         }
         
         function updateGame(delta) {
@@ -509,8 +390,7 @@
             if(timeOfDay >= 1) { timeOfDay = 0; dayCount++; isNight = false; showToast("🌅 DAYBREAK"); updateUI(); }
             isNight = timeOfDay > 0.55;
             
-            // Hunger drain
-            player.hunger -= 0.35 * delta;
+            player.hunger -= 0.4 * delta;
             if(player.hunger <= 0) { player.hp -= 2 * delta; player.hunger = 0; if(player.hp <= 0) { gameRunning = false; alert("You starved!"); location.reload(); } }
             if(player.hunger > 100) player.hunger = 100;
             
@@ -519,7 +399,7 @@
             
             if(targetX !== null && targetY !== null) {
                 let dx = targetX - player.x, dy = targetY - player.y;
-                if(Math.hypot(dx,dy) < 30) { interactWithTile(targetX, targetY); targetX = null; targetY = null; }
+                if(Math.hypot(dx,dy) < 30) { targetX = null; targetY = null; }
                 else {
                     let angle = Math.atan2(dy,dx);
                     let speed = 210;
@@ -530,90 +410,108 @@
                 }
             }
             
-            // Fishing
-            if(fishingActive) {
-                fishingTimer -= delta;
-                if(fishingTimer <= 0 && !fishBite) { fishBite = true; showToast("🎣 BITE! Tap to reel!"); }
-            }
-            
-            // Crops
-            for(let c of crops) { c.growth += delta * 0.2; if(c.growth >= c.maxGrowth && Math.random()<0.015) { let reward = 2+Math.floor(Math.random()*3); inventory.seeds[c.type] += reward; showToast(`🍅 Harvested ${c.type} +${reward}`); crops.splice(crops.indexOf(c),1); updateUI(); } }
+            // Attack animation
+            if(attackAnimation > 0) attackAnimation -= delta * 4;
             
             // Auto combat + enemies
             for(let i=0;i<enemies.length;i++) {
                 let e = enemies[i];
                 let dist = Math.hypot(e.x - player.x, e.y - player.y);
-                if(dist < 280 && !(nearCampfire && isNight)) {
+                if(dist < 260 && !(nearCampfire && isNight)) {
                     let angle = Math.atan2(player.y - e.y, player.x - e.x);
                     e.x += Math.cos(angle) * e.speed * delta;
                     e.y += Math.sin(angle) * e.speed * delta;
                     if(dist < 45) {
                         if(e.attackCooldown <= 0) { player.hp -= e.damage; e.attackCooldown = 0.9; if(player.hp <= 0) { gameRunning = false; alert("GAME OVER"); location.reload(); } updateUI(); }
-                        // Auto attack
-                        e.hp -= player.damage * delta * 3;
-                        if(e.hp <= 0) { enemies.splice(i,1); i--; let gain = 12+player.level*2; addXP(gain); player.coins += 2+Math.floor(Math.random()*4); updateUI(); showToast(`+${gain} XP`); }
+                        // Auto attack with weapon animation
+                        e.hp -= getTotalDamage() * delta * 4;
+                        attackAnimation = 0.3;
+                        if(e.hp <= 0) {
+                            enemies.splice(i,1); i--;
+                            let gain = 15+player.level*2;
+                            addXP(gain); player.coins += 3+Math.floor(Math.random()*5);
+                            updateUI(); showToast(`+${gain} XP +🪙`);
+                            for(let p=0;p<10;p++) particles.push({ x: e.x, y: e.y, life: 0.5, vx: (Math.random()-0.5)*50, vy: (Math.random()-0.5)*50 });
+                        }
                     }
                 }
                 if(e.attackCooldown > 0) e.attackCooldown -= delta;
             }
             
-            // Enemy respawn
+            // Resource respawn
             enemyRespawnTimer += delta;
-            if(enemyRespawnTimer > 90 && gameRunning) {
+            if(enemyRespawnTimer > 55 && gameRunning) {
                 enemyRespawnTimer = 0;
-                let toSpawn = 2 + Math.floor(Math.random()*3);
+                let toSpawn = 3 + Math.floor(Math.random()*5);
                 for(let i=0;i<toSpawn;i++) spawnEnemy();
-                showToast(`💀 Enemies have respawned!`);
+                // respawn trees & rocks
+                if(trees.length < 80) trees.push({ x: Math.random() * WORLD_SIZE, y: Math.random() * WORLD_SIZE, tapsNeeded: 8, tapsRemaining: 8 });
+                if(rocks.length < 80) rocks.push({ x: Math.random() * WORLD_SIZE, y: Math.random() * WORLD_SIZE, tapsNeeded: 8, tapsRemaining: 8 });
+                showToast(`🕷️ Spiders emerge from shadows!`);
             }
             
-            let spawnRate = isNight ? 0.5 : 0.15;
-            if(Math.random() < spawnRate * delta && enemies.length < (isNight ? 12 : 6)) { if(!(nearCampfire && isNight)) spawnEnemy(); }
+            // Particles
+            for(let i=0;i<particles.length;i++) { particles[i].life -= delta; if(particles[i].life<=0) particles.splice(i,1), i--; else { particles[i].x += particles[i].vx * delta; particles[i].y += particles[i].vy * delta; } }
             
             eventTimer += delta;
-            if(eventTimer > 55 && gameRunning) {
+            if(eventTimer > 60 && gameRunning) {
                 eventTimer = 0;
                 let r = Math.random();
-                if(r<0.25) { player.coins += 12; showToast("💰 TRAVELING MERCHANT +12 coins"); updateUI(); }
-                else if(r<0.5) { addXP(20); showToast("✨ MYSTIC SHRINE +20 XP"); }
-                else if(r<0.75) { player.food.Berry += 5; showToast("🍓 Berry Bush +5 berries"); updateUI(); }
-                else { for(let i=0;i<2;i++) spawnEnemy(); showToast("💀 WILD PACK!"); }
+                if(r<0.3) { player.coins += 12; showToast("💰 WANDERING TRADER +12 coins"); updateUI(); }
+                else if(r<0.6) { addXP(20); showToast("✨ MYSTIC SHRINE +20 XP"); }
+                else { for(let i=0;i<3;i++) spawnEnemy(); showToast("💀 SPIDER NEST DISTURBED!"); }
             }
         }
         
         function draw() {
             ctx.clearRect(0,0,width,height);
-            // Sky gradient
-            let grad = ctx.createLinearGradient(0,0,0,height);
-            grad.addColorStop(0, isNight ? "#0a1020" : "#87CEEB");
-            grad.addColorStop(1, isNight ? "#0a2a3a" : "#5a9e4e");
-            ctx.fillStyle = grad; ctx.fillRect(0,0,width,height);
-            // Clouds
-            for(let i=0;i<30;i++) { ctx.fillStyle = `rgba(255,255,200,0.2)`; ctx.beginPath(); ctx.ellipse(((i*317)%width), ((i*89)%height)+20, 40, 20, 0, 0, Math.PI*2); ctx.fill(); }
-            // Ground details
-            for(let i=0;i<400;i++) { ctx.fillStyle = isNight ? "#1a4a3a" : "#7cbd5c"; ctx.fillRect(((i*131)%width), ((i*57)%height), 5,5); }
+            // SOLID STONE GROUND
+            ctx.fillStyle = "#2a2a2a"; ctx.fillRect(0,0,width,height);
+            // Stone pattern
+            for(let i=0;i<600;i++) { ctx.fillStyle = `rgba(60,60,70,0.5)`; ctx.fillRect(((i*73)%width), ((i*41)%height), 4,4); }
+            for(let i=0;i<200;i++) { ctx.fillStyle = `rgba(80,80,90,0.4)`; ctx.fillRect(((i*131)%width), ((i*89)%height), 2,2); }
             
-            // Trees, rocks, etc (same as before with zoom)
+            // Trees
             for(let t of trees) { let s=worldToScreen(t.x,t.y); ctx.fillStyle="#4a3a2a"; ctx.fillRect(s.x-8,s.y-15,16,30); ctx.fillStyle="#2a8c2a"; ctx.beginPath(); ctx.arc(s.x,s.y-18,14,0,Math.PI*2); ctx.fill(); ctx.fillStyle="white"; ctx.fillText(`${t.tapsRemaining}`, s.x-4,s.y-26); }
-            for(let r of rocks) { let s=worldToScreen(r.x,r.y); ctx.fillStyle="#888"; ctx.fillRect(s.x-10,s.y-7,20,14); ctx.fillStyle="white"; ctx.fillText(`${r.tapsRemaining}`, s.x-4,s.y-12); }
-            for(let t of tilledSoil) { let s=worldToScreen(t.x,t.y); ctx.fillStyle="#8b5a2b"; ctx.fillRect(s.x-20,s.y-14,40,28); ctx.fillStyle="#c97e3a"; ctx.fillRect(s.x-17,s.y-10,34,22); }
-            for(let c of crops) { let s=worldToScreen(c.x,c.y); let size = 6+(c.growth/c.maxGrowth)*12; ctx.fillStyle="#aaff77"; ctx.fillRect(s.x-size/2,s.y-size,size,size*1.5); ctx.fillStyle="yellow"; ctx.fillText(c.type[0], s.x-3,s.y-3); }
+            // Rocks (BLACK)
+            for(let r of rocks) { let s=worldToScreen(r.x,r.y); ctx.fillStyle="#111"; ctx.fillRect(s.x-10,s.y-7,20,14); ctx.fillStyle="#333"; ctx.fillRect(s.x-8,s.y-5,16,10); ctx.fillStyle="white"; ctx.fillText(`${r.tapsRemaining}`, s.x-4,s.y-12); }
+            
+            // Spiders
+            for(let e of enemies) {
+                let s=worldToScreen(e.x,e.y);
+                ctx.fillStyle = "#2a1a1a";
+                ctx.beginPath(); ctx.ellipse(s.x,s.y,18,14,0,0,Math.PI*2); ctx.fill();
+                ctx.fillStyle = "#4a2a2a";
+                for(let leg=0;leg<8;leg++) { let angle = Math.PI*2*leg/8; ctx.beginPath(); ctx.moveTo(s.x,s.y); ctx.lineTo(s.x+Math.cos(angle)*22, s.y+Math.sin(angle)*12); ctx.lineWidth=3; ctx.stroke(); }
+                ctx.fillStyle = "#aa3333"; ctx.beginPath(); ctx.arc(s.x-6,s.y-4,3,0,Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(s.x+6,s.y-4,3,0,Math.PI*2); ctx.fill();
+                ctx.fillStyle = "white"; ctx.fillRect(s.x-15,s.y-18, (e.hp/e.maxHp)*30,4);
+                ctx.fillStyle = "white"; ctx.font="9px monospace"; ctx.fillText(e.type[0], s.x-4,s.y-12);
+            }
+            
+            // Structures
             for(let s of structures) { let scr=worldToScreen(s.x,s.y); if(s.type==='wall'){ ctx.fillStyle="#aa8866"; ctx.fillRect(scr.x-15,scr.y-10,30,20); } else if(s.type==='campfire'){ ctx.fillStyle="#ff6600"; ctx.beginPath(); ctx.arc(scr.x,scr.y,18,0,Math.PI*2); ctx.fill(); ctx.fillStyle="#ffcc44"; ctx.beginPath(); ctx.arc(scr.x,scr.y,8,0,Math.PI*2); ctx.fill(); } }
-            for(let e of enemies) { let s=worldToScreen(e.x,e.y); ctx.fillStyle = e.type==="GOBLIN"?"#aa5533": e.type==="WOLF"?"#886666": e.type==="SLIME"?"#55aa77": e.type==="SKELETON"?"#ccaa88":"#8866aa"; ctx.beginPath(); ctx.ellipse(s.x,s.y,18,22,0,0,Math.PI*2); ctx.fill(); ctx.fillStyle="white"; ctx.fillText(e.type[0], s.x-6,s.y-5); ctx.fillStyle="red"; ctx.fillRect(s.x-15,s.y-15, (e.hp/e.maxHp)*30,4); }
             
             let campPos = worldToScreen(campfireX, campfireY);
-            ctx.globalAlpha=0.2; ctx.fillStyle="orange"; ctx.beginPath(); ctx.arc(campPos.x,campPos.y,120,0,Math.PI*2); ctx.fill(); ctx.globalAlpha=1;
+            ctx.globalAlpha=0.2; ctx.fillStyle="orange"; ctx.beginPath(); ctx.arc(campPos.x,campPos.y,130,0,Math.PI*2); ctx.fill(); ctx.globalAlpha=1;
             
-            // Player
+            // Player with weapon animation
             let ps = worldToScreen(player.x, player.y);
+            // Attack swing
+            if(attackAnimation > 0) {
+                ctx.beginPath(); ctx.moveTo(ps.x+15, ps.y-5); ctx.lineTo(ps.x+45, ps.y-15); ctx.lineTo(ps.x+40, ps.y+5); ctx.fillStyle = "rgba(255,200,100,0.8)"; ctx.fill();
+            }
             ctx.fillStyle="#3a6ea5"; ctx.fillRect(ps.x-12,ps.y-8,24,32);
             ctx.fillStyle="#e8c8a0"; ctx.beginPath(); ctx.arc(ps.x,ps.y-14,14,0,Math.PI*2); ctx.fill();
             ctx.fillStyle="#5a3a2a"; ctx.fillRect(ps.x-12,ps.y-26,24,14);
             ctx.fillStyle="white"; ctx.beginPath(); ctx.arc(ps.x-6,ps.y-17,3,0,Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(ps.x+6,ps.y-17,3,0,Math.PI*2); ctx.fill();
             ctx.fillStyle="#2a3a5a"; ctx.beginPath(); ctx.arc(ps.x-6,ps.y-17,1.5,0,Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(ps.x+6,ps.y-17,1.5,0,Math.PI*2); ctx.fill();
-            ctx.fillStyle="#8a6a4a"; ctx.fillRect(ps.x+10,ps.y-10,8,20);
-            ctx.fillStyle="white"; ctx.font="bold 10px monospace"; ctx.fillText("SURVIVOR", ps.x-20, ps.y-30);
+            // Weapon in hand
+            if(currentWeapon.name === "Spear") { ctx.fillStyle="#8a6a4a"; ctx.fillRect(ps.x+12,ps.y-12,25,5); ctx.fillStyle="#aaa"; ctx.fillRect(ps.x+32,ps.y-13,8,7); }
+            else if(currentWeapon.name === "Sword") { ctx.fillStyle="#ccaa88"; ctx.fillRect(ps.x+12,ps.y-14,28,6); ctx.fillStyle="#ffcc44"; ctx.fillRect(ps.x+35,ps.y-16,10,10); }
+            else if(currentWeapon.name === "Crossbow") { ctx.fillStyle="#8a6a4a"; ctx.fillRect(ps.x+12,ps.y-15,30,10); ctx.fillStyle="#aaa"; ctx.fillRect(ps.x+38,ps.y-13,12,6); }
+            ctx.fillStyle="white"; ctx.font="bold 9px monospace"; ctx.fillText("SURVIVOR", ps.x-20, ps.y-30);
             
-            if(fishingActive) { ctx.fillStyle="cyan"; ctx.font="bold 14px monospace"; ctx.fillText("🎣 FISHING...", width/2-50, 100); }
+            for(let p of particles) { let s=worldToScreen(p.x,p.y); ctx.fillStyle=`rgba(200,50,50,${p.life*0.8})`; ctx.fillRect(s.x-2,s.y-2,4,4); }
         }
         
         function handleTap(e) {
@@ -623,21 +521,21 @@
             let sx = (e.touches ? e.touches[0].clientX : e.clientX);
             let sy = (e.touches ? e.touches[0].clientY : e.clientY);
             let wx = camera.x + sx, wy = camera.y + sy;
-            if(fishingActive && fishBite) { checkFishBite(); return; }
-            if(actionMode === "move") { targetX = wx; targetY = wy; }
-            else if(actionMode === "till") { tillSoil(wx, wy); }
-            else if(actionMode === "build" && selectedBuild) { buildStructure(wx, wy, selectedBuild); }
-            else { targetX = wx; targetY = wy; }
+            targetX = wx; targetY = wy;
+            // Harvest trees/rocks on tap
+            for(let i=0;i<trees.length;i++) { if(Math.hypot(wx - trees[i].x, wy - trees[i].y) < 50) { trees[i].tapsRemaining -= getTotalDamage(); if(trees[i].tapsRemaining<=0) { trees.splice(i,1); player.wood+=5+Math.floor(Math.random()*4); showToast(`+${5}🪵`); updateUI(); } return; } }
+            for(let i=0;i<rocks.length;i++) { if(Math.hypot(wx - rocks[i].x, wy - rocks[i].y) < 50) { rocks[i].tapsRemaining -= getTotalDamage(); if(rocks[i].tapsRemaining<=0) { rocks.splice(i,1); player.stone+=3+Math.floor(Math.random()*3); showToast(`+${3}🪨`); updateUI(); } return; } }
         }
         
-        document.getElementById('tillBtn').onclick = () => { actionMode = "till"; selectedBuild = null; document.getElementById('modeIndicator').innerHTML = "🌾 TILL MODE"; document.getElementById('tillBtn').classList.add('active'); document.getElementById('buildBtn').classList.remove('active'); document.getElementById('exitModeBtn').style.display = 'block'; };
-        document.getElementById('buildBtn').onclick = () => { let menu = document.getElementById('buildMenu'); menu.style.display = menu.style.display === 'flex' ? 'none' : 'flex'; };
-        document.getElementById('fishBtn').onclick = () => { startFishing(); };
-        document.getElementById('saveBtn').onclick = () => { saveGame(); };
-        document.getElementById('exitModeBtn').onclick = () => { exitMode(); document.getElementById('buildMenu').style.display = 'none'; };
-        document.querySelectorAll('.build-btn').forEach(btn => { btn.onclick = () => { actionMode = "build"; selectedBuild = btn.dataset.type; document.getElementById('modeIndicator').innerHTML = `🏗️ BUILD: ${selectedBuild}`; document.getElementById('buildBtn').classList.add('active'); document.getElementById('tillBtn').classList.remove('active'); document.getElementById('buildMenu').style.display = 'none'; document.getElementById('exitModeBtn').style.display = 'block'; }; });
-        
-        document.getElementById('startBtn').onclick = () => { gameRunning = true; document.getElementById('startOverlay').style.display = 'none'; spawnWorld(); for(let i=0;i<3;i++) spawnEnemy(); updateUI(); };
+        document.getElementById('shopWeaponBtn').onclick = () => { document.getElementById('weaponShop').style.display = 'flex'; };
+        document.getElementById('buySpear').onclick = () => buyWeapon("Spear", 50, 5);
+        document.getElementById('buySword').onclick = () => buyWeapon("Sword", 100, 12);
+        document.getElementById('buyCrossbow').onclick = () => buyWeapon("Crossbow", 200, 25);
+        document.getElementById('closeShop').onclick = () => document.getElementById('weaponShop').style.display = 'none';
+        document.getElementById('buildBtn').onclick = () => showToast("🏗️ Build system coming soon!");
+        document.getElementById('fishBtn').onclick = () => { if(Math.random()>0.5) { player.food.Fish++; showToast("🐟 Caught a fish!"); updateUI(); } else showToast("❌ Nothing bites..."); };
+        document.getElementById('saveBtn').onclick = () => saveGame();
+        document.getElementById('startBtn').onclick = () => { gameRunning = true; document.getElementById('startOverlay').style.display = 'none'; spawnWorld(); updateUI(); };
         document.getElementById('loadBtn').onclick = () => { if(loadGame()) { gameRunning = true; document.getElementById('startOverlay').style.display = 'none'; } };
         
         canvas.addEventListener('touchstart', handleTap);
