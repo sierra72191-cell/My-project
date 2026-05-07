@@ -3,46 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>OCEAN REALMS · PREDATOR UPDATE</title>
+    <title>OCEAN REALMS · SENTIENT SOUL</title>
     <style>
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { margin: 0; overflow: hidden; background: #00050a; font-family: 'Courier New', monospace; display: flex; flex-direction: column; height: 100vh; }
         #game-container { flex-grow: 1; position: relative; overflow: hidden; background: radial-gradient(circle at center, #001a33 0%, #00050a 100%); }
         canvas { display: block; width: 100%; height: 100%; }
         
-        /* Stats Dashboard */
         #stats-panel { 
             position: absolute; top: 10px; left: 10px; color: #00fbff; 
-            font-size: 12px; pointer-events: none;
-            background: rgba(0,0,0,0.7); padding: 10px; border: 1px solid #00fbff; border-radius: 5px;
+            font-size: 11px; pointer-events: none;
+            background: rgba(0,0,0,0.8); padding: 10px; border: 1px solid #00fbff; border-radius: 5px;
             line-height: 1.4; z-index: 10;
         }
-        .hp-bar-bg { width: 100px; height: 8px; background: #300; border: 1px solid #f00; margin-top: 4px; }
-        #hp-fill { width: 100%; height: 100%; background: #f00; transition: width 0.3s; }
+        .hp-bar-bg { width: 100px; height: 6px; background: #300; border: 1px solid #f00; margin: 4px 0; }
+        #hp-fill { width: 100%; height: 100%; background: #f00; transition: width 0.2s; }
+
+        #audio-prompt {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            color: #00fbff; background: rgba(0,21,41,0.9); padding: 20px; border: 2px solid #00fbff;
+            border-radius: 20px; text-align: center; z-index: 200; font-weight: bold;
+        }
 
         #controls {
-            height: 130px; background: #001529; border-top: 3px solid #00fbff;
-            display: flex; gap: 15px; padding: 20px 15px 35px 15px; z-index: 100;
+            height: 130px; background: #000d1a; border-top: 2px solid #00fbff;
+            display: flex; gap: 15px; padding: 20px 15px 40px 15px; z-index: 100;
         }
         .btn {
-            flex: 1; background: linear-gradient(#004080, #00264d); color: white; border: 2px solid #00fbff;
+            flex: 1; background: #002244; color: white; border: 1px solid #00fbff;
             border-radius: 15px; display: flex; align-items: center; justify-content: center;
-            text-align: center; font-size: 13px; font-weight: bold; text-transform: uppercase;
+            text-align: center; font-size: 13px; font-weight: bold;
         }
         .btn:active { background: #00fbff; color: #000; }
     </style>
 </head>
-<body>
+<body onclick="startAudio()">
 
     <div id="game-container">
+        <div id="audio-prompt" id="ap">TAP TO AWAKEN AUDIO</div>
         <div id="stats-panel">
-            <b>VITAL SIGNS</b><br>
-            HP: <span id="hpText">15000</span> / 15000
+            <b>ENTITY: OCEAN SOUL</b><br>
+            VITALS: <span id="hpText">15000</span>
             <div class="hp-bar-bg"><div id="hp-fill"></div></div>
-            COINS: <span id="coinUI">0</span><br>
-            ALLIES: <span id="friendUI">0</span><br>
-            DEPTH: <span id="depthUI">2000</span>m<br>
-            THREAT: <span id="threatUI">LOW</span>
+            BIOMASS: <span id="coinUI">0</span> | GUARD: <span id="friendUI">0</span><br>
+            STATE: <span id="stateUI">IDLE</span><br>
+            THREAT: <span id="threatUI">NONE</span>
         </div>
         <canvas id="gameCanvas"></canvas>
     </div>
@@ -56,52 +61,50 @@
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     
-    // Game State
-    let coins = 0;
-    let friends = [];
-    let entities = [];
-    let particles = []; // Bubbles!
-    let reefs = [];
+    let coins = 0, friends = [], entities = [], particles = [], reefs = [];
     let cam = { x: 2000, y: 2000 };
-    let fish = { 
-        x: 2000, y: 2000, tx: 2005, ty: 2005, angle: 0, 
-        hp: 15000, maxHp: 15000, autoTimer: 0 
-    };
+    let fish = { x: 2000, y: 2000, tx: 2005, ty: 2005, angle: 0, hp: 15000, maxHp: 15000, autoTimer: 0, mood: 'IDLE' };
+    let audioStarted = false;
+    let audioCtx, masterGain;
 
-    // Audio Context for Ambient Sound
-    let audioCtx = null;
-    function initMusic() {
-        if (audioCtx) return;
+    function startAudio() {
+        if (audioStarted) return;
+        audioStarted = true;
+        document.getElementById('audio-prompt').style.display = 'none';
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        setInterval(() => { // Soft Deep Hum
+        masterGain = audioCtx.createGain();
+        masterGain.gain.value = 0.1;
+        masterGain.connect(audioCtx.destination);
+        
+        setInterval(() => {
             let osc = audioCtx.createOscillator();
-            let gain = audioCtx.createGain();
-            osc.type = 'sine'; osc.frequency.setValueAtTime(40 + Math.random()*2, audioCtx.currentTime);
-            gain.gain.setValueAtTime(0.02, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 4);
-            osc.connect(gain); gain.connect(audioCtx.destination);
-            osc.start(); osc.stop(audioCtx.currentTime + 4);
-        }, 3000);
+            let g = audioCtx.createGain();
+            osc.frequency.value = 50 + Math.random()*5;
+            g.gain.setValueAtTime(0.05, audioCtx.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 3);
+            osc.connect(g); g.connect(masterGain);
+            osc.start(); osc.stop(audioCtx.currentTime + 3);
+        }, 4000);
     }
 
-    // World Gen
-    for(let i=0; i<40; i++) {
-        reefs.push({
-            x: Math.random()*5000, y: Math.random()*5000,
-            size: 40+Math.random()*120, depth: 0.1+Math.random()*0.4,
-            color: `hsl(210, 30%, ${5+Math.random()*10}%)`
-        });
+    function playNote(freq, vol=0.05) {
+        if(!audioStarted) return;
+        let o = audioCtx.createOscillator();
+        let g = audioCtx.createGain();
+        o.frequency.value = freq;
+        g.gain.setValueAtTime(vol, audioCtx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.5);
+        o.connect(g); g.connect(masterGain);
+        o.start(); o.stop(audioCtx.currentTime + 0.5);
     }
 
-    function resize() {
-        canvas.width = canvas.parentElement.clientWidth;
-        canvas.height = canvas.parentElement.clientHeight;
-    }
+    for(let i=0; i<40; i++) reefs.push({x: Math.random()*5000, y: Math.random()*5000, size: 50+Math.random()*100, depth: 0.2+Math.random()*0.3, color: `hsl(200, 20%, ${5+Math.random()*10}%)`});
+
+    function resize() { canvas.width = canvas.parentElement.clientWidth; canvas.height = canvas.parentElement.clientHeight; }
     window.addEventListener('resize', resize); resize();
 
-    // Buttons
     document.getElementById('buyShrimp').addEventListener('touchstart', (e) => {
-        if(coins >= 5) { coins -= 5; friends.push({x:fish.x, y:fish.y, type:'Shrimp', wiggle:0}); updateUI(); initMusic(); }
+        if(coins >= 5) { coins -= 5; friends.push({x:fish.x, y:fish.y, type:'Shrimp', wiggle:0}); updateUI(); playNote(440); }
         e.preventDefault();
     });
 
@@ -110,117 +113,99 @@
         document.getElementById('friendUI').innerText = friends.length;
         document.getElementById('hpText').innerText = Math.floor(fish.hp);
         document.getElementById('hp-fill').style.width = (fish.hp/fish.maxHp)*100 + "%";
-        document.getElementById('depthUI').innerText = Math.floor(2000 + (fish.y/10));
+        document.getElementById('stateUI').innerText = fish.mood;
     }
 
     canvas.addEventListener('touchstart', (e) => {
         const rect = canvas.getBoundingClientRect();
-        fish.tx = e.touches[0].clientX - rect.left + cam.x;
-        fish.ty = e.touches[0].clientY - rect.top + cam.y;
-        fish.autoTimer = 0;
-        initMusic();
+        let wx = e.touches[0].clientX - rect.left + cam.x;
+        let wy = e.touches[0].clientY - rect.top + cam.y;
+        
+        let hit = false;
+        entities.forEach(en => {
+            if((en.type==='shark' || en.type==='urchin') && Math.hypot(en.x-wx, en.y-wy) < 60) {
+                en.hp -= 20; hit = true; playNote(100, 0.1);
+                if(en.hp <= 0) en.dead = true;
+            }
+        });
+
+        if(!hit) { fish.tx = wx; fish.ty = wy; fish.autoTimer = 0; fish.mood = 'TRAVELLING'; }
+        updateUI();
     });
 
-    function drawShark(x, y, angle) {
-        ctx.save(); ctx.translate(x-cam.x, y-cam.y); ctx.rotate(angle);
-        ctx.fillStyle = '#445566';
-        ctx.beginPath(); ctx.ellipse(0,0, 35, 12, 0, 0, 7); ctx.fill();
-        ctx.beginPath(); ctx.moveTo(0, -10); ctx.lineTo(-15, -25); ctx.lineTo(-5, -10); ctx.fill(); // Fin
-        ctx.fillStyle = '#ff0000'; ctx.beginPath(); ctx.arc(20, -2, 2, 0, 7); ctx.fill(); // Red eye
-        ctx.restore();
-    }
-
     function loop() {
-        // Stats & Healing
-        if(fish.hp < fish.maxHp) fish.hp += 0.5; // Gentle Heal
+        if(fish.hp < fish.maxHp) fish.hp += 0.3;
+        
+        // Advanced AI Logic
         fish.autoTimer++;
-        if(fish.autoTimer > 150 && Math.random() < 0.01) {
-            fish.tx = fish.x + (Math.random()-0.5)*800;
-            fish.ty = fish.y + (Math.random()-0.5)*800;
+        if(fish.autoTimer > 180) {
+            fish.mood = 'EXPLORING';
+            if(Math.random() < 0.01) {
+                let nearestCoin = entities.find(e => e.type === 'coin' && Math.hypot(e.x-fish.x, e.y-fish.y) < 400);
+                if(nearestCoin) { fish.tx = nearestCoin.x; fish.ty = nearestCoin.y; }
+                else { fish.tx = fish.x + (Math.random()-0.5)*600; fish.ty = fish.y + (Math.random()-0.5)*600; }
+            }
         }
 
-        // Cam & Movement
         cam.x += (fish.x - canvas.width/2 - cam.x) * 0.05;
         cam.y += (fish.y - canvas.height/2 - cam.y) * 0.05;
         fish.x += (fish.tx - fish.x) * 0.03;
         fish.y += (fish.ty - fish.y) * 0.03;
         fish.angle = Math.atan2(fish.ty - fish.y, fish.tx - fish.x);
 
-        // Spawn logic (More enemies!)
-        if(Math.random() < 0.06 && entities.length < 50) {
-            let type = Math.random() < 0.2 ? 'shark' : (Math.random() < 0.5 ? 'urchin' : 'coin');
-            entities.push({x: fish.x+(Math.random()-0.5)*1500, y: fish.y+(Math.random()-0.5)*1500, type, stun:0});
+        if(Math.random() < 0.05 && entities.length < 50) {
+            let type = Math.random() < 0.15 ? 'shark' : (Math.random() < 0.4 ? 'urchin' : 'coin');
+            entities.push({x: fish.x+(Math.random()-0.5)*1800, y: fish.y+(Math.random()-0.5)*1800, type, hp: 50, dead:false});
         }
 
-        // Bubbles
-        if(Math.random() < 0.1) particles.push({x: fish.x+(Math.random()-0.5)*1000, y: fish.y+500, s: Math.random()*3, v: 1+Math.random()*2});
-
         ctx.clearRect(0,0, canvas.width, canvas.height);
+        reefs.forEach(r => { ctx.fillStyle = r.color; ctx.beginPath(); ctx.arc(r.x - cam.x*r.depth, r.y - cam.y*r.depth, r.size, 0, 7); ctx.fill(); });
 
-        // Background
-        reefs.forEach(r => {
-            ctx.fillStyle = r.color;
-            ctx.beginPath(); ctx.arc(r.x - cam.x*r.depth, r.y - cam.y*r.depth, r.size, 0, 7); ctx.fill();
-        });
-
-        // Draw Bubbles
-        ctx.fillStyle = 'rgba(255,255,255,0.2)';
-        particles = particles.filter(p => {
-            p.y -= p.v;
-            ctx.beginPath(); ctx.arc(p.x - cam.x, p.y - cam.y, p.s, 0, 7); ctx.fill();
-            return p.y > cam.y - 100;
-        });
-
-        // Entities & Damage
         entities = entities.filter(en => {
             let d = Math.hypot(fish.x - en.x, fish.y - en.y);
-            if(en.type === 'coin' && d < 40) { coins++; updateUI(); return false; }
-            
-            // Damage Logic
-            if((en.type === 'shark' || en.type === 'urchin') && d < 60 && en.stun <= 0) {
-                fish.hp -= 10/60; // 10hp per second (60fps)
-                updateUI();
-            }
+            if(en.type === 'coin' && d < 40) { coins++; updateUI(); playNote(880, 0.02); return false; }
+            if((en.type === 'shark' || en.type === 'urchin') && d < 60) fish.hp -= 0.5;
 
-            if(en.type === 'shark') { // Sharks track you!
-                en.x += (fish.x - en.x) * 0.01; en.y += (fish.y - en.y) * 0.01;
-                drawShark(en.x, en.y, Math.atan2(fish.y-en.y, fish.x-en.x));
+            ctx.save(); ctx.translate(en.x-cam.x, en.y-cam.y);
+            if(en.type === 'shark') {
+                en.x += (fish.x - en.x) * 0.008; en.y += (fish.y - en.y) * 0.008;
+                let ang = Math.atan2(fish.y-en.y, fish.x-en.x); ctx.rotate(ang);
+                ctx.fillStyle='#3a4a5a'; ctx.beginPath(); ctx.ellipse(0,0,30,10,0,0,7); ctx.fill();
+                ctx.fillStyle='red'; ctx.beginPath(); ctx.arc(15,-2,2,0,7); ctx.fill();
             } else if(en.type === 'urchin') {
-                ctx.fillStyle = '#4b0082'; ctx.beginPath(); ctx.arc(en.x-cam.x, en.y-cam.y, 15, 0, 7); ctx.fill();
+                ctx.fillStyle='#2e0854'; ctx.beginPath(); ctx.arc(0,0,15,0,7); ctx.fill();
             } else {
-                ctx.fillStyle = 'gold'; ctx.beginPath(); ctx.arc(en.x-cam.x, en.y-cam.y, 6, 0, 7); ctx.fill();
+                ctx.fillStyle='#ffd700'; ctx.beginPath(); ctx.arc(0,0,5,0,7); ctx.fill();
             }
+            ctx.restore();
             return !en.dead;
         });
 
-        // Friend Train (Shrimp)
         friends.forEach((fr, i) => {
-            // "Train" logic: each follow the one in front, but stay 60px back
-            let leader = i === 0 ? fish : friends[i-1];
-            let dist = Math.hypot(leader.x - fr.x, leader.y - fr.y);
+            // TIGHT ORBIT LOGIC
+            let orbitX = fish.x + Math.cos(Date.now()/1000 + i) * 60;
+            let orbitY = fish.y + Math.sin(Date.now()/1000 + i) * 60;
             
-            // Search for enemies
-            let enemy = entities.find(e => (e.type==='shark' || e.type==='urchin') && Math.hypot(e.x-fr.x, e.y-fr.y) < 300);
+            let target = { x: orbitX, y: orbitY };
+            let enemy = entities.find(e => (e.type==='shark' || e.type==='urchin') && Math.hypot(e.x-fish.x, e.y-fish.y) < 250);
             
-            if(enemy) {
-                fr.x += (enemy.x - fr.x) * 0.07; fr.y += (enemy.y - fr.y) * 0.07;
-                if(Math.hypot(enemy.x-fr.x, enemy.y-fr.y) < 40) { enemy.dead = true; coins++; updateUI(); }
-            } else if(dist > 60) {
-                fr.x += (leader.x - fr.x) * 0.04; fr.y += (leader.y - fr.y) * 0.04;
-            }
+            if(enemy) { target = enemy; fish.mood = 'DEFENDING'; }
 
-            // Draw Shrimp
-            ctx.save(); ctx.translate(fr.x-cam.x, fr.y-cam.y);
-            ctx.rotate(Math.atan2(leader.y-fr.y, leader.x-fr.x));
-            ctx.fillStyle = '#ff7f50'; ctx.beginPath(); ctx.ellipse(0,0, 8, 4, 0, 0, 7); ctx.fill();
-            ctx.restore();
+            fr.x += (target.x - fr.x) * 0.08;
+            fr.y += (target.y - fr.y) * 0.08;
+
+            if(enemy && Math.hypot(fr.x-enemy.x, fr.y-enemy.y) < 40) { enemy.dead = true; coins++; updateUI(); playNote(660, 0.03); }
+
+            ctx.fillStyle = '#ff7f50'; ctx.beginPath(); ctx.arc(fr.x-cam.x, fr.y-cam.y, 6, 0, 7); ctx.fill();
         });
 
-        // Player
+        // Detailed Fish
         ctx.save(); ctx.translate(fish.x-cam.x, fish.y-cam.y); ctx.rotate(fish.angle);
         ctx.fillStyle = '#00fbff'; ctx.shadowBlur=20; ctx.shadowColor='#00fbff';
-        ctx.beginPath(); ctx.ellipse(0,0, 22, 14, 0, 0, 7); ctx.fill();
-        ctx.beginPath(); ctx.moveTo(-15,0); ctx.lineTo(-28,12); ctx.lineTo(-28,-12); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(0,0,22,13,0,0,7); ctx.fill(); // Body
+        ctx.beginPath(); ctx.moveTo(-10,0); ctx.lineTo(-28,12 + Math.sin(Date.now()/100)*5); ctx.lineTo(-28,-12 - Math.sin(Date.now()/100)*5); ctx.fill(); // Tail
+        ctx.fillStyle='white'; ctx.beginPath(); ctx.arc(12,-5,5,0,7); ctx.fill(); // Eye
+        ctx.fillStyle='black'; ctx.beginPath(); ctx.arc(14,-5,2,0,7); ctx.fill(); // Pupil
         ctx.restore();
 
         requestAnimationFrame(loop);
