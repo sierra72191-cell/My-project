@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-    <title>SPACE RHYTHM · GLITCH RUNNER</title>
+    <title>SURVIVAL REALMS · ROBOT SURVIVOR</title>
     <style>
         * {
             margin: 0;
@@ -12,14 +12,12 @@
             -webkit-tap-highlight-color: transparent;
             user-select: none;
         }
-
         body {
-            background: #000;
+            background: #0a1f0a;
             overflow: hidden;
             font-family: 'Courier New', monospace;
             touch-action: none;
         }
-
         canvas {
             display: block;
             position: fixed;
@@ -27,554 +25,496 @@
             left: 0;
             width: 100%;
             height: 100%;
-            cursor: pointer;
+            cursor: crosshair;
         }
-
         /* HUD */
-        .score-board {
+        .hud {
             position: fixed;
-            top: 20px;
-            left: 20px;
-            background: rgba(0,0,0,0.7);
-            backdrop-filter: blur(8px);
-            padding: 10px 18px;
-            border-radius: 30px;
-            color: #0ff;
+            top: 12px;
+            left: 12px;
+            background: rgba(0,0,0,0.75);
+            backdrop-filter: blur(10px);
+            padding: 8px 14px;
+            border-radius: 20px;
+            color: #0f0;
             font-family: monospace;
+            font-size: 12px;
             font-weight: bold;
-            font-size: 20px;
-            z-index: 10;
-            border-left: 3px solid #0ff;
-            letter-spacing: 2px;
+            z-index: 20;
+            border-left: 3px solid #0f0;
             pointer-events: none;
+            line-height: 1.5;
         }
-
-        .high-score {
+        .stats-right {
             position: fixed;
-            top: 20px;
-            right: 20px;
-            background: rgba(0,0,0,0.7);
-            backdrop-filter: blur(8px);
-            padding: 10px 18px;
-            border-radius: 30px;
+            top: 12px;
+            right: 12px;
+            background: rgba(0,0,0,0.75);
+            backdrop-filter: blur(10px);
+            padding: 8px 14px;
+            border-radius: 20px;
             color: #ffaa44;
             font-family: monospace;
+            font-size: 12px;
             font-weight: bold;
-            font-size: 16px;
-            z-index: 10;
+            z-index: 20;
             border-right: 3px solid gold;
-            pointer-events: none;
             text-align: right;
+            pointer-events: none;
         }
-
-        .combo-meter {
+        .inventory {
             position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
+            bottom: 20px;
+            left: 20px;
             background: rgba(0,0,0,0.8);
             backdrop-filter: blur(12px);
-            padding: 8px 20px;
-            border-radius: 40px;
-            color: #ff66cc;
+            padding: 8px 16px;
+            border-radius: 30px;
+            color: white;
+            font-family: monospace;
+            font-size: 12px;
+            z-index: 20;
+            display: flex;
+            gap: 12px;
+            pointer-events: none;
+        }
+        .day-cycle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.7);
+            padding: 8px 16px;
+            border-radius: 30px;
             font-family: monospace;
             font-weight: bold;
-            font-size: 18px;
-            z-index: 10;
-            border: 1px solid #ff66cc;
-            white-space: nowrap;
+            z-index: 20;
             pointer-events: none;
-            letter-spacing: 2px;
         }
-
+        .shop-panel {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1a2a1aff;
+            backdrop-filter: blur(20px);
+            padding: 12px 20px;
+            border-radius: 40px;
+            display: flex;
+            gap: 15px;
+            z-index: 30;
+            border: 1px solid gold;
+            display: none;
+        }
+        .shop-btn {
+            background: #2a3a2a;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 30px;
+            color: gold;
+            font-weight: bold;
+            cursor: pointer;
+        }
         .start-overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: radial-gradient(circle, #000000, #001122);
+            background: radial-gradient(circle, #0a2a0a, #020a02);
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            z-index: 100;
+            z-index: 200;
             font-family: monospace;
-            transition: 0.3s;
         }
-
         .start-title {
             font-size: 48px;
-            font-weight: bold;
-            color: #0ff;
-            text-shadow: 0 0 20px cyan, 0 0 40px blue;
+            color: #0f0;
+            text-shadow: 0 0 20px green;
             margin-bottom: 20px;
-            letter-spacing: 6px;
         }
-
-        .start-sub {
-            color: #88aaff;
-            margin-bottom: 40px;
-            font-size: 14px;
-        }
-
         .start-btn {
-            background: linear-gradient(45deg, #0ff, #00a);
+            background: #2a6a2a;
             border: none;
-            padding: 16px 40px;
-            border-radius: 60px;
+            padding: 16px 32px;
+            border-radius: 40px;
             color: white;
             font-size: 20px;
             font-weight: bold;
-            font-family: monospace;
             cursor: pointer;
-            box-shadow: 0 0 20px cyan;
-            transition: 0.1s;
         }
-
-        .start-btn:active {
-            transform: scale(0.96);
-        }
-
-        .glitch-notice {
+        .event-toast {
             position: fixed;
-            bottom: 20px;
-            left: 20px;
-            font-size: 10px;
-            color: #555;
+            top: 30%;
+            left: 50%;
+            transform: translate(-50%,-50%);
+            background: black;
+            color: cyan;
+            padding: 10px 20px;
+            border-radius: 40px;
+            z-index: 150;
+            font-weight: bold;
+            animation: fadeUp 2s forwards;
             pointer-events: none;
+            white-space: nowrap;
+        }
+        @keyframes fadeUp {
+            0% { opacity: 1; transform: translate(-50%,-50%) scale(0.9);}
+            100% { opacity: 0; transform: translate(-50%,-100%) scale(1.1);}
         }
     </style>
 </head>
 <body>
 <canvas id="gameCanvas"></canvas>
-<div class="score-board" id="scoreDisplay">SCORE: 0</div>
-<div class="high-score" id="highScoreDisplay">🏆 HIGH: 0</div>
-<div class="combo-meter" id="comboDisplay">🔥 COMBO x1</div>
-<div class="start-overlay" id="startOverlay">
-    <div class="start-title">◢ SPACE RHYTHM ◣</div>
-    <div class="start-sub">tap the falling notes in time | glitch mode intensifies</div>
-    <button class="start-btn" id="startBtn">▶ INITIALIZE ENGINE</button>
+<div class="hud" id="hudStats">❤️ 500 HP | ⚔️ DMG 1 | 🧪 LVL 1 | ✨ XP 0/100</div>
+<div class="stats-right" id="statsRight">🪵 0 | 🪨 0 | 🌾 0 | 🪙 0</div>
+<div class="inventory" id="inventory">🔧 0 Walls | 🌱 Seeds: 0</div>
+<div class="day-cycle" id="dayCycle">🌞 DAY 1</div>
+<div class="shop-panel" id="shopPanel">
+    <button class="shop-btn" id="buyWeapon">⚔️ +DMG (50🪙)</button>
+    <button class="shop-btn" id="buyArmor">🛡️ +HP (50🪙)</button>
+    <button class="shop-btn" id="buySeed">🌱 Seed (10🪙)</button>
+    <button class="shop-btn" id="buyWall">🧱 Wall (20🪙)</button>
 </div>
-<div class="glitch-notice">⚡ GLITCH MODE ACTIVE | TAP TO THE BEAT</div>
+<div class="start-overlay" id="startOverlay">
+    <div class="start-title">⚙️ SURVIVAL REALMS ⚙️</div>
+    <div style="margin-bottom: 20px;">tap to move | auto-fight | day/night cycle</div>
+    <button class="start-btn" id="startBtn">▶ BEGIN</button>
+</div>
 
 <script>
     (function(){
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         let width, height;
-        
-        // Game state
         let gameRunning = false;
-        let score = 0;
-        let highScore = localStorage.getItem('rhythmHighScore') || 0;
-        let combo = 1;
-        let maxCombo = 1;
-        let perfectStreak = 0;
         
-        // Camera / tunnel effect
-        let cameraZ = 0;
-        let tunnelAngle = 0;
-        let tunnelSpeed = 0.02;
+        // WORLD (large)
+        const WORLD_SIZE = 5000;
+        let camera = { x: 0, y: 0 };
         
-        // Falling notes
-        let notes = [];
-        let noteId = 0;
-        let lastSpawn = 0;
-        let spawnInterval = 0.85; // seconds between spawns (starts moderate)
+        // PLAYER
+        let player = {
+            x: WORLD_SIZE/2,
+            y: WORLD_SIZE/2,
+            hp: 500,
+            maxHp: 500,
+            damage: 1,
+            level: 1,
+            xp: 0,
+            xpNeeded: 100,
+            coins: 10,
+            wood: 0,
+            stone: 0,
+            seeds: 3,
+            walls: 0
+        };
         
-        // Audio context (web audio synth for beeps)
-        let audioCtx = null;
-        let isAudioReady = false;
+        let targetX = null, targetY = null;
         
-        // Glitch mode
-        let glitchIntensity = 0; // 0 to 1
-        let glitchTimer = 0;
-        let screenGlitch = false;
-        let glitchFlash = 0;
+        // WORLD ENTITIES
+        let trees = [];
+        let rocks = [];
+        let plants = [];
+        let walls = [];
+        let enemies = [];
+        let items = [];
         
-        // Difficulty scaling
-        let difficulty = 1;
-        let speedMultiplier = 1;
+        // day/night
+        let dayCount = 1;
+        let timeOfDay = 0; // 0-1, 0 = dawn, 0.5 = night
+        let nightDuration = 0;
+        let isNight = false;
+        let campfireActive = false;
+        let campfireX = player.x, campfireY = player.y;
         
-        // Beat track (simple metronome)
-        let beatTime = 0;
-        let lastBeat = 0;
+        // random events
+        let eventTimer = 0;
         
-        // Colors for notes (sound mapping)
-        const noteColors = [
-            { color: "#ff3366", sound: 523.25, name: "C" },   // C5
-            { color: "#33ff66", sound: 587.33, name: "D" },   // D5
-            { color: "#33aaff", sound: 659.25, name: "E" },   // E5
-            { color: "#ffcc33", sound: 698.46, name: "F" },   // F5
-            { color: "#ff66cc", sound: 783.99, name: "G" },   // G5
-            { color: "#66ffcc", sound: 880.00, name: "A" },   // A5
-            { color: "#ffaa44", sound: 987.77, name: "B" }    // B5
-        ];
+        // particles
+        let particles = [];
         
-        // Stars / background particles
-        let stars = [];
-        
-        // Touch/mouse position for trail effect
-        let trail = [];
-        
-        function resizeCanvas() {
+        // resize and camera
+        function resize() {
             width = window.innerWidth;
             height = window.innerHeight;
             canvas.width = width;
             canvas.height = height;
         }
         
-        function initAudio() {
-            if(audioCtx) return;
-            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            isAudioReady = true;
+        function updateCamera() {
+            camera.x = player.x - width/2;
+            camera.y = player.y - height/2;
+            camera.x = Math.min(Math.max(camera.x, 0), WORLD_SIZE - width);
+            camera.y = Math.min(Math.max(camera.y, 0), WORLD_SIZE - height);
         }
         
-        function playNote(frequency, volume = 0.3) {
-            if(!audioCtx || !gameRunning) return;
-            try {
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.frequency.value = frequency;
-                gain.gain.value = volume * (0.5 + combo/20);
-                osc.type = "sine";
-                gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.5);
-                osc.start();
-                osc.stop(audioCtx.currentTime + 0.3);
-            } catch(e) { console.log("audio err"); }
+        function worldToScreen(wx, wy) {
+            return { x: wx - camera.x, y: wy - camera.y };
         }
         
-        function playTapSound(isPerfect = true) {
-            if(!audioCtx) return;
-            const now = audioCtx.currentTime;
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.frequency.value = isPerfect ? 880 : 660;
-            gain.gain.value = isPerfect ? 0.25 : 0.15;
-            gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.2);
-            osc.start();
-            osc.stop(now + 0.15);
-        }
-        
-        function spawnNote() {
-            if(!gameRunning) return;
-            const noteIndex = Math.floor(Math.random() * noteColors.length);
-            const x = 50 + Math.random() * (width - 100);
-            notes.push({
-                id: noteId++,
-                x: x,
-                y: -40,
-                radius: 28,
-                noteIndex: noteIndex,
-                speed: 3.5 + difficulty * 1.2,
-                life: true
-            });
-            // glitch spawn effect
-            if(glitchIntensity > 0.3 && Math.random() < 0.4) {
-                notes.push({
-                    id: noteId++,
-                    x: x + (Math.random() - 0.5) * 60,
-                    y: -40,
-                    radius: 24,
-                    noteIndex: (noteIndex + 3) % noteColors.length,
-                    speed: 3.5 + difficulty * 1.5,
-                    life: true,
-                    glitched: true
-                });
+        // spawn resources
+        function spawnWorld() {
+            for(let i=0;i<120;i++) {
+                trees.push({ x: Math.random() * WORLD_SIZE, y: Math.random() * WORLD_SIZE, hp: 5 });
+                rocks.push({ x: Math.random() * WORLD_SIZE, y: Math.random() * WORLD_SIZE, hp: 8 });
             }
+        }
+        
+        function spawnEnemyAroundPlayer() {
+            if(!gameRunning) return;
+            let angle = Math.random() * Math.PI * 2;
+            let dist = 350 + Math.random() * 250;
+            let x = player.x + Math.cos(angle)*dist;
+            let y = player.y + Math.sin(angle)*dist;
+            x = Math.min(Math.max(x, 50), WORLD_SIZE-50);
+            y = Math.min(Math.max(y, 50), WORLD_SIZE-50);
+            enemies.push({
+                x, y, hp: 5 + player.level, maxHp: 5+player.level,
+                damage: 1, radius: 20, speed: 45,
+                attackCooldown: 0
+            });
+        }
+        
+        function showToast(msg) {
+            let div = document.createElement('div');
+            div.className = 'event-toast';
+            div.innerText = msg;
+            document.body.appendChild(div);
+            setTimeout(()=>div.remove(), 2000);
+        }
+        
+        function updateUI() {
+            document.getElementById('hudStats').innerHTML = `❤️ ${Math.floor(player.hp)}/${player.maxHp} | ⚔️ DMG ${player.damage} | 🧪 LVL ${player.level} | ✨ ${player.xp}/${player.xpNeeded}`;
+            document.getElementById('statsRight').innerHTML = `🪵 ${player.wood} | 🪨 ${player.stone} | 🌾 ${Math.floor(player.seeds)} | 🪙 ${Math.floor(player.coins)}`;
+            document.getElementById('inventory').innerHTML = `🧱 Walls: ${player.walls} | 🌱 Seeds: ${Math.floor(player.seeds)}`;
+            document.getElementById('dayCycle').innerHTML = isNight ? `🌙 NIGHT ${dayCount} 🔥` : `🌞 DAY ${dayCount}`;
+        }
+        
+        function addXP(amount) {
+            player.xp += amount;
+            while(player.xp >= player.xpNeeded) {
+                player.xp -= player.xpNeeded;
+                player.level++;
+                player.damage++;
+                player.maxHp += 25;
+                player.hp = player.maxHp;
+                player.xpNeeded = Math.floor(100 + player.level * 15);
+                showToast(`⚡ LEVEL UP! LVL ${player.level} | +DMG +HP`);
+            }
+            updateUI();
+        }
+        
+        // actions
+        function interactWithTile(tx, ty) {
+            // chop trees
+            for(let i=0;i<trees.length;i++) {
+                let t = trees[i];
+                if(Math.hypot(tx - t.x, ty - t.y) < 35) {
+                    t.hp -= player.damage;
+                    if(t.hp <= 0) {
+                        trees.splice(i,1);
+                        player.wood += 1 + Math.floor(Math.random()*2);
+                        showToast("+🪵 wood");
+                        updateUI();
+                    }
+                    return true;
+                }
+            }
+            // mine rocks
+            for(let i=0;i<rocks.length;i++) {
+                let r = rocks[i];
+                if(Math.hypot(tx - r.x, ty - r.y) < 35) {
+                    r.hp -= player.damage;
+                    if(r.hp <= 0) {
+                        rocks.splice(i,1);
+                        player.stone += 1;
+                        showToast("+🪨 stone");
+                        updateUI();
+                    }
+                    return true;
+                }
+            }
+            // plant seeds
+            if(player.seeds >= 1 && Math.random() < 0.6) {
+                player.seeds -= 1;
+                plants.push({ x: tx, y: ty, growth: 0, maxGrowth: 5 });
+                showToast("🌱 planted seed");
+                updateUI();
+                return true;
+            }
+            return false;
         }
         
         function updateGame(delta) {
             if(!gameRunning) return;
             if(delta > 0.033) delta = 0.033;
             
-            // Spawn notes
-            lastSpawn += delta;
-            let currentSpawnInterval = Math.max(0.45, spawnInterval - difficulty * 0.03);
-            if(lastSpawn >= currentSpawnInterval) {
-                lastSpawn = 0;
-                spawnNote();
-                if(difficulty > 1.2 && Math.random() < 0.3) spawnNote(); // double notes
-            }
+            // day/night cycle (90 sec day, 45 sec night)
+            timeOfDay += delta / 90;
+            if(timeOfDay >= 1) { timeOfDay = 0; dayCount++; isNight = false; updateUI(); showToast("🌅 DAYBREAK"); }
+            isNight = timeOfDay > 0.55;
+            nightDuration = isNight ? delta : 0;
             
-            // Move notes and check miss
-            for(let i=0;i<notes.length;i++) {
-                notes[i].y += notes[i].speed * (1 + glitchIntensity * 0.5) * delta * 60;
-                if(notes[i].y > height + 100) {
-                    notes.splice(i,1);
-                    i--;
-                    // missed note breaks combo
-                    combo = 1;
-                    perfectStreak = 0;
-                    updateComboUI();
-                    if(gameRunning) playTapSound(false);
+            // campfire protection (no enemies near campfire)
+            let nearCampfire = Math.hypot(player.x - campfireX, player.y - campfireY) < 110;
+            
+            // move to target
+            if(targetX !== null && targetY !== null) {
+                let dx = targetX - player.x, dy = targetY - player.y;
+                if(Math.hypot(dx,dy) < 12) {
+                    targetX = null; targetY = null;
+                    interactWithTile(player.x, player.y);
+                } else {
+                    let angle = Math.atan2(dy,dx);
+                    let speed = 180;
+                    player.x += Math.cos(angle) * speed * delta;
+                    player.y += Math.sin(angle) * speed * delta;
+                    player.x = Math.min(Math.max(player.x, 30), WORLD_SIZE-30);
+                    player.y = Math.min(Math.max(player.y, 30), WORLD_SIZE-30);
                 }
             }
             
-            // Difficulty scaling based on score
-            difficulty = 1 + (score / 8000);
-            if(difficulty > 2.5) difficulty = 2.5;
-            spawnInterval = 0.85 - (difficulty - 1) * 0.2;
+            // plant growth
+            for(let p of plants) { p.growth += delta * 0.3; if(p.growth >= p.maxGrowth && Math.random()<0.02) { player.seeds += 1; plants.splice(plants.indexOf(p),1); showToast("🌾 harvested +1 seed"); updateUI(); } }
             
-            // Glitch mode progression
-            glitchIntensity = Math.min(0.9, difficulty * 0.5);
-            glitchTimer += delta;
-            if(glitchTimer > 3) {
-                glitchTimer = 0;
-                if(Math.random() < glitchIntensity * 0.7) {
-                    screenGlitch = true;
-                    glitchFlash = 0.4;
-                    setTimeout(()=>{ screenGlitch = false; }, 120);
+            // enemy AI + auto combat
+            for(let i=0;i<enemies.length;i++) {
+                let e = enemies[i];
+                let distToPlayer = Math.hypot(e.x - player.x, e.y - player.y);
+                // detection range
+                if(distToPlayer < 200 && !nearCampfire) {
+                    let angle = Math.atan2(player.y - e.y, player.x - e.x);
+                    e.x += Math.cos(angle) * e.speed * delta;
+                    e.y += Math.sin(angle) * e.speed * delta;
+                    if(distToPlayer < 28) {
+                        if(e.attackCooldown <= 0) {
+                            player.hp -= e.damage;
+                            e.attackCooldown = 0.8;
+                            if(player.hp <= 0) { gameRunning = false; alert("GAME OVER"); location.reload(); }
+                            updateUI();
+                        }
+                    }
+                    // player auto attack
+                    if(distToPlayer < 45) {
+                        e.hp -= player.damage * delta * 3;
+                        if(e.hp <= 0) {
+                            enemies.splice(i,1); i--;
+                            let gainedXP = 15 + player.level*2;
+                            addXP(gainedXP);
+                            player.coins += 3 + Math.floor(Math.random()*5);
+                            showToast(`+${gainedXP} XP +${3} coins`);
+                            updateUI();
+                        }
+                    }
                 }
+                if(e.attackCooldown > 0) e.attackCooldown -= delta;
             }
-            if(glitchFlash > 0) glitchFlash -= delta * 2;
             
-            // Camera tunnel effect
-            cameraZ += 0.02;
-            tunnelAngle += tunnelSpeed;
-            tunnelSpeed = 0.02 + difficulty * 0.008;
-            
-            // stars background update
-            for(let s of stars) {
-                s.z -= 0.8 * (1 + difficulty * 0.3);
-                if(s.z <= 0) { s.z = 100; s.x = Math.random() * width; s.y = Math.random() * height; }
+            // spawn enemies (more at night)
+            let spawnRate = isNight ? 1.4 : 0.45;
+            if(Math.random() < spawnRate * delta && enemies.length < (isNight ? 10 : 5)) {
+                if(!nearCampfire || !isNight) spawnEnemyAroundPlayer();
             }
+            
+            // random events
+            eventTimer += delta;
+            if(eventTimer > 45 && gameRunning) {
+                eventTimer = 0;
+                let r = Math.random();
+                if(r<0.3) { player.coins += 10; showToast("💰 WANDERING TRADER +10 coins"); }
+                else if(r<0.6) { addXP(25); showToast("✨ MYSTIC SHRINE +25 XP"); }
+                else { for(let i=0;i<2;i++) spawnEnemyAroundPlayer(); showToast("💀 WILD PACK ATTACK!"); }
+                updateUI();
+            }
+            
+            // particles
+            for(let i=0;i<particles.length;i++) { particles[i].life -= delta; if(particles[i].life<=0) particles.splice(i,1), i--; }
         }
         
+        // DRAW
+        function draw() {
+            ctx.clearRect(0,0,width,height);
+            let bgColor = isNight ? "#0a1a2a" : "#5a9e4e";
+            ctx.fillStyle = bgColor;
+            ctx.fillRect(0,0,width,height);
+            
+            // grass details
+            for(let i=0;i<200;i++) { ctx.fillStyle = isNight ? "#2a4a3a" : "#7cbd5c"; ctx.fillRect((i*131)%width, (i*57)%height, 2,2); }
+            
+            // trees
+            for(let t of trees) { let s=worldToScreen(t.x,t.y); ctx.fillStyle="#3c2a1c"; ctx.fillRect(s.x-8,s.y-15,16,30); ctx.fillStyle="#2a8c2a"; ctx.beginPath(); ctx.arc(s.x,s.y-18,12,0,Math.PI*2); ctx.fill(); }
+            // rocks
+            for(let r of rocks) { let s=worldToScreen(r.x,r.y); ctx.fillStyle="#777"; ctx.fillRect(s.x-9,s.y-6,18,12); }
+            // plants
+            for(let p of plants) { let s=worldToScreen(p.x,p.y); ctx.fillStyle="#aaff77"; ctx.fillRect(s.x-3,s.y-5,6,10); }
+            // walls
+            for(let w of walls) { let s=worldToScreen(w.x,w.y); ctx.fillStyle="#aa8866"; ctx.fillRect(s.x-12,s.y-10,24,20); }
+            // enemies
+            for(let e of enemies) { let s=worldToScreen(e.x,e.y); ctx.fillStyle="#aa3355"; ctx.beginPath(); ctx.ellipse(s.x,s.y,16,20,0,0,Math.PI*2); ctx.fill(); ctx.fillStyle="white"; ctx.fillText("👾",s.x-8,s.y-5); }
+            
+            // campfire aura
+            let campPos = worldToScreen(campfireX, campfireY);
+            ctx.globalAlpha=0.3; ctx.fillStyle="orange"; ctx.beginPath(); ctx.arc(campPos.x,campPos.y,70,0,Math.PI*2); ctx.fill(); ctx.globalAlpha=1;
+            
+            // player (robot)
+            let ps = worldToScreen(player.x, player.y);
+            ctx.fillStyle="#88ccff"; ctx.fillRect(ps.x-12,ps.y-15,24,30); ctx.fillStyle="#aaa"; ctx.fillRect(ps.x-6,ps.y-25,12,12); ctx.fillStyle="cyan"; ctx.fillRect(ps.x-4,ps.y-22,4,6); ctx.fillRect(ps.x,ps.y-22,4,6);
+            
+            // particles
+            for(let p of particles) { let s=worldToScreen(p.x,p.y); ctx.fillStyle=`rgba(255,200,0,${p.life})`; ctx.fillRect(s.x-3,s.y-3,6,6); }
+            
+            // UI text
+            if(campfireActive) { ctx.fillStyle="white"; ctx.font="bold 14px monospace"; ctx.fillText("🔥 CAMPFIRE SAFE ZONE", campPos.x-70,campPos.y-50); }
+        }
+        
+        // input
         function handleTap(e) {
             if(!gameRunning) return;
             e.preventDefault();
-            
-            // Get tap coordinates
             let rect = canvas.getBoundingClientRect();
-            let tx, ty;
-            if(e.touches) {
-                tx = e.touches[0].clientX;
-                ty = e.touches[0].clientY;
-            } else {
-                tx = e.clientX;
-                ty = e.clientY;
-            }
-            
-            // Trail effect for visual feedback
-            trail.push({ x: tx, y: ty, life: 0.4 });
-            
-            // Find nearest note
-            let closest = null;
-            let minDist = 80;
-            for(let i=0;i<notes.length;i++) {
-                let n = notes[i];
-                let dist = Math.hypot(tx - n.x, ty - n.y);
-                if(dist < minDist) {
-                    minDist = dist;
-                    closest = n;
-                }
-            }
-            
-            if(closest) {
-                // Perfect hit detection
-                let isPerfect = minDist < 25;
-                let noteData = noteColors[closest.noteIndex];
-                playNote(noteData.sound, 0.35);
-                
-                // Score calculation
-                let addScore = Math.floor(10 * combo);
-                if(isPerfect) addScore = Math.floor(15 * combo);
-                score += addScore;
-                if(isPerfect) perfectStreak++; else perfectStreak = 0;
-                
-                combo++;
-                if(combo > maxCombo) maxCombo = combo;
-                if(combo > 30) combo = 30;
-                
-                // High score update
-                if(score > highScore) {
-                    highScore = score;
-                    localStorage.setItem('rhythmHighScore', highScore);
-                }
-                
-                updateUI();
-                
-                // Remove the note
-                const index = notes.indexOf(closest);
-                if(index !== -1) notes.splice(index,1);
-                
-                // extra glitch feedback
-                if(isPerfect && Math.random() < glitchIntensity * 0.5) {
-                    glitchFlash = 0.3;
-                }
-                playTapSound(isPerfect);
-            } else {
-                // miss tap - penalty
-                combo = 1;
-                perfectStreak = 0;
-                updateComboUI();
-                playTapSound(false);
-            }
+            let sx, sy;
+            if(e.touches) { sx=e.touches[0].clientX; sy=e.touches[0].clientY; }
+            else { sx=e.clientX; sy=e.clientY; }
+            let wx = camera.x + sx, wy = camera.y + sy;
+            targetX = wx; targetY = wy;
+            // interaction burst
         }
         
-        function updateUI() {
-            document.getElementById('scoreDisplay').innerHTML = `SCORE: ${Math.floor(score)}`;
-            document.getElementById('highScoreDisplay').innerHTML = `🏆 HIGH: ${Math.floor(highScore)}`;
-            updateComboUI();
+        function openShop() {
+            document.getElementById('shopPanel').style.display = 'flex';
         }
         
-        function updateComboUI() {
-            let comboDisplay = document.getElementById('comboDisplay');
-            if(combo > 20) comboDisplay.innerHTML = `⚡ MEGA COMBO x${combo} ⚡`;
-            else if(combo > 10) comboDisplay.innerHTML = `🔥 INSANE COMBO x${combo} 🔥`;
-            else if(combo > 5) comboDisplay.innerHTML = `✨ COMBO x${combo} ✨`;
-            else comboDisplay.innerHTML = `🎵 COMBO x${combo} 🎵`;
-            if(combo === 1) comboDisplay.style.color = "#ff66cc";
-            else comboDisplay.style.color = "#ffff00";
-        }
-        
-        // D R A W I N G   (with glitch and tunnel)
-        function draw() {
-            if(!ctx) return;
-            ctx.clearRect(0,0,width,height);
-            
-            // Space background with stars
-            ctx.fillStyle = "#010a1a";
-            ctx.fillRect(0,0,width,height);
-            for(let s of stars) {
-                let brightness = 150 + (s.z * 1.5);
-                ctx.fillStyle = `rgb(${brightness}, ${brightness+40}, 255)`;
-                ctx.beginPath();
-                ctx.arc(s.x, s.y, 2+(100-s.z)/30, 0, Math.PI*2);
-                ctx.fill();
-            }
-            
-            // Tunnel effect (warp lines)
-            ctx.save();
-            ctx.globalAlpha = 0.3;
-            for(let i=0;i<12;i++) {
-                let offset = (cameraZ * 5 + i * 30) % 200;
-                ctx.beginPath();
-                ctx.moveTo(width/2 + Math.sin(tunnelAngle + i)*40, offset);
-                ctx.lineTo(width/2 + Math.cos(tunnelAngle*0.8 + i)*70, offset+120);
-                ctx.lineWidth = 4;
-                ctx.strokeStyle = `rgba(0,255,255,${0.2+Math.sin(cameraZ)*0.1})`;
-                ctx.stroke();
-            }
-            ctx.restore();
-            
-            // Draw notes with glow
-            for(let n of notes) {
-                let col = noteColors[n.noteIndex].color;
-                let gradient = ctx.createRadialGradient(n.x, n.y, 5, n.x, n.y, n.radius);
-                gradient.addColorStop(0, col);
-                gradient.addColorStop(1, "#ffffff");
-                ctx.shadowBlur = 15;
-                ctx.shadowColor = col;
-                ctx.beginPath();
-                ctx.arc(n.x, n.y, n.radius, 0, Math.PI*2);
-                ctx.fillStyle = gradient;
-                ctx.fill();
-                ctx.fillStyle = "white";
-                ctx.font = `bold ${Math.floor(n.radius-8)}px monospace`;
-                ctx.fillText(noteColors[n.noteIndex].name, n.x-9, n.y+6);
-                if(n.glitched) {
-                    ctx.fillStyle = "red";
-                    ctx.font = "bold 16px monospace";
-                    ctx.fillText("!", n.x+12, n.y-10);
-                }
-            }
-            ctx.shadowBlur = 0;
-            
-            // Trail particles (tap feedback)
-            for(let i=0;i<trail.length;i++) {
-                let t = trail[i];
-                ctx.fillStyle = `rgba(0,255,255,${t.life})`;
-                ctx.beginPath();
-                ctx.arc(t.x, t.y, 12 * t.life, 0, Math.PI*2);
-                ctx.fill();
-                t.life -= 0.03;
-                if(t.life <= 0) trail.splice(i,1), i--;
-            }
-            
-            // GLITCH EFFECT overlay
-            if(screenGlitch || glitchFlash > 0.05) {
-                for(let i=0;i<20;i++) {
-                    ctx.fillStyle = `rgba(${Math.random()*255}, ${Math.random()*100}, 255, 0.3)`;
-                    ctx.fillRect(Math.random()*width, Math.random()*height, 30, Math.random()*10);
-                }
-                ctx.fillStyle = `rgba(255,0,255,0.2)`;
-                ctx.fillRect(0,0,width,height);
-            }
-            
-            // Draw beat pulse ring
-            let beatPulse = 1 + Math.sin(Date.now() * 0.012) * 0.05;
-            ctx.beginPath();
-            ctx.arc(width/2, height-70, 40 * beatPulse, 0, Math.PI*2);
-            ctx.strokeStyle = "#0ff";
-            ctx.lineWidth = 2;
-            ctx.stroke();
-        }
-        
-        function gameLoop() {
-            if(!width) return;
-            draw();
-            requestAnimationFrame(gameLoop);
-        }
-        
-        let lastUpdate = 0;
-        function updateLoop(now) {
-            let delta = (now - lastUpdate) / 1000;
-            if(delta > 0.03) delta = 0.03;
-            updateGame(delta);
-            lastUpdate = now;
-            requestAnimationFrame(updateLoop);
-        }
+        // buying
+        document.getElementById('buyWeapon').onclick = () => { if(player.coins>=50) { player.coins-=50; player.damage+=2; showToast("⚔️ +2 DMG"); updateUI(); } else showToast("not enough coins"); };
+        document.getElementById('buyArmor').onclick = () => { if(player.coins>=50) { player.coins-=50; player.maxHp+=30; player.hp=player.maxHp; showToast("🛡️ +30 MAX HP"); updateUI(); } };
+        document.getElementById('buySeed').onclick = () => { if(player.coins>=10) { player.coins-=10; player.seeds+=3; showToast("🌱 +3 seeds"); updateUI(); } };
+        document.getElementById('buyWall').onclick = () => { if(player.coins>=20 && player.wood>=5 && player.stone>=3) { player.coins-=20; player.wood-=5; player.stone-=3; player.walls++; walls.push({ x: player.x, y: player.y }); showToast("🧱 wall built"); updateUI(); } else showToast("need 20🪙 +5🪵 +3🪨"); };
         
         function startGame() {
-            if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
             gameRunning = true;
-            score = 0;
-            combo = 1;
-            perfectStreak = 0;
-            difficulty = 1;
-            glitchIntensity = 0;
-            notes = [];
-            lastSpawn = 0;
-            cameraZ = 0;
-            updateUI();
             document.getElementById('startOverlay').style.display = 'none';
-            // high score display
-            document.getElementById('highScoreDisplay').innerHTML = `🏆 HIGH: ${Math.floor(highScore)}`;
+            spawnWorld();
+            for(let i=0;i<3;i++) spawnEnemyAroundPlayer();
+            campfireActive = true;
+            updateUI();
         }
         
-        // event listeners
         canvas.addEventListener('touchstart', handleTap);
         canvas.addEventListener('mousedown', handleTap);
-        window.addEventListener('resize', ()=>{ resizeCanvas(); });
-        
-        // stars init
-        for(let i=0;i<150;i++) stars.push({ x: Math.random() * 1000, y: Math.random() * 1500, z: Math.random() * 100 });
-        
-        resizeCanvas();
-        initAudio();
-        
-        document.getElementById('startBtn').addEventListener('click', ()=>{
-            initAudio();
-            if(audioCtx) audioCtx.resume();
-            startGame();
-        });
-        
-        // start loops
-        lastUpdate = performance.now();
-        updateLoop(lastUpdate);
-        gameLoop();
-        
-        // auto hide overlay on tap outside button? no, but it's fine
-        setInterval(()=>{
-            if(gameRunning && audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-        }, 1000);
+        window.addEventListener('resize', ()=>{ resize(); updateCamera(); });
+        resize();
+        let lastTime=0;
+        function loop(now) {
+            let delta = Math.min(0.033, (now-lastTime)/1000);
+            if(delta>0.01 && gameRunning) { updateGame(delta); updateCamera(); draw(); }
+            lastTime=now;
+            requestAnimationFrame(loop);
+        }
+        document.getElementById('startBtn').onclick = startGame;
+        setInterval(()=>{ if(gameRunning) updateUI(); }, 100);
+        loop(performance.now());
     })();
 </script>
 </body>
