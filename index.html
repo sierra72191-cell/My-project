@@ -3,38 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>OCEAN REALMS · ABYSSAL INK</title>
+    <title>OCEAN REALMS · HIGH DEF</title>
     <style>
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { margin: 0; overflow: hidden; background: #00050a; font-family: 'Courier New', monospace; display: flex; flex-direction: column; height: 100vh; }
         #game-container { flex-grow: 1; position: relative; overflow: hidden; background: radial-gradient(circle at center, #001a33 0%, #00050a 100%); }
         canvas { display: block; width: 100%; height: 100%; }
-        #stats-panel { position: absolute; top: 10px; left: 10px; color: #cc00ff; font-size: 11px; pointer-events: none; background: rgba(0,0,0,0.85); padding: 12px; border: 1px solid #cc00ff; border-radius: 8px; line-height: 1.5; z-index: 10; }
-        .hp-bar-bg { width: 120px; height: 8px; background: #300; border: 1px solid #f00; margin: 5px 0; }
-        #hp-fill { width: 100%; height: 100%; background: #ff0055; transition: width 0.2s; }
-        #audio-prompt { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #00fbff; background: rgba(0,21,41,0.95); padding: 30px; border: 2px solid #00fbff; border-radius: 20px; text-align: center; z-index: 200; font-weight: bold; }
-        #controls { height: 140px; background: #000d1a; border-top: 2px solid #cc00ff; display: flex; gap: 15px; padding: 20px 15px 45px 15px; z-index: 100; }
-        .btn { flex: 1; background: linear-gradient(#1a0033, #000d1a); color: white; border: 1px solid #cc00ff; border-radius: 15px; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 12px; font-weight: bold; }
-        .btn:active { background: #cc00ff; color: #000; }
+        
+        /* Easier to read Stat Box */
+        #stats-panel { 
+            position: absolute; top: 10px; left: 10px; color: #00fbff; 
+            font-size: 12px; pointer-events: none;
+            background: rgba(0, 15, 30, 0.9); padding: 12px; border: 2px solid #00fbff; 
+            border-radius: 10px; line-height: 1.6; z-index: 10;
+            box-shadow: 0 0 20px rgba(0, 251, 255, 0.2);
+        }
+        .hp-bar-bg { width: 130px; height: 10px; background: #200; border: 1px solid #ff0055; margin: 5px 0; border-radius: 5px; overflow: hidden; }
+        #hp-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #ff0055, #ff77aa); transition: width 0.2s; }
+
+        #controls { height: 140px; background: #000d1a; border-top: 3px solid #00fbff; display: flex; gap: 15px; padding: 20px 15px 45px 15px; z-index: 100; }
+        .btn { flex: 1; background: #002244; color: #00fbff; border: 1px solid #00fbff; border-radius: 15px; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 12px; font-weight: bold; text-transform: uppercase; }
+        .btn:active { background: #00fbff; color: #000; }
     </style>
 </head>
 <body onclick="startAudio()">
 
     <div id="game-container">
-        <div id="audio-prompt">TAP TO AWAKEN</div>
         <div id="stats-panel">
-            <b>ENTITY: NEON SOUL</b><br>
+            <b style="color: #ff00ff;">[ NEON SOUL UNIT ]</b><br>
             HP: <span id="hpText">15000</span>
             <div class="hp-bar-bg"><div id="hp-fill"></div></div>
-            AGE: <span id="ageUI">0</span>s | SIZE: <span id="sizeUI">1.0</span>x<br>
-            BIOMASS: <span id="coinUI">0</span> | GUARD: <span id="friendUI">0</span>
+            BIOMASS: <span id="coinUI">0</span> | ARMY: <span id="friendUI">0</span><br>
+            GROWTH: <span id="sizeUI">1.0</span>x | AGE: <span id="ageUI">0</span>s
         </div>
         <canvas id="gameCanvas"></canvas>
     </div>
     
     <div id="controls">
-        <div class="btn" id="buyShrimp">SHRIMP<br>(DMG)</div>
-        <div class="btn" id="buyScout">STARFISH<br>(STUN)</div>
+        <div class="btn" id="buyShrimp">WAR<br>SHRIMP</div>
+        <div class="btn" id="buyScout">STUN<br>STARFISH</div>
     </div>
 
 <script>
@@ -46,27 +53,23 @@
     let fish = { x: 2500, y: 2500, tx: 2505, ty: 2505, angle: 0, hp: 15000, maxHp: 15000, age: 0, scale: 0.5, tailWiggle: 0 };
     let audioStarted = false, audioCtx, masterGain;
 
-    function startAudio() {
-        if (audioStarted) return; audioStarted = true;
-        document.getElementById('audio-prompt').style.display = 'none';
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        masterGain = audioCtx.createGain(); masterGain.gain.value = 0.1; masterGain.connect(audioCtx.destination);
-    }
+    function startAudio() { if (audioStarted) return; audioStarted = true; audioCtx = new AudioContext(); masterGain = audioCtx.createGain(); masterGain.gain.value = 0.1; masterGain.connect(audioCtx.destination); }
 
-    for(let i=0; i<40; i++) reefs.push({x: Math.random()*6000, y: Math.random()*6000, size: 50+Math.random()*100, depth: 0.2+Math.random()*0.3, color: `hsl(280, 30%, ${5+Math.random()*5}%)`});
-    for(let i=0; i<10; i++) ruins.push({x: Math.random()*6000, y: Math.random()*6000, w: 40+Math.random()*60, h: 100+Math.random()*200});
+    // Setup Environment
+    for(let i=0; i<40; i++) reefs.push({x: Math.random()*6000, y: Math.random()*6000, size: 40+Math.random()*120, depth: 0.2+Math.random()*0.3, color: `hsl(210, 20%, ${5+Math.random()*8}%)`});
+    for(let i=0; i<12; i++) ruins.push({x: Math.random()*6000, y: Math.random()*6000, w: 50, h: 150});
 
     function resize() { canvas.width = canvas.parentElement.clientWidth; canvas.height = canvas.parentElement.clientHeight; }
     window.addEventListener('resize', resize); resize();
 
-    const setupBtn = (id, cost, type) => {
+    const setupBtn = (id, type) => {
         document.getElementById(id).addEventListener('touchstart', (e) => {
-            if(coins >= cost) { coins -= cost; friends.push({x:fish.x, y:fish.y, type, hp: 100}); updateUI(); }
+            let cost = type === 'Shrimp' ? 5 : 10;
+            if(coins >= cost) { coins -= cost; friends.push({x:fish.x, y:fish.y, type, angle:0}); updateUI(); }
             e.preventDefault();
         });
     };
-    setupBtn('buyShrimp', 5, 'Shrimp');
-    setupBtn('buyScout', 10, 'Scout');
+    setupBtn('buyShrimp', 'Shrimp'); setupBtn('buyScout', 'Scout');
 
     function updateUI() {
         document.getElementById('coinUI').innerText = coins;
@@ -77,117 +80,139 @@
         document.getElementById('sizeUI').innerText = fish.scale.toFixed(2);
     }
 
+    // DRAWING FUNCTIONS
+    function drawShrimp(x, y, angle) {
+        ctx.save(); ctx.translate(x-cam.x, y-cam.y); ctx.rotate(angle);
+        ctx.fillStyle = '#ff7f50';
+        for(let j=0; j<5; j++) { ctx.beginPath(); ctx.ellipse(-j*5, Math.sin(Date.now()/150 + j)*2, 6, 4, 0, 0, 7); ctx.fill(); } // Segments
+        ctx.strokeStyle = '#ff7f50'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(0,-2); ctx.lineTo(15, -10); ctx.moveTo(0,2); ctx.lineTo(15, 10); ctx.stroke(); // Antennae
+        ctx.restore();
+    }
+
+    function drawStarfish(x, y) {
+        ctx.save(); ctx.translate(x-cam.x, y-cam.y);
+        ctx.rotate(Date.now()/800);
+        ctx.fillStyle = '#f0ff00'; ctx.shadowBlur=15; ctx.shadowColor='gold';
+        ctx.beginPath();
+        for(let i=0; i<5; i++) { ctx.rotate(Math.PI*2/5); ctx.lineTo(18, 0); ctx.lineTo(7, 5); }
+        ctx.closePath(); ctx.fill(); ctx.restore();
+    }
+
+    function drawOctopus(x, y) {
+        ctx.save(); ctx.translate(x-cam.x, y-cam.y);
+        ctx.fillStyle = '#800000'; ctx.beginPath(); ctx.ellipse(0,0,20,15,0,0,7); ctx.fill();
+        ctx.strokeStyle = '#800000'; ctx.lineWidth = 3;
+        for(let i=0; i<8; i++) {
+            ctx.beginPath(); ctx.moveTo(0,0);
+            let a = (i*Math.PI/4) + Math.sin(Date.now()/200 + i)*0.4;
+            ctx.lineTo(Math.cos(a)*30, Math.sin(a)*30); ctx.stroke();
+        }
+        ctx.restore();
+    }
+
+    function drawShark(x, y, angle) {
+        ctx.save(); ctx.translate(x-cam.x, y-cam.y); ctx.rotate(angle);
+        ctx.fillStyle = '#1a1a1a'; ctx.beginPath(); ctx.ellipse(0,0,55,18,0,0,7); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(0, -15); ctx.lineTo(-20, -35); ctx.lineTo(-5, -15); ctx.fill(); // Fin
+        ctx.fillStyle = 'red'; ctx.beginPath(); ctx.arc(25, -4, 3, 0, 7); ctx.fill(); // Eye
+        ctx.restore();
+    }
+
     canvas.addEventListener('touchstart', (e) => {
         const rect = canvas.getBoundingClientRect();
         fish.tx = e.touches[0].clientX - rect.left + cam.x;
         fish.ty = e.touches[0].clientY - rect.top + cam.y;
     });
 
-    function drawOctopus(x, y, i) {
-        ctx.save(); ctx.translate(x-cam.x, y-cam.y);
-        ctx.fillStyle = '#800000'; ctx.beginPath(); ctx.ellipse(0,0, 18, 12, 0, 0, 7); ctx.fill();
-        ctx.strokeStyle = '#800000'; ctx.lineWidth = 3;
-        for(let j=0; j<8; j++) {
-            ctx.beginPath(); ctx.moveTo(0,0);
-            let ang = (j * Math.PI/4) + Math.sin(Date.now()/300 + i)*0.5;
-            ctx.lineTo(Math.cos(ang)*25, Math.sin(ang)*25); ctx.stroke();
-        }
-        ctx.restore();
-    }
-
     function loop() {
         fish.age += 1/60; fish.scale = 0.5 + (fish.age / 500);
-        if(fish.hp < fish.maxHp) fish.hp += 0.8;
+        if(fish.hp < fish.maxHp) fish.hp += 1;
 
-        // NEW INTELLIGENT MOVEMENT
-        let distToTarget = Math.hypot(fish.tx - fish.x, fish.ty - fish.y);
-        if(distToTarget < 20) {
-            let nearest = entities.find(e => e.type === 'coin' && Math.hypot(e.x-fish.x, e.y-fish.y) < 500);
-            if(nearest) { fish.tx = nearest.x; fish.ty = nearest.y; }
-            else if (Math.random() < 0.01) { fish.tx += (Math.random()-0.5)*400; fish.ty += (Math.random()-0.5)*400; }
+        // Auto-Seek Curiosity
+        if(Math.hypot(fish.tx-fish.x, fish.ty-fish.y) < 20) {
+            let coin = entities.find(e => e.type==='coin' && Math.hypot(e.x-fish.x, e.y-fish.y) < 400);
+            if(coin) { fish.tx = coin.x; fish.ty = coin.y; }
         }
 
         cam.x += (fish.x - canvas.width/2 - cam.x) * 0.05;
         cam.y += (fish.y - canvas.height/2 - cam.y) * 0.05;
-        fish.x += (fish.tx - fish.x) * 0.03;
-        fish.y += (fish.ty - fish.y) * 0.03;
-        fish.angle = Math.atan2(fish.ty - fish.y, fish.tx - fish.x);
-        fish.tailWiggle += 0.15;
+        fish.x += (fish.tx - fish.x) * 0.03; fish.y += (fish.ty - fish.y) * 0.03;
+        fish.angle = Math.atan2(fish.ty-fish.y, fish.tx-fish.x);
+        fish.tailWiggle += 0.2;
 
         ctx.clearRect(0,0, canvas.width, canvas.height);
         ruins.forEach(r => { ctx.fillStyle = '#020a14'; ctx.fillRect(r.x-cam.x*0.2, r.y-cam.y*0.2, r.w, r.h); });
         reefs.forEach(r => { ctx.fillStyle = r.color; ctx.beginPath(); ctx.arc(r.x - cam.x*r.depth, r.y - cam.y*r.depth, r.size, 0, 7); ctx.fill(); });
 
-        // Ink Clouds
-        ctx.fillStyle = 'rgba(0,0,0,0.6)';
+        // Ink System
+        ctx.fillStyle = 'rgba(0,0,0,0.7)';
         inkClouds = inkClouds.filter(c => {
-            c.r += 0.5; c.life -= 0.01;
+            c.r += 0.4; c.life -= 0.01;
             ctx.beginPath(); ctx.arc(c.x-cam.x, c.y-cam.y, c.r, 0, 7); ctx.fill();
-            if(Math.hypot(fish.x-c.x, fish.y-c.y) < c.r) fish.hp -= 0.1; 
+            if(Math.hypot(fish.x-c.x, fish.y-c.y) < c.r) fish.hp -= 2;
             return c.life > 0;
         });
 
+        // Entities & Combat Logic
         entities = entities.filter(en => {
             let d = Math.hypot(fish.x - en.x, fish.y - en.y);
             if(en.type === 'coin' && d < 50) { coins++; updateUI(); return false; }
             if(en.stun > 0) { en.stun--; ctx.globalAlpha = 0.4; }
 
-            ctx.save(); ctx.translate(en.x-cam.x, en.y-cam.y);
             if(en.type === 'shark') {
-                en.x += (fish.x - en.x) * 0.01; en.y += (fish.y - en.y) * 0.01;
-                ctx.rotate(Math.atan2(fish.y-en.y, fish.x-en.x));
-                ctx.fillStyle='#1a1a1a'; ctx.beginPath(); ctx.ellipse(0,0,50,16,0,0,7); ctx.fill();
+                if(en.stun <= 0) { en.x += (fish.x-en.x)*0.012; en.y += (fish.y-en.y)*0.012; }
+                drawShark(en.x, en.y, Math.atan2(fish.y-en.y, fish.x-en.x));
             } else if(en.type === 'octopus') {
-                if(Math.random() < 0.01) inkClouds.push({x: en.x, y: en.y, r: 10, life: 1});
-                drawOctopus(0,0, 0);
+                if(Math.random() < 0.01) inkClouds.push({x:en.x, y:en.y, r:10, life:1});
+                drawOctopus(en.x, en.y);
             } else if(en.type === 'enemyFish') {
-                en.x += (fish.x - en.x) * 0.02; en.y += (fish.y - en.y) * 0.02;
-                ctx.fillStyle='#ff4400'; ctx.beginPath(); ctx.ellipse(0,0,15,8,0,0,7); ctx.fill();
+                if(en.stun <= 0) { en.x += (fish.x-en.x)*0.02; en.y += (fish.y-en.y)*0.02; }
+                ctx.fillStyle = '#ff4400'; ctx.save(); ctx.translate(en.x-cam.x, en.y-cam.y);
+                ctx.beginPath(); ctx.ellipse(0,0,18,10,0,0,7); ctx.fill(); ctx.restore();
             } else {
-                ctx.fillStyle='#ffd700'; ctx.beginPath(); ctx.arc(0,0,6,0,7); ctx.fill();
+                ctx.fillStyle = 'gold'; ctx.beginPath(); ctx.arc(en.x-cam.x, en.y-cam.y, 6, 0, 7); ctx.fill();
             }
-            ctx.restore(); ctx.globalAlpha = 1.0;
-            if(d < 60 && en.stun <= 0) {
-                if(en.type==='shark') fish.hp -= 1.5;
-                if(en.type==='octopus' || en.type==='enemyFish') fish.hp -= 0.5;
-            }
+            ctx.globalAlpha = 1.0;
+            if(d < 65 && en.stun <= 0) fish.hp -= (en.type==='shark' ? 5 : 1);
             return !en.dead;
         });
 
+        // Companions
         friends.forEach((fr, i) => {
-            let orbitX = fish.x + Math.cos(Date.now()/1000 + i) * (80 + fish.scale*10);
-            let orbitY = fish.y + Math.sin(Date.now()/1000 + i) * (80 + fish.scale*10);
+            let orbitX = fish.x + Math.cos(Date.now()/1000 + i) * (90 + fish.scale*15);
+            let orbitY = fish.y + Math.sin(Date.now()/1000 + i) * (90 + fish.scale*15);
             let target = { x: orbitX, y: orbitY };
-            let enemy = entities.find(e => (e.type!=='coin') && Math.hypot(e.x-fish.x, e.y-fish.y) < 300);
+            let enemy = entities.find(e => e.type !== 'coin' && Math.hypot(e.x-fish.x, e.y-fish.y) < 350);
             
             if(enemy) target = enemy;
             fr.x += (target.x - fr.x) * 0.1; fr.y += (target.y - fr.y) * 0.1;
             
-            if(enemy && Math.hypot(fr.x-enemy.x, fr.y-enemy.y) < 50) {
-                if(fr.type === 'Shrimp') { enemy.hp -= 0.2; if(enemy.hp <= 0) { enemy.dead=true; coins+=2; } }
-                if(fr.type === 'Scout') { enemy.stun = 100; }
+            // DAMAGE AND STUN APPLICATION
+            if(enemy && Math.hypot(fr.x-enemy.x, fr.y-enemy.y) < 55) {
+                if(fr.type === 'Shrimp') { enemy.hp -= 0.5; if(enemy.hp <= 0) { enemy.dead=true; coins+=3; } }
+                else { enemy.stun = 120; } // 2 second stun
             }
             
-            ctx.fillStyle = fr.type === 'Shrimp' ? '#ff7f50' : '#f0ff00';
-            ctx.beginPath(); ctx.arc(fr.x-cam.x, fr.y-cam.y, 7, 0, 7); ctx.fill();
+            if(fr.type === 'Shrimp') drawShrimp(fr.x, fr.y, Math.atan2(target.y-fr.y, target.x-fr.x));
+            else drawStarfish(fr.x, fr.y);
         });
 
-        // PLAYER: BIOLUMINESCENT NEON VIOLET
+        // PLAYER: NEON PURPLE
         ctx.save(); ctx.translate(fish.x-cam.x, fish.y-cam.y); ctx.rotate(fish.angle); ctx.scale(fish.scale, fish.scale);
-        ctx.shadowBlur=30; ctx.shadowColor='#cc00ff';
-        ctx.fillStyle = '#cc00ff'; ctx.beginPath(); ctx.ellipse(0,0,25,14,0,0,7); ctx.fill(); // Body
-        ctx.fillStyle = '#ff00ff'; ctx.beginPath(); ctx.moveTo(-15,0); ctx.lineTo(-35, 12 * Math.sin(fish.tailWiggle)); ctx.lineTo(-35, -12 * Math.sin(fish.tailWiggle)); ctx.fill(); // Tail
-        ctx.fillStyle='white'; ctx.beginPath(); ctx.arc(12,-6,5,0,7); ctx.fill();
+        ctx.shadowBlur=35; ctx.shadowColor='#ff00ff';
+        ctx.fillStyle = '#cc00ff'; ctx.beginPath(); ctx.ellipse(0,0,26,15,0,0,7); ctx.fill();
+        ctx.fillStyle = '#ff00ff'; ctx.beginPath(); ctx.moveTo(-15,0); 
+        ctx.lineTo(-38, 15*Math.sin(fish.tailWiggle)); ctx.lineTo(-38, -15*Math.sin(fish.tailWiggle)); ctx.fill();
+        ctx.fillStyle='white'; ctx.beginPath(); ctx.arc(14,-7,6,0,7); ctx.fill();
+        ctx.fillStyle='black'; ctx.beginPath(); ctx.arc(16,-7,3,0,7); ctx.fill();
         ctx.restore();
 
-        // Balanced Spawning
-        if(Math.random() < 0.05 && entities.length < 50) {
+        if(Math.random() < 0.04 && entities.length < 45) {
             let r = Math.random();
             let type = r < 0.05 ? 'shark' : (r < 0.15 ? 'octopus' : (r < 0.4 ? 'enemyFish' : 'coin'));
-            let hp = type === 'shark' ? 500 : (type === 'coin' ? 1 : 100);
-            entities.push({x: fish.x+(Math.random()-0.5)*2000, y: fish.y+(Math.random()-0.5)*2000, type, hp, stun:0, dead:false});
+            entities.push({x: fish.x+(Math.random()-0.5)*2000, y: fish.y+(Math.random()-0.5)*2000, type, hp: type==='shark'?500:100, stun:0, dead:false});
         }
-
         updateUI(); requestAnimationFrame(loop);
     }
     loop();
