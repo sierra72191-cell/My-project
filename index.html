@@ -2,257 +2,580 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>NEON RUSH: GLITCH EDITION</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+    <title>SPACE RHYTHM · GLITCH RUNNER</title>
     <style>
-        :root { --neon: #00f2ff; --pink: #ff00ff; --glitch-red: #ff0044; }
-        body { margin: 0; background: #000; overflow: hidden; font-family: 'Segoe UI', sans-serif; touch-action: none; }
-        canvas { display: block; width: 100vw; height: 100vh; }
-        
-        #ui-layer {
-            position: absolute; inset: 0; pointer-events: none;
-            display: flex; flex-direction: column; align-items: center; padding-top: 60px;
-            z-index: 5;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
         }
-        .score-box { font-size: 40px; color: var(--neon); text-shadow: 0 0 20px var(--neon); font-weight: 900; letter-spacing: 2px; transition: 0.1s; }
-        .combo-text { font-size: 30px; color: var(--pink); opacity: 0; transition: 0.2s; transform: translateY(10px); text-shadow: 0 0 15px var(--pink); }
-        .combo-active { opacity: 1; transform: translateY(0); }
 
-        #overlay {
-            position: fixed; inset: 0; background: radial-gradient(circle, #111 0%, #000 100%);
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            z-index: 100; color: white; text-align: center;
+        body {
+            background: #000;
+            overflow: hidden;
+            font-family: 'Courier New', monospace;
+            touch-action: none;
         }
-        .logo { font-size: 3.5rem; margin: 0; background: linear-gradient(to bottom, var(--neon), var(--pink)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 0 10px var(--neon)); font-weight: 900; }
-        .best-score { color: #555; margin-top: 10px; font-size: 1.2rem; letter-spacing: 3px; }
-        button {
-            background: transparent; border: 2px solid var(--neon); color: var(--neon);
-            padding: 18px 50px; font-size: 22px; cursor: pointer; border-radius: 4px;
-            box-shadow: 0 0 15px var(--neon); margin-top: 40px; transition: 0.3s;
-            text-transform: uppercase; font-weight: bold;
+
+        canvas {
+            display: block;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        /* HUD */
+        .score-board {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(8px);
+            padding: 10px 18px;
+            border-radius: 30px;
+            color: #0ff;
+            font-family: monospace;
+            font-weight: bold;
+            font-size: 20px;
+            z-index: 10;
+            border-left: 3px solid #0ff;
+            letter-spacing: 2px;
+            pointer-events: none;
+        }
+
+        .high-score {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(8px);
+            padding: 10px 18px;
+            border-radius: 30px;
+            color: #ffaa44;
+            font-family: monospace;
+            font-weight: bold;
+            font-size: 16px;
+            z-index: 10;
+            border-right: 3px solid gold;
+            pointer-events: none;
+            text-align: right;
+        }
+
+        .combo-meter {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(12px);
+            padding: 8px 20px;
+            border-radius: 40px;
+            color: #ff66cc;
+            font-family: monospace;
+            font-weight: bold;
+            font-size: 18px;
+            z-index: 10;
+            border: 1px solid #ff66cc;
+            white-space: nowrap;
+            pointer-events: none;
+            letter-spacing: 2px;
+        }
+
+        .start-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, #000000, #001122);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            font-family: monospace;
+            transition: 0.3s;
+        }
+
+        .start-title {
+            font-size: 48px;
+            font-weight: bold;
+            color: #0ff;
+            text-shadow: 0 0 20px cyan, 0 0 40px blue;
+            margin-bottom: 20px;
+            letter-spacing: 6px;
+        }
+
+        .start-sub {
+            color: #88aaff;
+            margin-bottom: 40px;
+            font-size: 14px;
+        }
+
+        .start-btn {
+            background: linear-gradient(45deg, #0ff, #00a);
+            border: none;
+            padding: 16px 40px;
+            border-radius: 60px;
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+            font-family: monospace;
+            cursor: pointer;
+            box-shadow: 0 0 20px cyan;
+            transition: 0.1s;
+        }
+
+        .start-btn:active {
+            transform: scale(0.96);
+        }
+
+        .glitch-notice {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            font-size: 10px;
+            color: #555;
+            pointer-events: none;
         }
     </style>
 </head>
 <body>
+<canvas id="gameCanvas"></canvas>
+<div class="score-board" id="scoreDisplay">SCORE: 0</div>
+<div class="high-score" id="highScoreDisplay">🏆 HIGH: 0</div>
+<div class="combo-meter" id="comboDisplay">🔥 COMBO x1</div>
+<div class="start-overlay" id="startOverlay">
+    <div class="start-title">◢ SPACE RHYTHM ◣</div>
+    <div class="start-sub">tap the falling notes in time | glitch mode intensifies</div>
+    <button class="start-btn" id="startBtn">▶ INITIALIZE ENGINE</button>
+</div>
+<div class="glitch-notice">⚡ GLITCH MODE ACTIVE | TAP TO THE BEAT</div>
 
-    <div id="overlay">
-        <h1 class="logo">NEON RUSH</h1>
-        <div class="best-score">HIGH SCORE: <span id="best">0</span></div>
-        <button onclick="bootGame()">INITIALIZE ENGINE</button>
-    </div>
-
-    <div id="ui-layer">
-        <div class="score-box" id="scoreDisplay">0000</div>
-        <div class="combo-text" id="comboDisplay">COMBO X2</div>
-    </div>
-
-    <canvas id="renderCanvas"></canvas>
-
-    <script>
-        const canvas = document.getElementById('renderCanvas');
+<script>
+    (function(){
+        const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
-        const scoreDisplay = document.getElementById('scoreDisplay');
-        const comboDisplay = document.getElementById('comboDisplay');
-        const bestDisplay = document.getElementById('best');
-
-        let score = 0, combo = 0, isActive = false, frameCount = 0;
-        let speed = 8, shake = 0, glitchIntensity = 0;
-        let bestScore = localStorage.getItem('trance_best_v2') || 0;
+        let width, height;
         
-        let tiles = [], particles = [];
-        const lanes = 4;
-        let laneW, canvasW, canvasH;
-
-        let audioCtx;
-        const scale = [130.81, 146.83, 164.81, 196.00, 220.00, 261.63, 293.66, 329.63];
-
-        bestDisplay.innerText = bestScore;
-
-        function resize() {
-            canvasW = canvas.width = window.innerWidth * window.devicePixelRatio;
-            canvasH = canvas.height = window.innerHeight * window.devicePixelRatio;
-            laneW = canvasW / lanes;
+        // Game state
+        let gameRunning = false;
+        let score = 0;
+        let highScore = localStorage.getItem('rhythmHighScore') || 0;
+        let combo = 1;
+        let maxCombo = 1;
+        let perfectStreak = 0;
+        
+        // Camera / tunnel effect
+        let cameraZ = 0;
+        let tunnelAngle = 0;
+        let tunnelSpeed = 0.02;
+        
+        // Falling notes
+        let notes = [];
+        let noteId = 0;
+        let lastSpawn = 0;
+        let spawnInterval = 0.85; // seconds between spawns (starts moderate)
+        
+        // Audio context (web audio synth for beeps)
+        let audioCtx = null;
+        let isAudioReady = false;
+        
+        // Glitch mode
+        let glitchIntensity = 0; // 0 to 1
+        let glitchTimer = 0;
+        let screenGlitch = false;
+        let glitchFlash = 0;
+        
+        // Difficulty scaling
+        let difficulty = 1;
+        let speedMultiplier = 1;
+        
+        // Beat track (simple metronome)
+        let beatTime = 0;
+        let lastBeat = 0;
+        
+        // Colors for notes (sound mapping)
+        const noteColors = [
+            { color: "#ff3366", sound: 523.25, name: "C" },   // C5
+            { color: "#33ff66", sound: 587.33, name: "D" },   // D5
+            { color: "#33aaff", sound: 659.25, name: "E" },   // E5
+            { color: "#ffcc33", sound: 698.46, name: "F" },   // F5
+            { color: "#ff66cc", sound: 783.99, name: "G" },   // G5
+            { color: "#66ffcc", sound: 880.00, name: "A" },   // A5
+            { color: "#ffaa44", sound: 987.77, name: "B" }    // B5
+        ];
+        
+        // Stars / background particles
+        let stars = [];
+        
+        // Touch/mouse position for trail effect
+        let trail = [];
+        
+        function resizeCanvas() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
         }
-        window.addEventListener('resize', resize);
-        resize();
-
-        class Tile {
-            constructor(lane) {
-                this.lane = lane;
-                this.x = lane * laneW;
-                this.y = -400;
-                this.h = 320;
-                this.active = true;
-                this.color = `hsl(${180 + (Math.random() * 100)}, 100%, 60%)`;
-            }
-            update() { this.y += speed; }
-            draw(offsetY = 0, offsetX = 0) {
-                if (!this.active) return;
-                ctx.save();
-                ctx.shadowBlur = 25;
-                ctx.shadowColor = this.color;
-                ctx.fillStyle = this.color;
-                ctx.fillRect(this.x + 12 + offsetX, this.y + offsetY, laneW - 24, this.h);
-                ctx.strokeStyle = 'white';
-                ctx.lineWidth = 4;
-                ctx.globalAlpha = 0.4;
-                ctx.strokeRect(this.x + 30 + offsetX, this.y + 30 + offsetY, laneW - 60, this.h - 60);
-                ctx.restore();
-            }
+        
+        function initAudio() {
+            if(audioCtx) return;
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            isAudioReady = true;
         }
-
-        function triggerAudio(type) {
-            if (!audioCtx) return;
+        
+        function playNote(frequency, volume = 0.3) {
+            if(!audioCtx || !gameRunning) return;
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.frequency.value = frequency;
+                gain.gain.value = volume * (0.5 + combo/20);
+                osc.type = "sine";
+                gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.5);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.3);
+            } catch(e) { console.log("audio err"); }
+        }
+        
+        function playTapSound(isPerfect = true) {
+            if(!audioCtx) return;
+            const now = audioCtx.currentTime;
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
-            osc.type = (type === 'bass') ? 'sawtooth' : 'triangle';
-            const freq = scale[Math.floor(Math.random() * scale.length)];
-            osc.frequency.setValueAtTime(type === 'bass' ? freq / 2 : freq * 1.5, audioCtx.currentTime);
-            gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.6);
             osc.connect(gain);
             gain.connect(audioCtx.destination);
+            osc.frequency.value = isPerfect ? 880 : 660;
+            gain.gain.value = isPerfect ? 0.25 : 0.15;
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.2);
             osc.start();
-            osc.stop(audioCtx.currentTime + 0.6);
+            osc.stop(now + 0.15);
         }
-
-        function createBurst(x, y, color) {
-            for (let i = 0; i < 15; i++) {
-                particles.push({
-                    x, y,
-                    vx: (Math.random() - 0.5) * 25,
-                    vy: (Math.random() - 0.5) * 25,
-                    life: 1.0,
-                    color
+        
+        function spawnNote() {
+            if(!gameRunning) return;
+            const noteIndex = Math.floor(Math.random() * noteColors.length);
+            const x = 50 + Math.random() * (width - 100);
+            notes.push({
+                id: noteId++,
+                x: x,
+                y: -40,
+                radius: 28,
+                noteIndex: noteIndex,
+                speed: 3.5 + difficulty * 1.2,
+                life: true
+            });
+            // glitch spawn effect
+            if(glitchIntensity > 0.3 && Math.random() < 0.4) {
+                notes.push({
+                    id: noteId++,
+                    x: x + (Math.random() - 0.5) * 60,
+                    y: -40,
+                    radius: 24,
+                    noteIndex: (noteIndex + 3) % noteColors.length,
+                    speed: 3.5 + difficulty * 1.5,
+                    life: true,
+                    glitched: true
                 });
             }
         }
-
-        function bootGame() {
-            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            document.getElementById('overlay').style.display = 'none';
-            score = 0; speed = 8; combo = 0; glitchIntensity = 0;
-            tiles = []; particles = [];
-            scoreDisplay.innerText = "0000";
-            isActive = true;
-            updateLoop();
-        }
-
-        function gameOver() {
-            isActive = false;
-            if (score > bestScore) {
-                bestScore = score;
-                localStorage.setItem('trance_best_v2', score);
-            }
-            bestDisplay.innerText = bestScore;
-            document.getElementById('overlay').style.display = 'flex';
-            document.querySelector('.logo').innerText = "VIBE LOST";
-            comboDisplay.classList.remove('combo-active');
-        }
-
-        function updateLoop() {
-            if (!isActive) return;
-
-            // GLITCH LOGIC
-            glitchIntensity = Math.min(score / 5000, 1); // Max glitch at 5000 score
-            const isGlitching = Math.random() < (0.05 * glitchIntensity);
+        
+        function updateGame(delta) {
+            if(!gameRunning) return;
+            if(delta > 0.033) delta = 0.033;
             
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.25)'; 
-            ctx.fillRect(0, 0, canvasW, canvasH);
+            // Spawn notes
+            lastSpawn += delta;
+            let currentSpawnInterval = Math.max(0.45, spawnInterval - difficulty * 0.03);
+            if(lastSpawn >= currentSpawnInterval) {
+                lastSpawn = 0;
+                spawnNote();
+                if(difficulty > 1.2 && Math.random() < 0.3) spawnNote(); // double notes
+            }
             
-            if (shake > 0 || isGlitching) {
-                let s = shake + (isGlitching ? 20 * glitchIntensity : 0);
-                ctx.translate((Math.random() - 0.5) * s, (Math.random() - 0.5) * s);
-                shake *= 0.92;
+            // Move notes and check miss
+            for(let i=0;i<notes.length;i++) {
+                notes[i].y += notes[i].speed * (1 + glitchIntensity * 0.5) * delta * 60;
+                if(notes[i].y > height + 100) {
+                    notes.splice(i,1);
+                    i--;
+                    // missed note breaks combo
+                    combo = 1;
+                    perfectStreak = 0;
+                    updateComboUI();
+                    if(gameRunning) playTapSound(false);
+                }
             }
-
-            // Draw Background static during glitch
-            if (isGlitching) {
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
-                for(let i=0; i<10; i++) ctx.fillRect(Math.random()*canvasW, Math.random()*canvasH, canvasW, 2);
+            
+            // Difficulty scaling based on score
+            difficulty = 1 + (score / 8000);
+            if(difficulty > 2.5) difficulty = 2.5;
+            spawnInterval = 0.85 - (difficulty - 1) * 0.2;
+            
+            // Glitch mode progression
+            glitchIntensity = Math.min(0.9, difficulty * 0.5);
+            glitchTimer += delta;
+            if(glitchTimer > 3) {
+                glitchTimer = 0;
+                if(Math.random() < glitchIntensity * 0.7) {
+                    screenGlitch = true;
+                    glitchFlash = 0.4;
+                    setTimeout(()=>{ screenGlitch = false; }, 120);
+                }
             }
-
-            // Spawn Tiles
-            if (frameCount % Math.floor(Math.max(12, 45 - speed)) === 0) {
-                tiles.push(new Tile(Math.floor(Math.random() * lanes)));
+            if(glitchFlash > 0) glitchFlash -= delta * 2;
+            
+            // Camera tunnel effect
+            cameraZ += 0.02;
+            tunnelAngle += tunnelSpeed;
+            tunnelSpeed = 0.02 + difficulty * 0.008;
+            
+            // stars background update
+            for(let s of stars) {
+                s.z -= 0.8 * (1 + difficulty * 0.3);
+                if(s.z <= 0) { s.z = 100; s.x = Math.random() * width; s.y = Math.random() * height; }
             }
-
-            for (let i = tiles.length - 1; i >= 0; i--) {
-                let t = tiles[i];
-                t.update();
+        }
+        
+        function handleTap(e) {
+            if(!gameRunning) return;
+            e.preventDefault();
+            
+            // Get tap coordinates
+            let rect = canvas.getBoundingClientRect();
+            let tx, ty;
+            if(e.touches) {
+                tx = e.touches[0].clientX;
+                ty = e.touches[0].clientY;
+            } else {
+                tx = e.clientX;
+                ty = e.clientY;
+            }
+            
+            // Trail effect for visual feedback
+            trail.push({ x: tx, y: ty, life: 0.4 });
+            
+            // Find nearest note
+            let closest = null;
+            let minDist = 80;
+            for(let i=0;i<notes.length;i++) {
+                let n = notes[i];
+                let dist = Math.hypot(tx - n.x, ty - n.y);
+                if(dist < minDist) {
+                    minDist = dist;
+                    closest = n;
+                }
+            }
+            
+            if(closest) {
+                // Perfect hit detection
+                let isPerfect = minDist < 25;
+                let noteData = noteColors[closest.noteIndex];
+                playNote(noteData.sound, 0.35);
                 
-                // Chromatic Aberration Effect on tiles during Glitch
-                if (isGlitching) {
-                    ctx.globalCompositeOperation = 'screen';
-                    t.draw(0, 5); // Red offset
-                    ctx.fillStyle = '#ff0044';
-                    t.draw(0, -5); // Cyan offset
-                    ctx.globalCompositeOperation = 'source-over';
-                } else {
-                    t.draw();
+                // Score calculation
+                let addScore = Math.floor(10 * combo);
+                if(isPerfect) addScore = Math.floor(15 * combo);
+                score += addScore;
+                if(isPerfect) perfectStreak++; else perfectStreak = 0;
+                
+                combo++;
+                if(combo > maxCombo) maxCombo = combo;
+                if(combo > 30) combo = 30;
+                
+                // High score update
+                if(score > highScore) {
+                    highScore = score;
+                    localStorage.setItem('rhythmHighScore', highScore);
                 }
-
-                if (t.y > canvasH) {
-                    if (t.active) gameOver();
-                    tiles.splice(i, 1);
+                
+                updateUI();
+                
+                // Remove the note
+                const index = notes.indexOf(closest);
+                if(index !== -1) notes.splice(index,1);
+                
+                // extra glitch feedback
+                if(isPerfect && Math.random() < glitchIntensity * 0.5) {
+                    glitchFlash = 0.3;
+                }
+                playTapSound(isPerfect);
+            } else {
+                // miss tap - penalty
+                combo = 1;
+                perfectStreak = 0;
+                updateComboUI();
+                playTapSound(false);
+            }
+        }
+        
+        function updateUI() {
+            document.getElementById('scoreDisplay').innerHTML = `SCORE: ${Math.floor(score)}`;
+            document.getElementById('highScoreDisplay').innerHTML = `🏆 HIGH: ${Math.floor(highScore)}`;
+            updateComboUI();
+        }
+        
+        function updateComboUI() {
+            let comboDisplay = document.getElementById('comboDisplay');
+            if(combo > 20) comboDisplay.innerHTML = `⚡ MEGA COMBO x${combo} ⚡`;
+            else if(combo > 10) comboDisplay.innerHTML = `🔥 INSANE COMBO x${combo} 🔥`;
+            else if(combo > 5) comboDisplay.innerHTML = `✨ COMBO x${combo} ✨`;
+            else comboDisplay.innerHTML = `🎵 COMBO x${combo} 🎵`;
+            if(combo === 1) comboDisplay.style.color = "#ff66cc";
+            else comboDisplay.style.color = "#ffff00";
+        }
+        
+        // D R A W I N G   (with glitch and tunnel)
+        function draw() {
+            if(!ctx) return;
+            ctx.clearRect(0,0,width,height);
+            
+            // Space background with stars
+            ctx.fillStyle = "#010a1a";
+            ctx.fillRect(0,0,width,height);
+            for(let s of stars) {
+                let brightness = 150 + (s.z * 1.5);
+                ctx.fillStyle = `rgb(${brightness}, ${brightness+40}, 255)`;
+                ctx.beginPath();
+                ctx.arc(s.x, s.y, 2+(100-s.z)/30, 0, Math.PI*2);
+                ctx.fill();
+            }
+            
+            // Tunnel effect (warp lines)
+            ctx.save();
+            ctx.globalAlpha = 0.3;
+            for(let i=0;i<12;i++) {
+                let offset = (cameraZ * 5 + i * 30) % 200;
+                ctx.beginPath();
+                ctx.moveTo(width/2 + Math.sin(tunnelAngle + i)*40, offset);
+                ctx.lineTo(width/2 + Math.cos(tunnelAngle*0.8 + i)*70, offset+120);
+                ctx.lineWidth = 4;
+                ctx.strokeStyle = `rgba(0,255,255,${0.2+Math.sin(cameraZ)*0.1})`;
+                ctx.stroke();
+            }
+            ctx.restore();
+            
+            // Draw notes with glow
+            for(let n of notes) {
+                let col = noteColors[n.noteIndex].color;
+                let gradient = ctx.createRadialGradient(n.x, n.y, 5, n.x, n.y, n.radius);
+                gradient.addColorStop(0, col);
+                gradient.addColorStop(1, "#ffffff");
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = col;
+                ctx.beginPath();
+                ctx.arc(n.x, n.y, n.radius, 0, Math.PI*2);
+                ctx.fillStyle = gradient;
+                ctx.fill();
+                ctx.fillStyle = "white";
+                ctx.font = `bold ${Math.floor(n.radius-8)}px monospace`;
+                ctx.fillText(noteColors[n.noteIndex].name, n.x-9, n.y+6);
+                if(n.glitched) {
+                    ctx.fillStyle = "red";
+                    ctx.font = "bold 16px monospace";
+                    ctx.fillText("!", n.x+12, n.y-10);
                 }
             }
-
-            particles.forEach((p, i) => {
-                p.x += p.vx; p.y += p.vy; p.life -= 0.025;
-                ctx.fillStyle = p.color;
-                ctx.globalAlpha = p.life;
-                ctx.fillRect(p.x, p.y, 6, 6);
-                if (p.life <= 0) particles.splice(i, 1);
-            });
-            ctx.globalAlpha = 1.0;
-
-            frameCount++;
-            speed += 0.002;
-            ctx.setTransform(1, 0, 0, 1, 0, 0); 
+            ctx.shadowBlur = 0;
+            
+            // Trail particles (tap feedback)
+            for(let i=0;i<trail.length;i++) {
+                let t = trail[i];
+                ctx.fillStyle = `rgba(0,255,255,${t.life})`;
+                ctx.beginPath();
+                ctx.arc(t.x, t.y, 12 * t.life, 0, Math.PI*2);
+                ctx.fill();
+                t.life -= 0.03;
+                if(t.life <= 0) trail.splice(i,1), i--;
+            }
+            
+            // GLITCH EFFECT overlay
+            if(screenGlitch || glitchFlash > 0.05) {
+                for(let i=0;i<20;i++) {
+                    ctx.fillStyle = `rgba(${Math.random()*255}, ${Math.random()*100}, 255, 0.3)`;
+                    ctx.fillRect(Math.random()*width, Math.random()*height, 30, Math.random()*10);
+                }
+                ctx.fillStyle = `rgba(255,0,255,0.2)`;
+                ctx.fillRect(0,0,width,height);
+            }
+            
+            // Draw beat pulse ring
+            let beatPulse = 1 + Math.sin(Date.now() * 0.012) * 0.05;
+            ctx.beginPath();
+            ctx.arc(width/2, height-70, 40 * beatPulse, 0, Math.PI*2);
+            ctx.strokeStyle = "#0ff";
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+        
+        function gameLoop() {
+            if(!width) return;
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+        
+        let lastUpdate = 0;
+        function updateLoop(now) {
+            let delta = (now - lastUpdate) / 1000;
+            if(delta > 0.03) delta = 0.03;
+            updateGame(delta);
+            lastUpdate = now;
             requestAnimationFrame(updateLoop);
         }
-
-        const handleInput = (clientX, clientY) => {
-            if (!isActive) return;
-            const rect = canvas.getBoundingClientRect();
-            const x = (clientX - rect.left) * (canvasW / rect.width);
-            const y = (clientY - rect.top) * (canvasH / rect.height);
-            
-            let hit = false;
-            tiles.forEach(t => {
-                if (t.active && x > t.x && x < t.x + laneW && y > t.y - 100 && y < t.y + t.h + 100) {
-                    t.active = false;
-                    hit = true;
-                    score += 10 + (combo * 2);
-                    combo++;
-                    shake = 18;
-                    
-                    scoreDisplay.innerText = score.toString().padStart(4, '0');
-                    if (combo > 4) {
-                        comboDisplay.innerText = `COMBO X${Math.floor(combo/4) + 1}`;
-                        comboDisplay.classList.add('combo-active');
-                    }
-                    
-                    createBurst(x, y, t.color);
-                    triggerAudio(combo % 8 === 0 ? 'bass' : 'lead');
-                }
-            });
-
-            if (!hit && y > canvasH * 0.4) {
-                gameOver();
-            }
-        };
-
-        canvas.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            handleInput(e.touches[e.touches.length - 1].clientX, e.touches[e.touches.length - 1].clientY);
-        }, {passive: false});
-
-        canvas.addEventListener('mousedown', (e) => {
-            handleInput(e.clientX, e.clientY);
+        
+        function startGame() {
+            if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+            gameRunning = true;
+            score = 0;
+            combo = 1;
+            perfectStreak = 0;
+            difficulty = 1;
+            glitchIntensity = 0;
+            notes = [];
+            lastSpawn = 0;
+            cameraZ = 0;
+            updateUI();
+            document.getElementById('startOverlay').style.display = 'none';
+            // high score display
+            document.getElementById('highScoreDisplay').innerHTML = `🏆 HIGH: ${Math.floor(highScore)}`;
+        }
+        
+        // event listeners
+        canvas.addEventListener('touchstart', handleTap);
+        canvas.addEventListener('mousedown', handleTap);
+        window.addEventListener('resize', ()=>{ resizeCanvas(); });
+        
+        // stars init
+        for(let i=0;i<150;i++) stars.push({ x: Math.random() * 1000, y: Math.random() * 1500, z: Math.random() * 100 });
+        
+        resizeCanvas();
+        initAudio();
+        
+        document.getElementById('startBtn').addEventListener('click', ()=>{
+            initAudio();
+            if(audioCtx) audioCtx.resume();
+            startGame();
         });
-
-    </script>
+        
+        // start loops
+        lastUpdate = performance.now();
+        updateLoop(lastUpdate);
+        gameLoop();
+        
+        // auto hide overlay on tap outside button? no, but it's fine
+        setInterval(()=>{
+            if(gameRunning && audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+        }, 1000);
+    })();
+</script>
 </body>
 </html>
