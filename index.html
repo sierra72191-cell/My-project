@@ -2,41 +2,69 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>OCEAN REALMS · LIVING WORLD</title>
     <style>
-        body {
-            margin: 0;
-            overflow: hidden;
-            background: #001529; /* Deep Ocean Blue */
-            font-family: sans-serif;
-        }
-        canvas {
-            display: block;
-        }
-        #ui {
+        body { margin: 0; overflow: hidden; background: #000b1a; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        canvas { display: block; }
+        #ui-layer {
             position: absolute;
-            top: 20px;
-            left: 20px;
-            color: #00d4ff;
-            text-shadow: 0 0 5px #000;
+            top: 0; left: 0; width: 100%; height: 100%;
             pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        #stats {
+            padding: 20px;
+            color: #00fbff;
+            text-shadow: 0 0 10px rgba(0,251,255,0.5);
+        }
+        #controls {
+            padding: 20px;
+            display: flex;
+            gap: 10px;
+            pointer-events: auto;
+            background: rgba(0, 21, 41, 0.8);
+            border-top: 1px solid #00fbff;
+        }
+        .btn {
+            background: #003366;
+            color: white;
+            border: 1px solid #00fbff;
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: bold;
+            flex: 1;
+            text-align: center;
+            active { background: #00fbff; color: #000; }
         }
     </style>
 </head>
 <body>
 
-    <div id="ui">
-        <h1>OCEAN REALMS</h1>
-        <p>Tap or Click to move the Ocean Soul</p>
-    </div>
     <canvas id="gameCanvas"></canvas>
+    
+    <div id="ui-layer">
+        <div id="stats">
+            <div>HEALTH: <span id="hp">100%</span></div>
+            <div>COINS: <span id="coinCount">0</span></div>
+            <div>CREATURES: <span id="petCount">0</span></div>
+        </div>
+        
+        <div id="controls">
+            <div class="btn" onclick="spawnPet('Protector', 5)">Summon Protector (5 coins)</div>
+            <div class="btn" onclick="spawnPet('Scout', 10)">Summon Scout (10 coins)</div>
+        </div>
+    </div>
 
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
+        let coins = 0;
+        let pets = [];
+        let items = [];
 
-        // Make canvas full screen
         function resize() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
@@ -44,64 +72,140 @@
         window.addEventListener('resize', resize);
         resize();
 
-        // Player object
-        const player = {
+        const fish = {
             x: canvas.width / 2,
             y: canvas.height / 2,
             targetX: canvas.width / 2,
             targetY: canvas.height / 2,
-            size: 20,
-            speed: 0.05,
-            color: '#00fbff'
+            angle: 0,
+            size: 15,
+            wiggle: 0,
+            idleTimer: 0
         };
 
-        // Handle touch/mouse input
-        function setTarget(e) {
-            player.targetX = e.clientX || e.touches[0].clientX;
-            player.targetY = e.clientY || e.touches[0].clientY;
+        // Spawn a coin every 3 seconds
+        setInterval(() => {
+            items.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                size: 5
+            });
+        }, 3000);
+
+        function spawnPet(type, cost) {
+            if (coins >= cost) {
+                coins -= cost;
+                document.getElementById('coinCount').innerText = coins;
+                pets.push({ x: fish.x, y: fish.y, type: type, offset: pets.length + 1 });
+                document.getElementById('petCount').innerText = pets.length;
+            }
         }
 
+        function setTarget(e) {
+            const clientX = e.clientX || (e.touches ? e.touches[0].clientX : fish.x);
+            const clientY = e.clientY || (e.touches ? e.touches[0].clientY : fish.y);
+            fish.targetX = clientX;
+            fish.targetY = clientY;
+            fish.idleTimer = 0; 
+        }
+
+        window.addEventListener('touchstart', (e) => { setTarget(e); e.preventDefault(); }, {passive: false});
         window.addEventListener('mousedown', setTarget);
-        window.addEventListener('touchstart', (e) => {
-            setTarget(e);
-            e.preventDefault();
-        }, {passive: false});
 
         function update() {
-            // Smooth movement toward target
-            player.x += (player.targetX - player.x) * player.speed;
-            player.y += (player.targetY - player.y) * player.speed;
-        }
-
-        function draw() {
-            // Draw background
-            ctx.fillStyle = '#001529';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // Draw "bubbles" or particles
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
-            for(let i = 0; i < 50; i++) {
-                ctx.beginPath();
-                ctx.arc((i * 137) % canvas.width, (i * 256) % canvas.height, 2, 0, Math.PI * 2);
-                ctx.fill();
+            // Autonomous Drift
+            fish.idleTimer++;
+            if (fish.idleTimer > 100) {
+                fish.targetX += Math.sin(Date.now() / 1000) * 2;
+                fish.targetY += Math.cos(Date.now() / 1000) * 2;
             }
 
-            // Draw player (Ocean Soul)
-            ctx.shadowBlur = 15;
-            ctx.shadowColor = player.color;
-            ctx.fillStyle = player.color;
-            ctx.beginPath();
-            ctx.arc(player.x, player.y, player.size, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.shadowBlur = 0;
+            // Move Fish
+            const dx = fish.targetX - fish.x;
+            const dy = fish.targetY - fish.y;
+            fish.angle = Math.atan2(dy, dx);
+            fish.x += dx * 0.03;
+            fish.y += dy * 0.03;
+            fish.wiggle = Math.sin(Date.now() / 150) * 5;
 
-            requestAnimationFrame(() => {
-                update();
-                draw();
+            // Follower Logic
+            pets.forEach((pet, i) => {
+                const target = i === 0 ? fish : pets[i-1];
+                pet.x += (target.x - pet.x) * 0.05;
+                pet.y += (target.y - pet.y) * 0.05;
+            });
+
+            // Coin Collection
+            items = items.filter(item => {
+                const dist = Math.hypot(fish.x - item.x, fish.y - item.y);
+                if (dist < 30) {
+                    coins++;
+                    document.getElementById('coinCount').innerText = coins;
+                    return false;
+                }
+                return true;
             });
         }
 
-        draw();
+        function drawFish(x, y, angle, size, color, isPlayer) {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(angle);
+
+            // Tail
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.moveTo(-size, 0);
+            ctx.lineTo(-size - 15, fish.wiggle);
+            ctx.lineTo(-size - 15, -fish.wiggle);
+            ctx.fill();
+
+            // Body
+            ctx.beginPath();
+            ctx.ellipse(0, 0, size + 5, size, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Eye
+            if(isPlayer) {
+                ctx.fillStyle = "white";
+                ctx.beginPath();
+                ctx.arc(size / 2, -size / 3, 4, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = "black";
+                ctx.beginPath();
+                ctx.arc(size / 2 + 1, -size / 3, 2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.restore();
+        }
+
+        function animate() {
+            ctx.fillStyle = '#000b1a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw Coins
+            items.forEach(item => {
+                ctx.fillStyle = '#ffd700';
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = '#ffd700';
+                ctx.beginPath();
+                ctx.arc(item.x, item.y, item.size, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            // Draw Pets
+            pets.forEach(pet => {
+                drawFish(pet.x, pet.y, fish.angle, 8, pet.type === 'Protector' ? '#ff4d4d' : '#4dff88', false);
+            });
+
+            // Draw Player
+            drawFish(fish.x, fish.y, fish.angle, 15, '#00fbff', true);
+
+            update();
+            requestAnimationFrame(animate);
+        }
+
+        animate();
     </script>
 </body>
 </html>
