@@ -3,61 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>OCEAN REALMS · EXPLORER</title>
+    <title>OCEAN REALMS · INFINITE</title>
     <style>
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { margin: 0; overflow: hidden; background: #000408; font-family: 'Courier New', monospace; display: flex; flex-direction: column; height: 100vh; }
-        #game-container { flex-grow: 1; position: relative; overflow: hidden; background: radial-gradient(circle at center, #001a33 0%, #000205 100%); }
+        body { margin: 0; overflow: hidden; background: #000408; font-family: 'Courier New', monospace; height: 100vh; display: flex; flex-direction: column; }
+        #game-container { flex-grow: 1; position: relative; overflow: hidden; background: #000205; }
         canvas { display: block; width: 100%; height: 100%; }
         
         #stats-panel { 
             position: absolute; top: 12px; left: 12px; color: #00fbff; 
             font-size: 10px; pointer-events: none;
-            background: rgba(0, 10, 20, 0.9); padding: 15px; border: 2px solid #ff00ff; 
-            border-radius: 12px; line-height: 1.5; z-index: 10; min-width: 190px;
-            box-shadow: 0 0 15px rgba(255, 0, 255, 0.2);
+            background: rgba(0, 8, 15, 0.95); padding: 15px; border: 1px solid #00fbff; 
+            border-radius: 10px; line-height: 1.4; z-index: 10; min-width: 180px;
         }
-        .hp-bar-bg { width: 100%; height: 8px; background: #200; border: 1px solid #ff0055; margin: 6px 0; border-radius: 4px; overflow: hidden; }
-        #hp-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #ff0055, #ff00ff); transition: width 0.3s; }
+        .hp-bar-bg { width: 100%; height: 6px; background: #200; margin: 6px 0; border-radius: 3px; overflow: hidden; }
+        #hp-fill { width: 100%; height: 100%; background: #ff00ff; transition: width 0.3s; }
 
-        #controls { height: 130px; background: #000a14; border-top: 2px solid #ff00ff; display: flex; gap: 8px; padding: 12px 10px 35px 10px; z-index: 100; }
-        .btn { flex: 1; background: #001a33; color: #00fbff; border: 1px solid #00fbff; border-radius: 12px; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 10px; font-weight: bold; text-transform: uppercase; }
-        .btn:active { background: #ff00ff; color: #fff; transform: scale(0.95); }
+        #controls { height: 130px; background: #00070e; border-top: 2px solid #00fbff; display: flex; gap: 8px; padding: 10px 10px 30px 10px; z-index: 100; }
+        .btn { flex: 1; background: #001a33; color: #00fbff; border: 1px solid #00fbff; border-radius: 10px; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 10px; font-weight: bold; }
+        .btn:active { background: #00fbff; color: #000; }
     </style>
 </head>
 <body onclick="startAudio()">
 
     <div id="game-container">
         <div id="stats-panel">
-            <b style="color: #ff00ff; font-size: 12px;">SOUL CHASSIS: LVL <span id="lvlUI">1</span></b><br>
+            <b style="color: #ff00ff;">NEON SOUL LVL <span id="lvlUI">1</span></b><br>
             <div class="hp-bar-bg"><div id="hp-fill"></div></div>
-            SHIELD: <span id="shUI">0</span>% | HP: <span id="hpText">15000</span><br>
-            KILLS: <span id="killUI">0</span> | BIOMASS: <span id="coinUI">0</span><br>
-            EXP: <span id="expUI">0</span>/50 | SIZE: <span id="sizeUI">1.0</span>x
+            BIOMASS: <span id="coinUI">0</span> | KILLS: <span id="killUI">0</span><br>
+            SHIELD: <span id="shUI">0</span>% | DISTANCE: <span id="distUI">0</span>m<br>
+            ARMY: <span id="friendUI">0</span> | EXP: <span id="expUI">0</span>/50
         </div>
         <canvas id="gameCanvas"></canvas>
     </div>
     
     <div id="controls">
-        <div class="btn" id="buyShrimp">SHRIMP<br>(5c)</div>
-        <div class="btn" id="buyScout">STAR<br>(10c)</div>
-        <div class="btn" id="buyTurtle">TURTLE<br>(20c)</div>
+        <div class="btn" id="buyShrimp">WAR<br>SHRIMP</div>
+        <div class="btn" id="buyScout">STAR<br>FISH</div>
+        <div class="btn" id="buyTurtle">SHIELD<br>TURTLE</div>
     </div>
 
 <script>
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     
-    let coins = 0, kills = 0, exp = 0, lvl = 1, friends = [], entities = [], bubbles = [], reefs = [], grass = [], damageTexts = [];
-    let cam = { x: 2500, y: 2500 };
-    let fish = { x: 2500, y: 2500, tx: 2505, ty: 2505, angle: 0, hp: 15000, maxHp: 15000, shield: 0, age: 0, scale: 0.5, wiggle: 0, flinchX: 0, flinchY: 0, wanderTimer: 0 };
-    let audioStarted = false;
+    let coins = 0, kills = 0, exp = 0, lvl = 1, friends = [], entities = [], grass = [], damageTexts = [];
+    let cam = { x: 0, y: 0 };
+    let fish = { x: 0, y: 0, tx: 5, ty: 5, angle: 0, hp: 15000, maxHp: 15000, shield: 0, scale: 0.5, wiggle: 0, flinchX: 0, flinchY: 0, wanderTimer: 0 };
+    
+    function startAudio() { /* Placeholder for audio context */ }
 
-    function startAudio() { audioStarted = true; }
-
-    // World Gen with Parallax Layers
-    for(let i=0; i<40; i++) reefs.push({x: Math.random()*6000, y: Math.random()*6000, size: 40+Math.random()*100, depth: 0.1+Math.random()*0.2, color: `hsl(250, 20%, ${3+Math.random()*4}%)`});
-    for(let i=0; i<100; i++) grass.push({x: Math.random()*6000, y: Math.random()*6000, h: 30+Math.random()*40, off: Math.random()*10});
+    // World Detail - Initial seed
+    for(let i=0; i<60; i++) grass.push({x: (Math.random()-0.5)*4000, y: (Math.random()-0.5)*4000, h: 30+Math.random()*40, off: Math.random()*10});
 
     function resize() { canvas.width = canvas.parentElement.clientWidth; canvas.height = canvas.parentElement.clientHeight; }
     window.addEventListener('resize', resize); resize();
@@ -65,7 +62,7 @@
     const setupBtn = (id, type) => {
         document.getElementById(id).addEventListener('touchstart', (e) => {
             let costs = {Shrimp:5, Scout:10, Turtle:20};
-            if(coins >= costs[type]) { coins -= costs[type]; friends.push({x:fish.x, y:fish.y, type, angle:0, hp:100}); updateUI(); }
+            if(coins >= costs[type]) { coins -= costs[type]; friends.push({x:fish.x, y:fish.y, type, angle:0}); updateUI(); }
             e.preventDefault();
         });
     };
@@ -74,21 +71,18 @@
     function updateUI() {
         document.getElementById('coinUI').innerText = coins;
         document.getElementById('killUI').innerText = kills;
-        document.getElementById('hpText').innerText = Math.floor(fish.hp);
+        document.getElementById('hpText')?.remove(); // Cleanup old IDs if necessary
         document.getElementById('hp-fill').style.width = (fish.hp/fish.maxHp)*100 + "%";
-        document.getElementById('sizeUI').innerText = fish.scale.toFixed(2);
         document.getElementById('lvlUI').innerText = lvl;
         document.getElementById('expUI').innerText = exp;
         document.getElementById('shUI').innerText = Math.floor(fish.shield);
+        document.getElementById('distUI').innerText = Math.floor(Math.hypot(fish.x, fish.y)/10);
+        document.getElementById('friendUI').innerText = friends.length;
     }
 
-    function addText(x, y, text, color) { damageTexts.push({x, y, text, color, life: 1.0}); }
-
-    function drawTurtle(x, y) {
-        ctx.save(); ctx.translate(x-cam.x, y-cam.y);
-        ctx.fillStyle = '#2e8b57'; ctx.beginPath(); ctx.ellipse(0,0,18,14,0,0,7); ctx.fill(); // Shell
-        ctx.fillStyle = '#3cb371'; ctx.beginPath(); ctx.arc(12,0,6,0,7); ctx.fill(); // Head
-        ctx.restore();
+    function drawEye(x, y, size) {
+        ctx.fillStyle = 'white'; ctx.beginPath(); ctx.arc(x, y, size, 0, 7); ctx.fill();
+        ctx.fillStyle = 'black'; ctx.beginPath(); ctx.arc(x + size*0.3, y, size*0.5, 0, 7); ctx.fill();
     }
 
     function drawEnemy(en) {
@@ -96,11 +90,23 @@
         if(en.type === 'shark') {
             ctx.fillStyle = '#0a0a0a'; ctx.beginPath(); ctx.ellipse(0,0,50,16,0,0,7); ctx.fill();
             ctx.beginPath(); ctx.moveTo(-30,0); ctx.lineTo(-50, 12*Math.sin(Date.now()/150)); ctx.lineTo(-50, -12*Math.sin(Date.now()/150)); ctx.fill();
+            drawEye(25, -5, 4);
         } else if(en.type === 'octopus') {
             ctx.fillStyle = '#400'; ctx.beginPath(); ctx.ellipse(0,0,20,14,0,0,7); ctx.fill();
+            drawEye(12, -4, 3);
         } else {
-            ctx.fillStyle = '#ff4400'; ctx.beginPath(); ctx.ellipse(0,0,18,9,0,0,7); ctx.fill();
+            ctx.fillStyle = '#ff4400'; ctx.beginPath(); ctx.ellipse(0,0,20,10,0,0,7); ctx.fill();
+            ctx.beginPath(); ctx.moveTo(-15,0); ctx.lineTo(-28, 8*Math.sin(Date.now()/100)); ctx.lineTo(-28, -8*Math.sin(Date.now()/100)); ctx.fill();
+            drawEye(10, -3, 3);
         }
+        ctx.restore();
+    }
+
+    function drawTurtle(x, y, angle) {
+        ctx.save(); ctx.translate(x-cam.x, y-cam.y); ctx.rotate(angle);
+        ctx.fillStyle = '#1e5e37'; ctx.beginPath(); ctx.ellipse(0,0,18,14,0,0,7); ctx.fill();
+        ctx.fillStyle = '#2e8b57'; ctx.beginPath(); ctx.arc(14,0,7,0,7); ctx.fill();
+        drawEye(16, -2, 2);
         ctx.restore();
     }
 
@@ -108,103 +114,108 @@
         const rect = canvas.getBoundingClientRect();
         fish.tx = e.touches[0].clientX - rect.left + cam.x;
         fish.ty = e.touches[0].clientY - rect.top + cam.y;
-        fish.wanderTimer = 300; // Reset curiosity on manual touch
+        fish.wanderTimer = 400;
     });
 
     function loop() {
-        // LEVELING SYSTEM
-        if(exp >= lvl * 50) { exp = 0; lvl++; fish.maxHp += 2000; fish.hp = fish.maxHp; addText(fish.x, fish.y-50, "LEVEL UP!", "magenta"); }
+        if(exp >= lvl * 50) { exp = 0; lvl++; fish.maxHp += 1000; fish.hp = fish.maxHp; }
         
-        fish.age += 1/60; fish.scale = 0.5 + (lvl * 0.1);
-        if(fish.hp < fish.maxHp) fish.hp += (1 + lvl);
-        fish.flinchX *= 0.9; fish.flinchY *= 0.9;
+        // Infinite World Logic: Spawn grass ahead of player
+        if(Math.random() < 0.1) {
+            let ang = Math.random() * Math.PI * 2;
+            grass.push({x: fish.x + Math.cos(ang)*1500, y: fish.y + Math.sin(ang)*1500, h: 30+Math.random()*40, off: Math.random()*10});
+            if(grass.length > 200) grass.shift();
+        }
 
-        // CURIOSITY ENGINE: If idle, find coins or explore ruins
+        // Curiosity AI: Better Exploration
         fish.wanderTimer--;
         if(fish.wanderTimer <= 0) {
-            let target = entities.find(e => e.type==='coin' && Math.hypot(e.x-fish.x, e.y-fish.y) < 800);
-            if(target) { fish.tx = target.x; fish.ty = target.y; }
-            else { fish.tx += (Math.random()-0.5)*500; fish.ty += (Math.random()-0.5)*500; }
-            fish.wanderTimer = 180 + Math.random()*200;
+            let dist = 600 + Math.random()*400;
+            let ang = Math.random() * Math.PI * 2;
+            fish.tx = fish.x + Math.cos(ang) * dist;
+            fish.ty = fish.y + Math.sin(ang) * dist;
+            fish.wanderTimer = 300 + Math.random()*300;
         }
 
         cam.x += (fish.x - canvas.width/2 - cam.x) * 0.05;
         cam.y += (fish.y - canvas.height/2 - cam.y) * 0.05;
-        fish.x += (fish.tx + fish.flinchX - fish.x) * 0.03;
-        fish.y += (fish.ty + fish.flinchY - fish.y) * 0.03;
+        fish.x += (fish.tx + fish.flinchX - fish.x) * 0.025;
+        fish.y += (fish.ty + fish.flinchY - fish.y) * 0.025;
         fish.angle = Math.atan2(fish.ty-fish.y, fish.tx-fish.x);
-        fish.wiggle += 0.2;
+        fish.wiggle += 0.15;
 
         ctx.clearRect(0,0, canvas.width, canvas.height);
 
-        // Environment
-        reefs.forEach(r => { ctx.fillStyle = r.color; ctx.beginPath(); ctx.arc(r.x - cam.x*r.depth, r.y - cam.y*r.depth, r.size, 0, 7); ctx.fill(); });
+        // Render Grass
         ctx.strokeStyle = '#051a10'; ctx.lineWidth = 2;
         grass.forEach(g => {
             let sx = g.x - cam.x; let sy = g.y - cam.y;
-            ctx.beginPath(); ctx.moveTo(sx, sy);
-            ctx.quadraticCurveTo(sx + Math.sin(Date.now()/1000 + g.off)*15, sy - g.h/2, sx, sy - g.h); ctx.stroke();
+            if(sx > -50 && sx < canvas.width+50 && sy > -50 && sy < canvas.height+50) {
+                ctx.beginPath(); ctx.moveTo(sx, sy);
+                ctx.quadraticCurveTo(sx + Math.sin(Date.now()/1000 + g.off)*12, sy - g.h/2, sx, sy - g.h); ctx.stroke();
+            }
         });
 
-        // Floating Text
-        damageTexts = damageTexts.filter(t => {
-            t.y -= 1.5; t.life -= 0.02;
-            ctx.fillStyle = t.color.replace(')', `,${t.life})`).replace('rgb', 'rgba');
-            ctx.fillText(t.text, t.x-cam.x, t.y-cam.y); return t.life > 0;
-        });
-
-        // Entities & Enemies
+        // Smart Enemy AI
         entities = entities.filter(en => {
             let d = Math.hypot(fish.x - en.x, fish.y - en.y);
-            if(en.type === 'coin' && d < 65) { coins++; exp += 5; updateUI(); return false; }
+            if(en.type === 'coin' && d < 60) { coins++; exp += 5; updateUI(); return false; }
+            
             if(en.stun > 0) { en.stun--; ctx.globalAlpha = 0.4; }
-            else if(d < 450) {
-                en.angle = Math.atan2(fish.y - en.y, fish.x - en.x);
-                en.x += Math.cos(en.angle) * en.speed; en.y += Math.sin(en.angle) * en.speed;
+            else {
+                // "Dumb" Autonomous Logic: Wander unless very close
+                if(d < 350) { // Aggro range
+                    en.angle = Math.atan2(fish.y - en.y, fish.x - en.x);
+                    en.x += Math.cos(en.angle) * en.speed; en.y += Math.sin(en.angle) * en.speed;
+                } else {
+                    en.x += Math.cos(en.wander) * 0.6; en.y += Math.sin(en.wander) * 0.6;
+                    if(Math.random() < 0.01) en.wander = Math.random() * Math.PI * 2;
+                    en.angle = en.wander;
+                }
             }
             drawEnemy(en); ctx.globalAlpha = 1.0;
-            if(d < 70 && en.stun <= 0) {
-                if(fish.shield > 0) fish.shield -= 2;
-                else fish.hp -= (en.type === 'shark' ? 10 : 3);
-                let p = Math.atan2(fish.y - en.y, fish.x - en.x);
-                fish.flinchX += Math.cos(p) * 45; fish.flinchY += Math.sin(p) * 45;
+            if(d < 65 && en.stun <= 0) {
+                if(fish.shield > 0) fish.shield -= 0.5; else fish.hp -= (en.type==='shark'?8:2);
+                fish.flinchX += (fish.x-en.x)*0.2; fish.flinchY += (fish.y-en.y)*0.2;
             }
-            return !en.dead;
+            return d < 2500 && !en.dead; // Cleanup far away enemies
         });
 
-        // Army & The New Turtle
+        // Army
         fish.shield = 0;
         friends.forEach((fr, i) => {
-            let orbitX = fish.x + Math.cos(Date.now()/1000 + i) * (110 + (lvl*10));
-            let orbitY = fish.y + Math.sin(Date.now()/1000 + i) * (110 + (lvl*10));
-            let enemy = entities.find(e => e.type !== 'coin' && Math.hypot(e.x-fish.x, e.y-fish.y) < 400);
-            let target = enemy || {x: orbitX, y: orbitY};
-            fr.x += (target.x - fr.x) * 0.1; fr.y += (target.y - fr.y) * 0.1;
-            
-            if(fr.type === 'Turtle') fish.shield = Math.min(100, fish.shield + 20); // Each turtle adds 20% shield
+            let orbitX = fish.x + Math.cos(Date.now()/1200 + i) * 120;
+            let orbitY = fish.y + Math.sin(Date.now()/1200 + i) * 120;
+            let target = entities.find(e => e.type !== 'coin' && Math.hypot(e.x-fish.x, e.y-fish.y) < 350) || {x: orbitX, y: orbitY};
+            fr.x += (target.x - fr.x) * 0.08; fr.y += (target.y - fr.y) * 0.08;
+            let ang = Math.atan2(target.y-fr.y, target.x-fr.x);
 
-            if(enemy && Math.hypot(fr.x-enemy.x, fr.y-enemy.y) < 65) {
-                if(fr.type === 'Shrimp') { 
-                    enemy.hp -= 2.5; if(enemy.hp <= 0) { enemy.dead=true; coins+=3; kills++; exp+=20; updateUI(); } 
-                } else if(fr.type === 'Scout') { enemy.stun = 180; }
+            if(fr.type === 'Turtle') { fish.shield = Math.min(100, fish.shield + 25); drawTurtle(fr.x, fr.y, ang); }
+            else if(fr.type === 'Shrimp') {
+                ctx.save(); ctx.translate(fr.x-cam.x, fr.y-cam.y); ctx.rotate(ang);
+                ctx.fillStyle='#ff7f50'; ctx.beginPath(); ctx.ellipse(0,0,12,6,0,0,7); ctx.fill();
+                ctx.beginPath(); ctx.moveTo(8,-2); ctx.lineTo(15,-6); ctx.stroke(); ctx.restore();
+                if(target.hp) { target.hp -= 2; if(target.hp <= 0) { target.dead=true; kills++; exp+=20; updateUI(); } }
+            } else { // Starfish
+                ctx.save(); ctx.translate(fr.x-cam.x, fr.y-cam.y); ctx.rotate(Date.now()/500); ctx.fillStyle='#f0ff00';
+                ctx.beginPath(); for(let j=0; j<5; j++) { ctx.rotate(Math.PI*2/5); ctx.lineTo(12,0); ctx.lineTo(5,3); } ctx.fill(); ctx.restore();
+                if(target.type) target.stun = 120;
             }
-            if(fr.type === 'Shrimp') { ctx.save(); ctx.translate(fr.x-cam.x, fr.y-cam.y); ctx.rotate(Math.atan2(target.y-fr.y, target.x-fr.x)); ctx.fillStyle='#ff7f50'; ctx.beginPath(); ctx.ellipse(0,0,10,5,0,0,7); ctx.fill(); ctx.restore(); }
-            else if(fr.type === 'Scout') { ctx.save(); ctx.translate(fr.x-cam.x, fr.y-cam.y); ctx.rotate(Date.now()/500); ctx.fillStyle='#f0ff00'; ctx.beginPath(); for(let j=0; j<5; j++) { ctx.rotate(Math.PI*2/5); ctx.lineTo(12,0); ctx.lineTo(5,3); } ctx.fill(); ctx.restore(); }
-            else drawTurtle(fr.x, fr.y);
         });
 
-        // PLAYER: NEON SOUL
-        ctx.save(); ctx.translate(fish.x-cam.x, fish.y-cam.y); ctx.rotate(fish.angle); ctx.scale(fish.scale, fish.scale);
-        if(fish.shield > 0) { ctx.strokeStyle = '#00fbff'; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(0,0,40,0,7); ctx.stroke(); }
-        ctx.shadowBlur=30; ctx.shadowColor='#ff00ff'; ctx.fillStyle = '#cc00ff';
-        ctx.beginPath(); ctx.ellipse(0,0,28,16,0,0,7); ctx.fill();
-        ctx.fillStyle = '#ff00ff'; ctx.beginPath(); ctx.moveTo(-15,0); ctx.lineTo(-40, 18*Math.sin(fish.wiggle)); ctx.lineTo(-40, -18*Math.sin(fish.wiggle)); ctx.fill();
-        ctx.restore();
+        // PLAYER
+        ctx.save(); ctx.translate(fish.x-cam.x, fish.y-cam.y); ctx.rotate(fish.angle); 
+        ctx.scale(fish.scale, fish.scale);
+        if(fish.shield > 0) { ctx.strokeStyle='#00fbff'; ctx.lineWidth=3; ctx.beginPath(); ctx.arc(0,0,45,0,7); ctx.stroke(); }
+        ctx.shadowBlur=20; ctx.shadowColor='#ff00ff'; ctx.fillStyle='#cc00ff';
+        ctx.beginPath(); ctx.ellipse(0,0,30,16,0,0,7); ctx.fill();
+        ctx.fillStyle='#ff00ff'; ctx.beginPath(); ctx.moveTo(-15,0); ctx.lineTo(-45, 20*Math.sin(fish.wiggle)); ctx.lineTo(-45, -20*Math.sin(fish.wiggle)); ctx.fill();
+        drawEye(16, -6, 5); ctx.restore();
 
-        if(Math.random() < 0.04 && entities.length < 35) {
-            let r = Math.random();
-            let type = r < 0.08 ? 'shark' : (r < 0.2 ? 'octopus' : (r < 0.5 ? 'enemyFish' : 'coin'));
-            entities.push({x: fish.x+(Math.random()-0.5)*2600, y: fish.y+(Math.random()-0.5)*2600, type, hp: type==='shark'?500:100, speed: type==='shark'?1.3:2.3, stun:0, dead:false, angle:0});
+        if(Math.random() < 0.03 && entities.length < 30) {
+            let ang = Math.random()*Math.PI*2;
+            let type = Math.random() < 0.1 ? 'shark' : (Math.random() < 0.2 ? 'octopus' : (Math.random() < 0.5 ? 'enemyFish' : 'coin'));
+            entities.push({x: fish.x+Math.cos(ang)*1200, y: fish.y+Math.sin(ang)*1200, type, hp: type==='shark'?500:100, speed: type==='shark'?1.2:2.2, stun:0, dead:false, wander: Math.random()*7, angle:0});
         }
         updateUI(); requestAnimationFrame(loop);
     }
