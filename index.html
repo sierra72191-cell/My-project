@@ -3,733 +3,375 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Nova Realms: Hunger & Harvest</title>
+    <title>Nova Realms: Mobile Optimized</title>
     <style>
-        * {
-            user-select: none;
-            touch-action: manipulation;
-            box-sizing: border-box;
-        }
+        * { user-select: none; touch-action: none; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body {
-            margin: 0;
-            min-height: 100vh;
-            background: #1a1e1a;
+            margin: 0; padding: 0;
+            background: #121412;
+            display: flex; justify-content: center; align-items: center;
+            height: 100vh; width: 100vw;
+            overflow: hidden;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+        .game-wrapper {
+            position: relative;
+            width: 100%;
+            height: 100%;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-family: 'Courier New', monospace;
-            touch-action: none;
-            padding: 6px;
-        }
-        .game-container {
-            position: relative;
-            background: #2a2a2a;
-            border-radius: 28px;
-            box-shadow: 0 12px 28px black;
-            display: inline-block;
         }
         canvas {
             display: block;
-            margin: 0 auto;
-            border-radius: 24px;
-            cursor: crosshair;
-            touch-action: none;
-            width: 100%;
-            height: auto;
+            background: #2a2a2a;
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
         }
-        .ui-overlay {
+
+        /* Top Bar: Stats */
+        .top-stats {
             position: absolute;
-            bottom: 6px;
-            left: 6px;
-            right: 6px;
-            pointer-events: none;
-            z-index: 20;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(5px);
+            border: 1px solid #e0a235;
+            border-radius: 12px;
+            padding: 5px 15px;
+            display: flex;
+            gap: 15px;
+            color: #ffefc0;
+            font-size: 12px;
+            white-space: nowrap;
+            z-index: 100;
+        }
+
+        /* Side Controls: Crafting */
+        .side-panel {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
             display: flex;
             flex-direction: column;
-            gap: 6px;
-        }
-        .stats-panel {
-            background: rgba(0,0,0,0.8);
-            backdrop-filter: blur(8px);
-            border-radius: 40px;
-            padding: 6px 12px;
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            font-size: 11px;
-            font-weight: bold;
-            color: #ffefc0;
-            border: 1px solid #e0a235;
             gap: 8px;
-            pointer-events: none;
+            z-index: 100;
         }
-        .xp-bar-bg {
-            background: #3a2a1a;
-            border-radius: 20px;
-            height: 10px;
-            width: 100px;
-            overflow: hidden;
-            border: 1px solid #ccaa55;
-        }
-        .xp-bar-fill {
-            background: #aaf0a0;
-            width: 0%;
-            height: 100%;
-            border-radius: 20px;
-        }
-        .inventory-bar {
-            background: rgba(0,0,0,0.85);
-            backdrop-filter: blur(12px);
-            border-radius: 48px;
-            padding: 6px 12px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            justify-content: center;
-            pointer-events: auto;
-            border: 1px solid #b87c3a;
-        }
-        .inv-slot {
-            background: #2c2418;
-            border-radius: 36px;
-            padding: 3px 10px;
-            font-size: 14px;
-            font-weight: bold;
-            color: #ffe1a0;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            border: 1px solid #daa342;
-            pointer-events: auto;
-            cursor: pointer;
-            transition: 0.05s linear;
-            white-space: nowrap;
-        }
-        .inv-slot:active { transform: scale(0.96); background:#1e1810; }
-        .craft-float {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 6px;
-            pointer-events: auto;
-            margin-bottom: 4px;
-        }
-        .float-btn {
-            background: #3d2b1cdf;
-            backdrop-filter: blur(4px);
+
+        .action-btn {
+            background: rgba(61, 43, 28, 0.9);
             border: 1px solid #f5bc70;
             color: #ffefcf;
+            border-radius: 8px;
+            padding: 10px;
+            font-size: 10px;
             font-weight: bold;
-            border-radius: 60px;
-            padding: 5px 12px;
-            font-size: 11px;
-            font-family: monospace;
-            cursor: pointer;
-            transition: 0.05s linear;
-            touch-action: manipulation;
+            width: 80px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
         }
-        .float-btn:active { transform: scale(0.94); background:#2f210f; }
-        .toggle-active {
-            background: #6b8c3e;
-            border-color: #f9e45b;
-            color: white;
-            box-shadow: 0 0 6px #b5ff6a;
-        }
-        .message-tip {
+
+        .action-btn:active { background: #f5bc70; color: #000; }
+
+        /* Bottom Inventory */
+        .bottom-ui {
             position: absolute;
-            top: 8px;
-            left: 8px;
-            background: #000000bb;
-            color: #f5cd6d;
-            padding: 4px 12px;
-            border-radius: 28px;
-            font-size: 9px;
-            font-weight: bold;
-            font-family: monospace;
+            bottom: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
             pointer-events: none;
-            z-index: 30;
         }
-        @media (max-width: 700px) {
-            .stats-panel { font-size: 9px; padding: 4px 8px; }
-            .inv-slot { font-size: 10px; padding: 2px 8px; }
-            .float-btn { font-size: 9px; padding: 4px 8px; }
+
+        .inventory-bar {
+            background: rgba(0,0,0,0.8);
+            border: 1px solid #b87c3a;
+            border-radius: 20px;
+            padding: 5px 15px;
+            display: flex;
+            gap: 15px;
+            color: #fff;
+            font-size: 13px;
+            pointer-events: auto;
+        }
+
+        #plantMenu {
+            display: none;
+            position: absolute;
+            bottom: 80px;
+            background: rgba(0,0,0,0.9);
+            border: 2px solid #6b8c3e;
+            padding: 10px;
+            border-radius: 15px;
+            gap: 10px;
+            pointer-events: auto;
+        }
+
+        .plant-opt {
+            padding: 8px;
+            background: #2c2418;
+            border: 1px solid #daa342;
+            color: #ffe1a0;
+            border-radius: 5px;
+        }
+
+        .toggle-active { background: #6b8c3e !important; color: #fff; border-color: #fff; }
+        
+        .xp-container { width: 120px; height: 8px; background: #333; border-radius: 4px; overflow: hidden; border: 1px solid #555; }
+        .xp-fill { height: 100%; background: #aaf0a0; width: 0%; transition: width 0.3s; }
+        
+        #tipMsg {
+            position: absolute;
+            top: 55px;
+            background: rgba(0,0,0,0.6);
+            color: #f5cd6d;
+            padding: 4px 10px;
+            border-radius: 10px;
+            font-size: 10px;
+            z-index: 90;
         }
     </style>
 </head>
 <body>
-<div class="game-container">
+
+<div class="game-wrapper">
     <canvas id="gameCanvas" width="1000" height="700"></canvas>
-    <div class="ui-overlay">
-        <div class="stats-panel">
-            <span>❤️ <span id="hpVal">500</span>/<span id="maxHpVal">500</span></span>
-            <span>⚔️ Lv.<span id="lvlVal">1</span></span>
-            <span>🌀 RING:<span id="ringDmg">1</span></span>
-            <span>🌞 DAY <span id="dayVal">1</span>/99</span>
-            <span>🍗 HUNGER:<span id="hungerVal">100</span>%</span>
-            <span>🕷️ KILLS:<span id="killsVal">0</span></span>
-            <div class="xp-bar-bg"><div class="xp-bar-fill" id="xpFill"></div></div>
-        </div>
-        <div class="craft-float" id="floatCraft">
-            <button class="float-btn" id="craftCrossbowBtn">🔨 CROSSBOW</button>
-            <button class="float-btn" id="craftBoltsBtn">🏹 BOLTS +5</button>
-            <button class="float-btn" id="craftCampfireBtn">🔥 CAMPFIRE</button>
-            <button class="float-btn" id="craftWallBtn">🧱 WALL</button>
-            <button class="float-btn" id="craftTowerBtn">🗼 TOWER</button>
-            <button class="float-btn" id="toggleTillBtn" style="background:#5a4a2a;">🌾 TILL MODE</button>
-        </div>
-        <div class="inventory-bar" id="inventoryBar"></div>
+
+    <div class="top-stats">
+        <span>❤️ <span id="hpVal">500</span></span>
+        <span>🍗 <span id="hungerVal">100</span>%</span>
+        <span>🌞 DAY <span id="dayVal">1</span></span>
+        <div class="xp-container"><div class="xp-fill" id="xpFill"></div></div>
     </div>
-    <div class="message-tip" id="tipMsg">🌱 TILL MODE: toggle, tap ground → till soil. Plant seeds & eat to survive!</div>
+
+    <div id="tipMsg">Tap to move. Collect 🪵 and 🪨 to craft!</div>
+
+    <div class="side-panel">
+        <button class="action-btn" id="toggleTillBtn">🌾 TILL</button>
+        <button class="action-btn" onclick="craftWall()">🧱 WALL</button>
+        <button class="action-btn" onclick="craftTower()">🗼 TOWER</button>
+        <button class="action-btn" onclick="craftCampfire()">🔥 CAMP</button>
+        <button class="action-btn" onclick="craftCrossbow()">🔨 BOW</button>
+        <button class="action-btn" onclick="craftBolts()">🏹 BOLTS</button>
+    </div>
+
+    <div class="bottom-ui">
+        <div id="plantMenu">
+            <button class="plant-opt" onclick="confirmPlant('carrot')">🥕 Carrot</button>
+            <button class="plant-opt" onclick="confirmPlant('corn')">🌽 Corn</button>
+            <button class="plant-opt" onclick="confirmPlant('apple')">🍎 Apple</button>
+            <button class="plant-opt" onclick="confirmPlant('wheat')">🌾 Wheat</button>
+        </div>
+        <div class="inventory-bar" id="inventoryBar">
+            </div>
+    </div>
 </div>
 
 <script>
-    (function(){
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        let camera = { x: 0, y: 0 };
-        const MAP_SIZE = 4200;
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    // --- Game Logic Constants ---
+    const MAP_SIZE = 3000;
+    let camera = { x: 0, y: 0 };
+    let wood = 15, stone = 10;
+    let seeds = { carrot: 3, corn: 2, apple: 1, wheat: 3 };
+    let resources = [], structures = [], enemies = [], farmlands = [], projectiles = [];
+    let activePlot = null; // for planting menu
+
+    let player = {
+        x: MAP_SIZE/2, y: MAP_SIZE/2,
+        hp: 500, maxHp: 500, level: 1, xp: 0,
+        hunger: 100, boltCount: 0, hasCrossbow: false,
+        moveTarget: null
+    };
+
+    let game = { day: 1, dayTimer: 120, tillMode: false, gameOver: false };
+
+    // --- Core Functions ---
+
+    function updateUI() {
+        document.getElementById('hpVal').innerText = Math.floor(player.hp);
+        document.getElementById('hungerVal').innerText = Math.floor(player.hunger);
+        document.getElementById('dayVal').innerText = game.day;
+        let needed = player.level * 25;
+        document.getElementById('xpFill').style.width = (player.xp / needed * 100) + "%";
         
-        // Player
-        let player = {
-            x: MAP_SIZE/2, y: MAP_SIZE/2,
-            hp: 500, maxHp: 500,
-            level: 1, xp: 0,
-            ringDamage: 1,
-            hasCrossbow: false,
-            selectedWeapon: null,
-            boltCount: 0,
-            moveTarget: null,
-            hunger: 100,    // percent
-        };
-        
-        // Game state
-        let game = {
-            day: 1,
-            dayTimer: 120,
-            kills: 0,
-            gameOver: false,
-            victory: false,
-            tillMode: false      // till toggle
-        };
-        
-        // World objects
-        let resources = [];      // trees / stone
-        let structures = [];     // walls, towers, campfires
-        let farmlands = [];      // {x,y, planted: 'carrot'/'corn'/'apple'/'wheat', growth:0, stage:0}
-        let enemies = [];
-        let projectiles = [];
-        
-        // Inventory / materials
-        let wood = 12;
-        let stone = 8;
-        let seeds = { carrot: 3, corn: 2, apple: 1, wheat: 3 };
-        let foodItems = { carrot: 8, corn: 10, apple: 12, wheat: 6 }; // hunger restore
-        
-        // XP needed
-        function getXPneeded() { return player.level * 20; }
-        
-        function updateUI() {
-            document.getElementById('hpVal').innerText = Math.floor(player.hp);
-            document.getElementById('maxHpVal').innerText = player.maxHp;
-            document.getElementById('lvlVal').innerText = player.level;
-            document.getElementById('ringDmg').innerText = player.ringDamage;
-            document.getElementById('dayVal').innerText = `${game.day}`;
-            document.getElementById('hungerVal').innerText = Math.floor(player.hunger);
-            document.getElementById('killsVal').innerText = game.kills;
-            let xpPercent = (player.xp / getXPneeded()) * 100;
-            document.getElementById('xpFill').style.width = Math.min(100, xpPercent) + '%';
-            renderInventoryBar();
+        const inv = document.getElementById('inventoryBar');
+        inv.innerHTML = `<span>🪵 ${wood}</span> <span>🪨 ${stone}</span> <span>🏹 ${player.boltCount}</span>`;
+        if(player.hasCrossbow) inv.innerHTML += ` <b style="color:gold"> [BOW]</b>`;
+    }
+
+    function showTip(msg) {
+        document.getElementById('tipMsg').innerText = msg;
+    }
+
+    // --- Farming Logic ---
+    function handleTill(wx, wy) {
+        let plot = farmlands.find(f => Math.hypot(f.x - wx, f.y - wy) < 40);
+        if(!plot) {
+            farmlands.push({x: wx, y: wy, planted: null, growth: 0, ready: false});
+            showTip("Soil ready! Tap it to plant.");
+        } else if (!plot.planted) {
+            activePlot = plot;
+            document.getElementById('plantMenu').style.display = 'flex';
+        } else if (plot.ready) {
+            seeds[plot.planted] += 3;
+            player.hunger = Math.min(100, player.hunger + 15);
+            plot.planted = null; plot.ready = false; plot.growth = 0;
+            showTip("Harvested & Ate! +Hunger");
         }
-        
-        function renderInventoryBar() {
-            const bar = document.getElementById('inventoryBar');
-            bar.innerHTML = '';
-            let resDiv = document.createElement('div'); resDiv.className = 'inv-slot';
-            resDiv.innerHTML = `<span>🪵</span> ${wood}  <span>🪨</span> ${stone}`;
-            bar.appendChild(resDiv);
-            let boltsDiv = document.createElement('div'); boltsDiv.className = 'inv-slot';
-            boltsDiv.innerHTML = `<span>🏹</span> ${player.boltCount}`;
-            bar.appendChild(boltsDiv);
-            let seedsDiv = document.createElement('div'); seedsDiv.className = 'inv-slot';
-            seedsDiv.innerHTML = `<span>🥕${seeds.carrot||0} 🌽${seeds.corn||0} 🍎${seeds.apple||0} 🌾${seeds.wheat||0}</span>`;
-            bar.appendChild(seedsDiv);
-            if(player.hasCrossbow){
-                let bowSlot = document.createElement('div'); bowSlot.className = 'inv-slot';
-                bowSlot.innerHTML = `<span>🏹🔫</span> CROSSBOW`;
-                bowSlot.addEventListener('touchstart', (e)=>{ e.preventDefault(); equipCrossbow(); });
-                bowSlot.addEventListener('mousedown', (e)=>{ e.preventDefault(); equipCrossbow(); });
-                bar.appendChild(bowSlot);
-            }
+    }
+
+    function confirmPlant(type) {
+        if(seeds[type] > 0 && activePlot) {
+            seeds[type]--;
+            activePlot.planted = type;
+            activePlot.growth = 0;
+            document.getElementById('plantMenu').style.display = 'none';
+            showTip("Growing " + type + "...");
+        } else {
+            showTip("No seeds left!");
         }
-        
-        function equipCrossbow(){
-            if(!player.hasCrossbow) return;
-            player.selectedWeapon = 'crossbow';
-            showTip("🔫 Crossbow ready — tap enemy to fire", 1000);
-        }
-        
-        function addDPSPopup(x,y, dmg, isAcid=false){
-            const div = document.createElement('div');
-            div.className = 'dps-pop';
-            div.innerText = isAcid ? `💧-${dmg}` : `-${dmg}`;
-            let canvasRect = canvas.getBoundingClientRect();
-            let screenX = (x - camera.x) * (canvas.width/ canvas.clientWidth) + canvasRect.left;
-            let screenY = (y - camera.y) * (canvas.height/ canvas.clientHeight) + canvasRect.top;
-            div.style.position = 'fixed';
-            div.style.left = screenX + 'px';
-            div.style.top = screenY + 'px';
-            document.body.appendChild(div);
-            setTimeout(()=> div.remove(), 500);
-        }
-        
-        function showTip(msg, duration=1800){
-            let tipDiv = document.getElementById('tipMsg');
-            tipDiv.innerText = msg;
-            tipDiv.style.opacity = '1';
-            setTimeout(()=> { if(tipDiv.innerText === msg) tipDiv.style.opacity = '0.7'; }, duration);
-        }
-        
-        // Ring damage
-        function applyRingDamage(){
-            let ringRadius = 75 + player.level * 5;
-            for(let i=0;i<enemies.length;i++){
-                let e = enemies[i];
-                if(Math.hypot(e.x - player.x, e.y - player.y) < ringRadius){
-                    e.hp -= player.ringDamage;
-                    addDPSPopup(e.x, e.y, player.ringDamage);
-                    if(e.hp <= 0){
-                        let dropStone = (e.type === 'snail') ? 3 : 1;
-                        stone += dropStone;
-                        showTip(`+${dropStone}🪨`, 400);
-                        enemies.splice(i,1);
-                        game.kills++;
-                        player.xp += 12;
-                        checkLevelUp();
-                        i--;
-                    }
+    }
+
+    // --- Crafting Logic ---
+    function craftWall() { if(wood>=5 && stone>=2){ wood-=5; stone-=2; structures.push({x:player.x, y:player.y, type:'wall'}); } }
+    function craftTower() { if(wood>=10 && stone>=10){ wood-=10; stone-=10; structures.push({x:player.x, y:player.y, type:'tower', cooldown:0}); } }
+    function craftCampfire() { if(wood>=8){ wood-=8; structures.push({x:player.x, y:player.y, type:'campfire'}); } }
+    function craftCrossbow() { if(!player.hasCrossbow && wood>=15){ wood-=15; player.hasCrossbow=true; showTip("Bow Crafted!"); } }
+    function craftBolts() { if(wood>=2 && stone>=1){ wood-=2; stone-=1; player.boltCount+=5; } }
+
+    // --- Input Handling ---
+    function onTouch(e) {
+        e.preventDefault();
+        const rect = canvas.getBoundingClientRect();
+        const touch = e.touches ? e.touches[0] : e;
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        const tx = (touch.clientX - rect.left) * scaleX;
+        const ty = (touch.clientY - rect.top) * scaleY;
+        const wx = tx + camera.x;
+        const wy = ty + camera.y;
+
+        if(game.tillMode) {
+            handleTill(wx, wy);
+        } else {
+            // Resource gathering
+            let res = resources.find(r => Math.hypot(r.x - wx, r.y - wy) < 40);
+            if(res) {
+                res.hp--;
+                if(res.hp <= 0) {
+                    if(res.type==='tree') wood += 4; else stone += 3;
+                    resources.splice(resources.indexOf(res), 1);
                 }
-            }
-        }
-        
-        function checkLevelUp(){
-            let needed = getXPneeded();
-            while(player.xp >= needed){
-                player.level++;
-                player.xp -= needed;
-                player.maxHp += 20;
-                player.hp = player.maxHp;
-                player.ringDamage += 1;
-                showTip(`✨ LVL UP! +20 HP | RING +1`, 1000);
-                needed = getXPneeded();
-                updateUI();
-            }
-        }
-        
-        // --- Spiders & Snails (more spiders)
-        function spawnEnemies(){
-            let maxEnemies = 22 + Math.floor(game.day/5);
-            if(enemies.length < maxEnemies){
-                let isSnail = (Math.random() < 0.12); // more spiders now
-                let side = Math.floor(Math.random()*4);
-                let x,y;
-                let margin = 440;
-                if(side===0){ x = player.x + 480 + Math.random()*320; y = player.y - 260 + Math.random()*500;}
-                else if(side===1){ x = player.x - 800 + Math.random()*320; y = player.y - 260 + Math.random()*500;}
-                else if(side===2){ x = player.x - 260 + Math.random()*500; y = player.y + 500 + Math.random()*300;}
-                else { x = player.x - 260 + Math.random()*500; y = player.y - 820 + Math.random()*300;}
-                x = Math.min(MAP_SIZE-50, Math.max(50,x));
-                y = Math.min(MAP_SIZE-50, Math.max(50,y));
-                if(isSnail){
-                    enemies.push({ x,y, hp:50, type:'snail', speed: 38, dmg:1, attackTimer:0, rangedCooldown:0 });
-                } else {
-                    enemies.push({ x,y, hp:50, type:'spider', speed: 112, dmg:1, attackTimer:0 });
-                }
-            }
-        }
-        
-        function updateEnemies(deltaSec){
-            for(let i=0;i<enemies.length;i++){
-                let e = enemies[i];
-                let distToPlayer = Math.hypot(e.x - player.x, e.y - player.y);
-                let activeRange = (e.type === 'snail') ? 400 : 330;
-                if(distToPlayer < activeRange){
-                    let angle = Math.atan2(player.y - e.y, player.x - e.x);
-                    let move = e.speed * deltaSec;
-                    e.x += Math.cos(angle) * move;
-                    e.y += Math.sin(angle) * move;
-                    if(e.type === 'snail' && e.rangedCooldown <=0 && distToPlayer < 300){
-                        projectiles.push({ x:e.x, y:e.y, angle:angle, speed:300, damage:1, traveled:0, hit:false });
-                        e.rangedCooldown = 2.3;
-                    }
-                    if(e.rangedCooldown>0) e.rangedCooldown -= deltaSec;
-                    if(distToPlayer < 42 && player.hp>0 && e.attackTimer<=0){
-                        player.hp -= e.dmg;
-                        addDPSPopup(player.x, player.y, e.dmg);
-                        e.attackTimer = 1.0;
-                        if(player.hp<=0) gameOver();
-                    }
-                }
-                if(e.attackTimer>0) e.attackTimer -= deltaSec;
-                // collision with walls
-                for(let s of structures){
-                    if(s.type === 'wall' && Math.hypot(e.x - s.x, e.y - s.y) < 48){
-                        let angle = Math.atan2(e.y - s.y, e.x - s.x);
-                        e.x += Math.cos(angle)*15;
-                        e.y += Math.sin(angle)*15;
-                    }
-                }
-                e.x = Math.min(MAP_SIZE-25, Math.max(25, e.x));
-                e.y = Math.min(MAP_SIZE-25, Math.max(25, e.y));
-                if(e.hp <=0){
-                    let dropStone = (e.type === 'snail') ? 3 : 1;
-                    stone += dropStone;
-                    enemies.splice(i,1);
-                    game.kills++;
-                    player.xp += 12;
-                    checkLevelUp();
-                    i--;
-                }
-            }
-        }
-        
-        function updateProjectiles(delta){
-            for(let i=0;i<projectiles.length;i++){
-                let p = projectiles[i];
-                let step = p.speed * delta;
-                p.x += Math.cos(p.angle)*step;
-                p.y += Math.sin(p.angle)*step;
-                p.traveled += step;
-                if(Math.hypot(p.x - player.x, p.y - player.y) < 28){
-                    player.hp -= p.damage;
-                    addDPSPopup(player.x, player.y, p.damage, true);
-                    projectiles.splice(i,1);
-                    if(player.hp<=0) gameOver();
-                    i--;
-                } else if(p.traveled>600 || p.x<0 || p.x>MAP_SIZE || p.y<0 || p.y>MAP_SIZE){
-                    projectiles.splice(i,1);
-                    i--;
-                }
-            }
-        }
-        
-        function updateTowers(delta){
-            for(let s of structures){
-                if(s.type === 'tower'){
-                    s.cooldown = (s.cooldown||0) - delta;
-                    if(s.cooldown <=0){
-                        let closest = null; let minDist = 380;
-                        for(let e of enemies){
-                            let d = Math.hypot(e.x - s.x, e.y - s.y);
-                            if(d < minDist){ minDist = d; closest = e; }
-                        }
-                        if(closest){
-                            closest.hp -= 10;
-                            addDPSPopup(closest.x, closest.y, 10);
-                            s.cooldown = 1.0;
-                            if(closest.hp<=0){
-                                let idx = enemies.indexOf(closest);
-                                if(idx!==-1) enemies.splice(idx,1);
-                                game.kills++; player.xp+=12; checkLevelUp();
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        
-        // Hunger system + food consumption
-        function updateHunger(delta){
-            if(game.gameOver) return;
-            player.hunger -= delta * 3.5; // lose ~3.5% per sec -> starve in ~30 sec
-            if(player.hunger <= 0){
-                player.hp -= delta * 18;
-                player.hunger = 0;
-                if(player.hp <=0) gameOver();
-            }
-            if(player.hunger > 100) player.hunger = 100;
-            updateUI();
-        }
-        
-        function eatFood(type){
-            let restore = { carrot: 18, corn: 22, apple: 25, wheat: 20 };
-            if(seeds[type] > 0){
-                seeds[type]--;
-                player.hunger = Math.min(100, player.hunger + restore[type]);
-                showTip(`🍽️ Ate ${type} +${restore[type]} hunger`, 800);
-                updateUI();
-            } else showTip(`No ${type} seeds/harvest!`, 800);
-        }
-        
-        // --- Farming: Till Land + Plant
-        function tillSoil(worldX, worldY){
-            let exists = farmlands.some(f => Math.hypot(f.x - worldX, f.y - worldY) < 32);
-            if(!exists){
-                farmlands.push({ x: worldX, y: worldY, planted: null, growth: 0, ready: false });
-                showTip("🌾 Tilled soil! Tap again to plant a seed.", 1000);
             } else {
-                let plot = farmlands.find(f => Math.hypot(f.x - worldX, f.y - worldY) < 32);
-                if(plot && !plot.planted){
-                    showQuickPlantMenu(plot, worldX, worldY);
-                } else if(plot && plot.ready){
-                    // harvest
-                    let crop = plot.planted;
-                    if(crop && seeds[crop] !== undefined){
-                        let gain = { carrot: 4, corn: 3, apple: 2, wheat: 5 };
-                        let foodValue = gain[crop];
-                        seeds[crop] = (seeds[crop] || 0) + foodValue;
-                        showTip(`🌿 Harvested ${crop}! +${foodValue} seeds`, 800);
-                        plot.planted = null; plot.ready = false; plot.growth = 0;
-                        updateUI();
-                    }
-                } else if(plot && plot.planted && !plot.ready){
-                    showTip(`⏳ ${plot.planted} is growing...`, 700);
-                }
+                player.moveTarget = {x: wx, y: wy};
             }
         }
-        
-        function showQuickPlantMenu(plot, wx, wy){
-            let choice = prompt("Plant: carrot, corn, apple, wheat").toLowerCase();
-            if(['carrot','corn','apple','wheat'].includes(choice) && seeds[choice] > 0){
-                seeds[choice]--;
-                plot.planted = choice;
-                plot.growth = 0;
-                plot.ready = false;
-                showTip(`🌱 Planted ${choice}! It will grow over time.`, 1000);
-                updateUI();
-            } else showTip(`No ${choice} seeds or invalid`, 800);
+    }
+
+    // --- Main Game Loop ---
+    function init() {
+        for(let i=0; i<100; i++) {
+            resources.push({
+                x: Math.random()*MAP_SIZE, y: Math.random()*MAP_SIZE,
+                type: Math.random() > 0.4 ? 'tree' : 'stone', hp: 5
+            });
         }
         
-        function updateFarming(delta){
-            for(let plot of farmlands){
-                if(plot.planted && !plot.ready){
-                    plot.growth += delta;
-                    let growTime = 18; // seconds
-                    if(plot.growth >= growTime){
-                        plot.ready = true;
-                        showTip(`✨ ${plot.planted} is ready to harvest!`, 1000);
-                    }
-                }
+        document.getElementById('toggleTillBtn').onclick = () => {
+            game.tillMode = !game.tillMode;
+            document.getElementById('toggleTillBtn').classList.toggle('toggle-active');
+            document.getElementById('plantMenu').style.display = 'none';
+        };
+
+        canvas.addEventListener('touchstart', onTouch);
+        canvas.addEventListener('mousedown', onTouch);
+        requestAnimationFrame(loop);
+    }
+
+    function loop() {
+        // Simple Physics & AI
+        if(player.moveTarget) {
+            let dx = player.moveTarget.x - player.x;
+            let dy = player.moveTarget.y - player.y;
+            let dist = Math.hypot(dx, dy);
+            if(dist > 5) {
+                player.x += (dx/dist) * 4;
+                player.y += (dy/dist) * 4;
             }
         }
-        
-        // Movement, resources, etc
-        function updatePlayerMovement(delta){
-            if(player.moveTarget){
-                let dx = player.moveTarget.x - player.x;
-                let dy = player.moveTarget.y - player.y;
-                let dist = Math.hypot(dx,dy);
-                if(dist < 14) player.moveTarget = null;
-                else {
-                    let speed = 240;
-                    let step = Math.min(speed * delta, dist);
-                    let angle = Math.atan2(dy,dx);
-                    player.x += Math.cos(angle)*step;
-                    player.y += Math.sin(angle)*step;
-                }
+
+        // Hunger 
+        player.hunger -= 0.01;
+        if(player.hunger <= 0) player.hp -= 0.1;
+
+        // Farming Growth
+        farmlands.forEach(f => {
+            if(f.planted && !f.ready) {
+                f.growth += 0.01;
+                if(f.growth > 10) f.ready = true;
             }
-            player.x = Math.min(MAP_SIZE-30, Math.max(30, player.x));
-            player.y = Math.min(MAP_SIZE-30, Math.max(30, player.y));
-        }
-        
-        function gameOver(){
-            if(game.gameOver) return;
-            game.gameOver = true;
-            showTip("💀 STARVED/DIED. Refresh to try again", 3000);
-            setTimeout(()=> location.reload(), 2800);
-        }
-        
-        function initResources(){
-            for(let i=0;i<180;i++){
-                let type = Math.random()<0.6 ? 'tree' : 'stone';
-                resources.push({
-                    x: 100 + Math.random()*(MAP_SIZE-200),
-                    y: 100 + Math.random()*(MAP_SIZE-200),
-                    type, tapsLeft: 10,
-                    woodGain: type==='tree'?3:0, stoneGain: type==='stone'?2:0
-                });
-            }
-        }
-        
-        function handleResourceTap(x,y){
-            for(let i=0;i<resources.length;i++){
-                let r = resources[i];
-                if(Math.hypot(x - r.x, y - r.y) < 40 && r.tapsLeft>0){
-                    r.tapsLeft--;
-                    if(r.tapsLeft<=0){
-                        wood += r.woodGain;
-                        stone += r.stoneGain;
-                        showTip(`+${r.woodGain||0}🪵 +${r.stoneGain||0}🪨`, 500);
-                        resources.splice(i,1);
-                    } else showTip(`🔨 ${r.tapsLeft} taps`, 280);
-                    updateUI();
-                    break;
-                }
-            }
-        }
-        
-        // Crafting
-        function craftCrossbow(){ if(!player.hasCrossbow && wood>=10 && stone>=8){ wood-=10; stone-=8; player.hasCrossbow=true; showTip("CROSSBOW ready!"); updateUI();} else showTip("Need 10🪵 8🪨",600);}
-        function craftBolts(){ if(wood>=3 && stone>=2){ wood-=3; stone-=2; player.boltCount+=5; showTip("+5 bolts"); updateUI();} else showTip("Need 3🪵2🪨",600);}
-        function craftCampfire(){ if(wood>=15 && stone>=10){ wood-=15; stone-=10; structures.push({x:player.x, y:player.y, type:'campfire'}); showTip("🔥 Campfire (safe zone)"); updateUI();} else showTip("Need 15/10",600);}
-        function craftWall(){ if(wood>=12 && stone>=8){ wood-=12; stone-=8; structures.push({x:player.x, y:player.y, type:'wall', hp:50}); showTip("🧱 Wall built"); updateUI();} else showTip("Need 12/8",600);}
-        function craftTower(){ if(wood>=20 && stone>=15){ wood-=20; stone-=15; structures.push({x:player.x, y:player.y, type:'tower', cooldown:0}); showTip("🗼 Tower online"); updateUI();} else showTip("Need 20/15",600);}
-        
-        function fireCrossbow(tx, ty){
-            if(!player.hasCrossbow || player.selectedWeapon!=='crossbow'){ showTip("Equip crossbow",600); return false;}
-            if(player.boltCount<=0){ showTip("No bolts",600); return false;}
-            let hitIdx = -1;
-            for(let i=0;i<enemies.length;i++){
-                let e=enemies[i];
-                if(Math.hypot(e.x - tx, e.y - ty) < 55 && Math.hypot(e.x-player.x, e.y-player.y)<400){ hitIdx=i; break; }
-            }
-            if(hitIdx!==-1){
-                let e=enemies[hitIdx];
-                e.hp -= 28;
-                addDPSPopup(e.x, e.y, 28);
-                player.boltCount--;
-                if(e.hp<=0){
-                    stone += (e.type==='snail'?3:1);
-                    enemies.splice(hitIdx,1);
-                    game.kills++; player.xp+=12; checkLevelUp();
-                }
-                updateUI(); return true;
-            } else { player.boltCount--; showTip("Miss!",500); updateUI(); return false; }
-        }
-        
-        function updateDayNight(delta){
-            if(game.gameOver) return;
-            game.dayTimer -= delta;
-            if(game.dayTimer <= 0){
-                game.day++;
-                game.dayTimer = 120;
-                if(game.day > 99){ game.victory=true; showTip("VICTORY! 99 DAYS!",4000); game.gameOver=true; setTimeout(()=>location.reload(),5000);}
-                else showTip(`🌞 DAY ${game.day}`, 1000);
-                updateUI();
-            }
-        }
-        
-        function applySafeZones(){
-            for(let s of structures){
-                if(s.type === 'campfire' && Math.hypot(player.x - s.x, player.y - s.y) < 110){
-                    if(player.hp < player.maxHp && Math.random()<0.03) player.hp++;
-                    for(let e of enemies){
-                        if(Math.hypot(e.x - s.x, e.y - s.y) < 130){
-                            let angle = Math.atan2(e.y - s.y, e.x - s.x);
-                            e.x += Math.cos(angle)*70*0.016;
-                            e.y += Math.sin(angle)*70*0.016;
-                        }
-                    }
-                }
-            }
-        }
-        
-        // Drawing with farm plots
-        function draw(){
-            camera.x = player.x - canvas.width/2;
-            camera.y = player.y - canvas.height/2;
-            camera.x = Math.min(MAP_SIZE - canvas.width, Math.max(0, camera.x));
-            camera.y = Math.min(MAP_SIZE - canvas.height, Math.max(0, camera.y));
-            ctx.fillStyle = "#5c5c4a";
-            ctx.fillRect(0,0,canvas.width,canvas.height);
-            for(let i=0;i<400;i++){ ctx.fillStyle="#6e6e58"; ctx.fillRect((i*67)%canvas.width, (i*29)%canvas.height, 3,3); }
-            // resources
-            for(let r of resources){
-                let sx=r.x-camera.x, sy=r.y-camera.y;
-                ctx.fillStyle=r.type==='tree'?"#4fae4f":"#b8a87a";
-                ctx.fillRect(sx-14,sy-14,28,28);
-                ctx.fillStyle="#ffefb0"; ctx.font="bold 14px monospace"; ctx.fillText(`${r.tapsLeft}`,sx-7,sy-12);
-            }
-            // farmlands
-            for(let f of farmlands){
-                let sx=f.x-camera.x, sy=f.y-camera.y;
-                ctx.fillStyle = "#8b6946"; ctx.fillRect(sx-18, sy-12, 36, 24);
-                ctx.fillStyle = "#c9a87b"; ctx.fillRect(sx-16, sy-10, 32, 20);
-                if(f.planted && !f.ready) { ctx.fillStyle="#5a8f3a"; ctx.fillRect(sx-10, sy-6, 20, 12); ctx.fillStyle="#b5ff8a"; ctx.fillText("🌱", sx-4, sy+2);}
-                else if(f.ready) { ctx.fillStyle="#f5bc70"; ctx.fillRect(sx-10, sy-6, 20, 12); ctx.fillStyle="gold"; ctx.fillText("✨", sx-3, sy+2);}
-                else if(!f.planted) ctx.fillStyle="#b8865b"; ctx.fillRect(sx-12, sy-8, 24, 16);
-            }
-            // structures
-            for(let s of structures){
-                let sx=s.x-camera.x, sy=s.y-camera.y;
-                if(s.type==='campfire'){ ctx.fillStyle="#ff8844"; ctx.beginPath(); ctx.arc(sx,sy,22,0,Math.PI*2); ctx.fill(); ctx.fillStyle="orange"; ctx.fillRect(sx-8,sy-8,16,16);}
-                else if(s.type==='wall'){ ctx.fillStyle="#ad7a48"; ctx.fillRect(sx-22,sy-14,44,28);}
-                else if(s.type==='tower'){ ctx.fillStyle="#b87a4a"; ctx.fillRect(sx-14,sy-28,28,56); ctx.fillStyle="#acd"; ctx.fillRect(sx-4,sy-34,8,10);}
-            }
-            // enemies
-            for(let e of enemies){
-                let sx=e.x-camera.x, sy=e.y-camera.y;
-                if(e.type==='spider'){ ctx.fillStyle="#4a2a1a"; ctx.beginPath(); ctx.ellipse(sx,sy,16,12,0,0,2*Math.PI); ctx.fill(); ctx.fillStyle="#000"; ctx.fillRect(sx-6,sy-4,4,4); ctx.fillRect(sx+2,sy-4,4,4);}
-                else{ ctx.fillStyle="#7a9a52"; ctx.beginPath(); ctx.ellipse(sx,sy,20,14,0,0,2*Math.PI); ctx.fill(); ctx.fillStyle="#3c5a1e"; ctx.fillRect(sx-8,sy-2,4,4); ctx.fillRect(sx+4,sy-2,4,4);}
-            }
-            for(let p of projectiles){ let sx=p.x-camera.x, sy=p.y-camera.y; ctx.fillStyle="#b5ff6a"; ctx.beginPath(); ctx.arc(sx,sy,6,0,2*Math.PI); ctx.fill();}
-            let px=player.x-camera.x, py=player.y-camera.y;
-            ctx.fillStyle="#ffffff"; ctx.fillRect(px-16,py-16,32,32);
-            ctx.beginPath(); ctx.arc(px,py,36+player.level*2,0,2*Math.PI); ctx.strokeStyle="#ffcc88"; ctx.lineWidth=2.5; ctx.stroke();
-            if(player.selectedWeapon==='crossbow'){ ctx.beginPath(); ctx.arc(px,py,28,0,2*Math.PI); ctx.strokeStyle="red"; ctx.lineWidth=3; ctx.stroke();}
-            updateUI();
-        }
-        
-        // Input handling: till mode vs move/harvest
-        function handleCanvasTap(e){
-            if(game.gameOver) return;
-            e.preventDefault();
-            let rect = canvas.getBoundingClientRect();
-            let scaleX = canvas.width/rect.width, scaleY=canvas.height/rect.height;
-            let cx, cy;
-            if(e.touches){ cx=e.touches[0].clientX; cy=e.touches[0].clientY; }
-            else { cx=e.clientX; cy=e.clientY; }
-            let tapX = (cx - rect.left)*scaleX;
-            let tapY = (cy - rect.top)*scaleY;
-            let worldX = tapX + camera.x;
-            let worldY = tapY + camera.y;
-            if(player.selectedWeapon === 'crossbow'){ fireCrossbow(worldX, worldY); player.selectedWeapon=null; return; }
-            if(game.tillMode){ tillSoil(worldX, worldY); return; }
-            let hit=false;
-            for(let r of resources){ if(Math.hypot(worldX-r.x, worldY-r.y)<40){ handleResourceTap(worldX,worldY); hit=true; break; }}
-            if(!hit) player.moveTarget = {x:worldX, y:worldY};
-        }
-        
-        let lastTime=performance.now();
-        function gameLoop(now){
-            let delta=Math.min(0.033, (now-lastTime)/1000);
-            if(delta>0){
-                lastTime=now;
-                if(!game.gameOver){
-                    updatePlayerMovement(delta);
-                    updateEnemies(delta);
-                    updateProjectiles(delta);
-                    applyRingDamage();
-                    updateTowers(delta);
-                    applySafeZones();
-                    updateFarming(delta);
-                    updateHunger(delta);
-                    spawnEnemies();
-                    updateDayNight(delta);
-                }
-                draw();
-            }
-            requestAnimationFrame(gameLoop);
-        }
-        
-        function bindEvents(){
-            canvas.addEventListener('touchstart', handleCanvasTap, {passive:false});
-            canvas.addEventListener('mousedown', handleCanvasTap);
-            document.getElementById('craftCrossbowBtn').onclick = (e)=>{ e.preventDefault(); craftCrossbow(); updateUI();};
-            document.getElementById('craftBoltsBtn').onclick = (e)=>{ e.preventDefault(); craftBolts(); updateUI();};
-            document.getElementById('craftCampfireBtn').onclick = (e)=>{ e.preventDefault(); craftCampfire(); updateUI();};
-            document.getElementById('craftWallBtn').onclick = (e)=>{ e.preventDefault(); craftWall(); updateUI();};
-            document.getElementById('craftTowerBtn').onclick = (e)=>{ e.preventDefault(); craftTower(); updateUI();};
-            let tillBtn = document.getElementById('toggleTillBtn');
-            tillBtn.onclick = (e)=>{ e.preventDefault(); game.tillMode = !game.tillMode; tillBtn.classList.toggle('toggle-active', game.tillMode); showTip(game.tillMode?"🌾 TILL MODE ON: tap ground to till/plant":"⚔️ TILL MODE OFF", 900); };
-        }
-        
-        initResources();
-        bindEvents();
+        });
+
+        draw();
         updateUI();
-        requestAnimationFrame(gameLoop);
-        lastTime=performance.now();
-        showTip("🌽 New: TILL MODE → farm food to survive hunger! More spiders, floating UI", 4000);
-    })();
+        requestAnimationFrame(loop);
+    }
+
+    function draw() {
+        camera.x = player.x - canvas.width/2;
+        camera.y = player.y - canvas.height/2;
+        
+        ctx.fillStyle = "#34495e";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        ctx.save();
+        ctx.translate(-camera.x, -camera.y);
+
+        // Draw Map Grid
+        ctx.strokeStyle = "rgba(255,255,255,0.05)";
+        for(let i=0; i<MAP_SIZE; i+=100) {
+            ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i, MAP_SIZE); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(0,i); ctx.lineTo(MAP_SIZE, i); ctx.stroke();
+        }
+
+        // Resources
+        resources.forEach(r => {
+            ctx.fillStyle = r.type === 'tree' ? '#27ae60' : '#7f8c8d';
+            ctx.fillRect(r.x-15, r.y-15, 30, 30);
+        });
+
+        // Farmlands
+        farmlands.forEach(f => {
+            ctx.fillStyle = f.ready ? "#f1c40f" : "#8e44ad";
+            ctx.fillRect(f.x-20, f.y-20, 40, 40);
+            if(f.planted) { ctx.fillStyle="#fff"; ctx.fillText(f.planted, f.x-15, f.y); }
+        });
+
+        // Structures
+        structures.forEach(s => {
+            ctx.fillStyle = "#e67e22";
+            ctx.fillRect(s.x-20, s.y-20, 40, 40);
+        });
+
+        // Player
+        ctx.fillStyle = "white";
+        ctx.fillRect(player.x-15, player.y-15, 30, 30);
+        
+        ctx.restore();
+    }
+
+    init();
 </script>
 </body>
 </html>
