@@ -3,375 +3,292 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Nova Realms: Mobile Optimized</title>
+    <title>Nova Realms: Swarm Edition</title>
     <style>
-        * { user-select: none; touch-action: none; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body {
-            margin: 0; padding: 0;
-            background: #121412;
-            display: flex; justify-content: center; align-items: center;
-            height: 100vh; width: 100vw;
-            overflow: hidden;
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-        }
-        .game-wrapper {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        canvas {
-            display: block;
-            background: #2a2a2a;
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
-            box-shadow: 0 0 20px rgba(0,0,0,0.5);
-        }
-
-        /* Top Bar: Stats */
-        .top-stats {
-            position: absolute;
-            top: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.75);
-            backdrop-filter: blur(5px);
-            border: 1px solid #e0a235;
-            border-radius: 12px;
-            padding: 5px 15px;
-            display: flex;
-            gap: 15px;
-            color: #ffefc0;
-            font-size: 12px;
-            white-space: nowrap;
-            z-index: 100;
-        }
-
-        /* Side Controls: Crafting */
-        .side-panel {
-            position: absolute;
-            right: 10px;
-            top: 50%;
-            transform: translateY(-50%);
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            z-index: 100;
-        }
-
-        .action-btn {
-            background: rgba(61, 43, 28, 0.9);
-            border: 1px solid #f5bc70;
-            color: #ffefcf;
-            border-radius: 8px;
-            padding: 10px;
-            font-size: 10px;
-            font-weight: bold;
-            width: 80px;
-            text-align: center;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-        }
-
-        .action-btn:active { background: #f5bc70; color: #000; }
-
-        /* Bottom Inventory */
-        .bottom-ui {
-            position: absolute;
-            bottom: 15px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 90%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
-            pointer-events: none;
-        }
-
-        .inventory-bar {
-            background: rgba(0,0,0,0.8);
-            border: 1px solid #b87c3a;
-            border-radius: 20px;
-            padding: 5px 15px;
-            display: flex;
-            gap: 15px;
-            color: #fff;
-            font-size: 13px;
-            pointer-events: auto;
-        }
-
-        #plantMenu {
-            display: none;
-            position: absolute;
-            bottom: 80px;
-            background: rgba(0,0,0,0.9);
-            border: 2px solid #6b8c3e;
-            padding: 10px;
-            border-radius: 15px;
-            gap: 10px;
-            pointer-events: auto;
-        }
-
-        .plant-opt {
-            padding: 8px;
-            background: #2c2418;
-            border: 1px solid #daa342;
-            color: #ffe1a0;
-            border-radius: 5px;
-        }
-
-        .toggle-active { background: #6b8c3e !important; color: #fff; border-color: #fff; }
+        * { user-select: none; touch-action: none; box-sizing: border-box; outline: none; }
+        body { margin: 0; background: #0a0c0a; height: 100vh; width: 100vw; overflow: hidden; font-family: monospace; color: #eee; }
         
-        .xp-container { width: 120px; height: 8px; background: #333; border-radius: 4px; overflow: hidden; border: 1px solid #555; }
-        .xp-fill { height: 100%; background: #aaf0a0; width: 0%; transition: width 0.3s; }
-        
-        #tipMsg {
-            position: absolute;
-            top: 55px;
-            background: rgba(0,0,0,0.6);
-            color: #f5cd6d;
-            padding: 4px 10px;
-            border-radius: 10px;
-            font-size: 10px;
-            z-index: 90;
+        canvas { display: block; width: 100%; height: 100%; object-fit: cover; }
+
+        /* Sleeker Top Bar */
+        .top-ui {
+            position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,0.8); border: 1px solid #444; border-radius: 30px;
+            padding: 4px 15px; display: flex; gap: 12px; align-items: center; z-index: 10; font-size: 11px;
+        }
+        .xp-bar { width: 80px; height: 6px; background: #222; border-radius: 3px; overflow: hidden; border: 1px solid #555; }
+        .xp-fill { height: 100%; background: #00ffcc; width: 0%; }
+
+        /* Micro Side Buttons */
+        .side-btns {
+            position: absolute; right: 10px; top: 55%; transform: translateY(-50%);
+            display: flex; flex-direction: column; gap: 5px; z-index: 10;
+        }
+        .btn {
+            background: rgba(40,40,40,0.9); border: 1px solid #666; color: #fff;
+            padding: 8px; border-radius: 6px; font-size: 9px; width: 65px; text-align: center;
+        }
+        .btn:active { background: #e0a235; color: #000; }
+        .active-mode { background: #4a6723 !important; border-color: #b5ff6a; }
+
+        /* Bottom Inventory Bar */
+        .inv-bar {
+            position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,0.85); border: 1px solid #b87c3a; border-radius: 12px;
+            padding: 5px 12px; display: flex; gap: 10px; z-index: 10; font-size: 12px;
+        }
+
+        #plantSelect {
+            display: none; position: absolute; bottom: 60px; left: 50%; transform: translateX(-50%);
+            background: #1a1a1a; border: 2px solid #6b8c3e; border-radius: 10px; padding: 8px; gap: 8px;
         }
     </style>
 </head>
 <body>
 
-<div class="game-wrapper">
-    <canvas id="gameCanvas" width="1000" height="700"></canvas>
+<div class="top-ui">
+    <span>❤️ <span id="hp">500</span></span>
+    <span>🍗 <span id="hunger">100</span>%</span>
+    <span>⚔️ Lv.<span id="lvl">1</span></span>
+    <div class="xp-bar"><div class="xp-fill" id="xpF"></div></div>
+    <span>🌞 <span id="day">1</span></span>
+</div>
 
-    <div class="top-stats">
-        <span>❤️ <span id="hpVal">500</span></span>
-        <span>🍗 <span id="hungerVal">100</span>%</span>
-        <span>🌞 DAY <span id="dayVal">1</span></span>
-        <div class="xp-container"><div class="xp-fill" id="xpFill"></div></div>
-    </div>
+<div class="side-btns">
+    <button class="btn" id="tillBtn">🌾 TILL</button>
+    <button class="btn" onclick="craft('wall')">🧱 WALL</button>
+    <button class="btn" onclick="craft('tower')">🗼 TOWER</button>
+    <button class="btn" onclick="craft('fire')">🔥 CAMP</button>
+    <button class="btn" onclick="craft('bolt')">🏹 BOLTS</button>
+</div>
 
-    <div id="tipMsg">Tap to move. Collect 🪵 and 🪨 to craft!</div>
+<div id="plantSelect">
+    <button class="btn" onclick="confirmPlant('carrot')">🥕</button>
+    <button class="btn" onclick="confirmPlant('corn')">🌽</button>
+    <button class="btn" onclick="confirmPlant('apple')">🍎</button>
+</div>
 
-    <div class="side-panel">
-        <button class="action-btn" id="toggleTillBtn">🌾 TILL</button>
-        <button class="action-btn" onclick="craftWall()">🧱 WALL</button>
-        <button class="action-btn" onclick="craftTower()">🗼 TOWER</button>
-        <button class="action-btn" onclick="craftCampfire()">🔥 CAMP</button>
-        <button class="action-btn" onclick="craftCrossbow()">🔨 BOW</button>
-        <button class="action-btn" onclick="craftBolts()">🏹 BOLTS</button>
-    </div>
-
-    <div class="bottom-ui">
-        <div id="plantMenu">
-            <button class="plant-opt" onclick="confirmPlant('carrot')">🥕 Carrot</button>
-            <button class="plant-opt" onclick="confirmPlant('corn')">🌽 Corn</button>
-            <button class="plant-opt" onclick="confirmPlant('apple')">🍎 Apple</button>
-            <button class="plant-opt" onclick="confirmPlant('wheat')">🌾 Wheat</button>
-        </div>
-        <div class="inventory-bar" id="inventoryBar">
-            </div>
-    </div>
+<div class="inv-bar" id="inv">
+    <span>🪵 0</span><span>🪨 0</span><span>🏹 0</span>
 </div>
 
 <script>
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
-    
-    // --- Game Logic Constants ---
-    const MAP_SIZE = 3000;
-    let camera = { x: 0, y: 0 };
-    let wood = 15, stone = 10;
-    let seeds = { carrot: 3, corn: 2, apple: 1, wheat: 3 };
-    let resources = [], structures = [], enemies = [], farmlands = [], projectiles = [];
-    let activePlot = null; // for planting menu
+const canvas = document.createElement('canvas');
+document.body.appendChild(canvas);
+const ctx = canvas.getContext('2d');
 
-    let player = {
-        x: MAP_SIZE/2, y: MAP_SIZE/2,
-        hp: 500, maxHp: 500, level: 1, xp: 0,
-        hunger: 100, boltCount: 0, hasCrossbow: false,
-        moveTarget: null
-    };
+const MAP_SIZE = 4000;
+let cam = { x: 0, y: 0 };
+let player = { x: 2000, y: 2000, hp: 500, maxHp: 500, hunger: 100, lvl: 1, xp: 0, bolts: 0, target: null };
+let resources = [], enemies = [], structures = [], plots = [], particles = [];
+let wood = 12, stone = 8, day = 1, tillMode = false, selectedPlot = null;
 
-    let game = { day: 1, dayTimer: 120, tillMode: false, gameOver: false };
+// Initial Setup
+function init() {
+    window.onresize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
+    window.onresize();
+    spawnWorld();
+    requestAnimationFrame(loop);
+}
 
-    // --- Core Functions ---
+function spawnWorld() {
+    for(let i=0; i<150; i++) spawnRes();
+}
 
-    function updateUI() {
-        document.getElementById('hpVal').innerText = Math.floor(player.hp);
-        document.getElementById('hungerVal').innerText = Math.floor(player.hunger);
-        document.getElementById('dayVal').innerText = game.day;
-        let needed = player.level * 25;
-        document.getElementById('xpFill').style.width = (player.xp / needed * 100) + "%";
+function spawnRes() {
+    resources.push({
+        x: Math.random()*MAP_SIZE, y: Math.random()*MAP_SIZE,
+        type: Math.random() > 0.4 ? 'tree' : 'rock', taps: 10
+    });
+}
+
+function spawnEnemy() {
+    if(enemies.length > 40) return;
+    const side = Math.random() * 4;
+    let x = (Math.random() < 0.5) ? player.x - 800 : player.x + 800;
+    let y = (Math.random() < 0.5) ? player.y - 800 : player.y + 800;
+    const type = Math.random() > 0.3 ? 'spider' : 'snail';
+    enemies.push({ x, y, type, hp: 50, alert: false });
+}
+
+function loop() {
+    update();
+    draw();
+    requestAnimationFrame(loop);
+}
+
+function update() {
+    // Player Move
+    if(player.target) {
+        let dx = player.target.x - player.x, dy = player.target.y - player.y;
+        let d = Math.hypot(dx, dy);
+        if(d > 5) { player.x += dx/d * 5; player.y += dy/d * 5; }
+    }
+
+    cam.x = player.x - canvas.width/2;
+    cam.y = player.y - canvas.height/2;
+
+    // Orbit Ring Logic
+    let ringSize = 60 + (player.lvl * 10);
+    enemies.forEach((e, i) => {
+        let d = Math.hypot(e.x - player.x, e.y - player.y);
         
-        const inv = document.getElementById('inventoryBar');
-        inv.innerHTML = `<span>🪵 ${wood}</span> <span>🪨 ${stone}</span> <span>🏹 ${player.boltCount}</span>`;
-        if(player.hasCrossbow) inv.innerHTML += ` <b style="color:gold"> [BOW]</b>`;
-    }
-
-    function showTip(msg) {
-        document.getElementById('tipMsg').innerText = msg;
-    }
-
-    // --- Farming Logic ---
-    function handleTill(wx, wy) {
-        let plot = farmlands.find(f => Math.hypot(f.x - wx, f.y - wy) < 40);
-        if(!plot) {
-            farmlands.push({x: wx, y: wy, planted: null, growth: 0, ready: false});
-            showTip("Soil ready! Tap it to plant.");
-        } else if (!plot.planted) {
-            activePlot = plot;
-            document.getElementById('plantMenu').style.display = 'flex';
-        } else if (plot.ready) {
-            seeds[plot.planted] += 3;
-            player.hunger = Math.min(100, player.hunger + 15);
-            plot.planted = null; plot.ready = false; plot.growth = 0;
-            showTip("Harvested & Ate! +Hunger");
+        // Line of Sight Swarm
+        if(d < 400) e.alert = true;
+        if(e.alert) {
+            let angle = Math.atan2(player.y - e.y, player.x - e.x);
+            e.x += Math.cos(angle) * (e.type === 'spider' ? 3 : 1.5);
+            e.y += Math.sin(angle) * (e.type === 'spider' ? 3 : 1.5);
         }
-    }
 
-    function confirmPlant(type) {
-        if(seeds[type] > 0 && activePlot) {
-            seeds[type]--;
-            activePlot.planted = type;
-            activePlot.growth = 0;
-            document.getElementById('plantMenu').style.display = 'none';
-            showTip("Growing " + type + "...");
-        } else {
-            showTip("No seeds left!");
-        }
-    }
-
-    // --- Crafting Logic ---
-    function craftWall() { if(wood>=5 && stone>=2){ wood-=5; stone-=2; structures.push({x:player.x, y:player.y, type:'wall'}); } }
-    function craftTower() { if(wood>=10 && stone>=10){ wood-=10; stone-=10; structures.push({x:player.x, y:player.y, type:'tower', cooldown:0}); } }
-    function craftCampfire() { if(wood>=8){ wood-=8; structures.push({x:player.x, y:player.y, type:'campfire'}); } }
-    function craftCrossbow() { if(!player.hasCrossbow && wood>=15){ wood-=15; player.hasCrossbow=true; showTip("Bow Crafted!"); } }
-    function craftBolts() { if(wood>=2 && stone>=1){ wood-=2; stone-=1; player.boltCount+=5; } }
-
-    // --- Input Handling ---
-    function onTouch(e) {
-        e.preventDefault();
-        const rect = canvas.getBoundingClientRect();
-        const touch = e.touches ? e.touches[0] : e;
-        const scaleX = canvas.width / rect.width;
-        const scaleY = canvas.height / rect.height;
-        const tx = (touch.clientX - rect.left) * scaleX;
-        const ty = (touch.clientY - rect.top) * scaleY;
-        const wx = tx + camera.x;
-        const wy = ty + camera.y;
-
-        if(game.tillMode) {
-            handleTill(wx, wy);
-        } else {
-            // Resource gathering
-            let res = resources.find(r => Math.hypot(r.x - wx, r.y - wy) < 40);
-            if(res) {
-                res.hp--;
-                if(res.hp <= 0) {
-                    if(res.type==='tree') wood += 4; else stone += 3;
-                    resources.splice(resources.indexOf(res), 1);
-                }
-            } else {
-                player.moveTarget = {x: wx, y: wy};
+        // Ring Damage
+        if(d < ringSize) {
+            e.hp -= 0.5; // Damage per frame/sec
+            if(e.hp <= 0) { 
+                enemies.splice(i, 1); 
+                player.xp += 10; 
+                if(player.xp >= player.lvl * 50) { player.lvl++; player.xp = 0; player.maxHp += 50; player.hp = player.maxHp; }
             }
         }
-    }
 
-    // --- Main Game Loop ---
-    function init() {
-        for(let i=0; i<100; i++) {
-            resources.push({
-                x: Math.random()*MAP_SIZE, y: Math.random()*MAP_SIZE,
-                type: Math.random() > 0.4 ? 'tree' : 'stone', hp: 5
+        // Player Contact Damage
+        if(d < 30) player.hp -= 0.1;
+    });
+
+    // Tower Defense logic
+    structures.forEach(s => {
+        if(s.type === 'tower') {
+            enemies.forEach(e => {
+                if(Math.hypot(s.x-e.x, s.y-e.y) < 150) e.hp -= 0.2;
             });
         }
-        
-        document.getElementById('toggleTillBtn').onclick = () => {
-            game.tillMode = !game.tillMode;
-            document.getElementById('toggleTillBtn').classList.toggle('toggle-active');
-            document.getElementById('plantMenu').style.display = 'none';
-        };
+    });
 
-        canvas.addEventListener('touchstart', onTouch);
-        canvas.addEventListener('mousedown', onTouch);
-        requestAnimationFrame(loop);
+    // Auto-Respawn
+    if(Math.random() < 0.02) spawnEnemy();
+    player.hunger -= 0.005;
+    
+    updateUI();
+}
+
+function draw() {
+    ctx.fillStyle = '#1a1d1a';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.save();
+    ctx.translate(-cam.x, -cam.y);
+
+    // Grid
+    ctx.strokeStyle = '#222';
+    for(let i=0; i<MAP_SIZE; i+=200) {
+        ctx.strokeRect(i, 0, 200, MAP_SIZE);
+        ctx.strokeRect(0, i, MAP_SIZE, 200);
     }
 
-    function loop() {
-        // Simple Physics & AI
-        if(player.moveTarget) {
-            let dx = player.moveTarget.x - player.x;
-            let dy = player.moveTarget.y - player.y;
-            let dist = Math.hypot(dx, dy);
-            if(dist > 5) {
-                player.x += (dx/dist) * 4;
-                player.y += (dy/dist) * 4;
-            }
+    // Plots
+    plots.forEach(p => {
+        ctx.fillStyle = '#5d4037'; // Brown soil
+        ctx.fillRect(p.x-25, p.y-25, 50, 50);
+        if(p.planted) {
+            ctx.fillStyle = p.growth >= 100 ? 'gold' : '#2ecc71';
+            ctx.fillRect(p.x-10, p.y-10, 20, 20);
+            if(!p.ready && p.growth < 100) p.growth += 0.1;
         }
+    });
 
-        // Hunger 
-        player.hunger -= 0.01;
-        if(player.hunger <= 0) player.hp -= 0.1;
-
-        // Farming Growth
-        farmlands.forEach(f => {
-            if(f.planted && !f.ready) {
-                f.growth += 0.01;
-                if(f.growth > 10) f.ready = true;
-            }
-        });
-
-        draw();
-        updateUI();
-        requestAnimationFrame(loop);
-    }
-
-    function draw() {
-        camera.x = player.x - canvas.width/2;
-        camera.y = player.y - canvas.height/2;
-        
-        ctx.fillStyle = "#34495e";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        ctx.save();
-        ctx.translate(-camera.x, -camera.y);
-
-        // Draw Map Grid
-        ctx.strokeStyle = "rgba(255,255,255,0.05)";
-        for(let i=0; i<MAP_SIZE; i+=100) {
-            ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i, MAP_SIZE); ctx.stroke();
-            ctx.beginPath(); ctx.moveTo(0,i); ctx.lineTo(MAP_SIZE, i); ctx.stroke();
+    // Structures
+    structures.forEach(s => {
+        ctx.fillStyle = s.type === 'wall' ? '#111' : (s.type === 'fire' ? '#e67e22' : '#3498db');
+        ctx.fillRect(s.x-20, s.y-20, 40, 40);
+        if(s.type === 'tower') {
+            ctx.strokeStyle = 'rgba(52, 152, 219, 0.3)';
+            ctx.beginPath(); ctx.arc(s.x, s.y, 150, 0, Math.PI*2); ctx.stroke();
         }
+    });
 
-        // Resources
-        resources.forEach(r => {
-            ctx.fillStyle = r.type === 'tree' ? '#27ae60' : '#7f8c8d';
-            ctx.fillRect(r.x-15, r.y-15, 30, 30);
-        });
+    // Resources
+    resources.forEach(r => {
+        ctx.fillStyle = r.type === 'tree' ? '#27ae60' : '#7f8c8d';
+        ctx.fillRect(r.x-20, r.y-20, 40, 40);
+        ctx.fillStyle = '#fff'; ctx.font = '10px Arial';
+        ctx.fillText(r.taps, r.x-5, r.y-25);
+    });
 
-        // Farmlands
-        farmlands.forEach(f => {
-            ctx.fillStyle = f.ready ? "#f1c40f" : "#8e44ad";
-            ctx.fillRect(f.x-20, f.y-20, 40, 40);
-            if(f.planted) { ctx.fillStyle="#fff"; ctx.fillText(f.planted, f.x-15, f.y); }
-        });
+    // Enemies
+    enemies.forEach(e => {
+        ctx.fillStyle = e.type === 'spider' ? '#000' : '#555';
+        ctx.fillRect(e.x-18, e.y-18, 36, 36);
+        // Visual "legs" or impact
+        ctx.strokeStyle = ctx.fillStyle;
+        ctx.strokeRect(e.x-22, e.y-22, 44, 44);
+    });
 
-        // Structures
-        structures.forEach(s => {
-            ctx.fillStyle = "#e67e22";
-            ctx.fillRect(s.x-20, s.y-20, 40, 40);
-        });
+    // Player & Orbit Ring
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(player.x-15, player.y-15, 30, 30);
+    ctx.strokeStyle = 'cyan';
+    ctx.lineWidth = 2;
+    ctx.beginPath(); 
+    ctx.arc(player.x, player.y, 60 + (player.lvl*10), 0, Math.PI*2); 
+    ctx.stroke();
 
-        // Player
-        ctx.fillStyle = "white";
-        ctx.fillRect(player.x-15, player.y-15, 30, 30);
-        
-        ctx.restore();
+    ctx.restore();
+}
+
+function updateUI() {
+    document.getElementById('hp').innerText = Math.floor(player.hp);
+    document.getElementById('hunger').innerText = Math.floor(player.hunger);
+    document.getElementById('lvl').innerText = player.lvl;
+    document.getElementById('day').innerText = day;
+    document.getElementById('xpF').style.width = (player.xp / (player.lvl*50) * 100) + "%";
+    document.getElementById('inv').innerHTML = `<span>🪵 ${wood}</span> <span>🪨 ${stone}</span> <span>🏹 ${player.bolts}</span>`;
+}
+
+canvas.addEventListener('touchstart', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const tx = e.touches[0].clientX - rect.left, ty = e.touches[0].clientY - rect.top;
+    const wx = tx + cam.x, wy = ty + cam.y;
+
+    if(tillMode) {
+        let p = plots.find(p => Math.hypot(p.x-wx, p.y-wy) < 50);
+        if(!p) plots.push({x: wx, y: wy, planted: null, growth: 0});
+        else { selectedPlot = p; document.getElementById('plantSelect').style.display = 'flex'; }
+        return;
     }
 
-    init();
+    let res = resources.find(r => Math.hypot(r.x-wx, r.y-wy) < 50);
+    if(res) {
+        res.taps--;
+        if(res.taps <= 0) {
+            if(res.type === 'tree') wood += 5; else stone += 5;
+            resources.splice(resources.indexOf(res), 1);
+            spawnRes(); // Respawn elsewhere
+        }
+    } else {
+        player.target = { x: wx, y: wy };
+    }
+});
+
+function craft(item) {
+    if(item === 'wall' && wood >= 5) { wood -= 5; structures.push({x: player.x, y: player.y, type: 'wall'}); }
+    if(item === 'tower' && wood >= 15 && stone >= 10) { wood -= 15; stone -= 10; structures.push({x: player.x, y: player.y, type: 'tower'}); }
+    if(item === 'fire' && wood >= 10) { wood -= 10; structures.push({x: player.x, y: player.y, type: 'fire'}); }
+    if(item === 'bolt' && wood >= 2) { wood -= 2; player.bolts += 5; }
+}
+
+document.getElementById('tillBtn').onclick = () => {
+    tillMode = !tillMode;
+    document.getElementById('tillBtn').classList.toggle('active-mode');
+};
+
+function confirmPlant(type) {
+    if(selectedPlot) {
+        selectedPlot.planted = type;
+        selectedPlot.growth = 0;
+        document.getElementById('plantSelect').style.display = 'none';
+    }
+}
+
+init();
 </script>
 </body>
 </html>
