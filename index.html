@@ -3,246 +3,639 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Abyssal Neon: Visual Chaos</title>
+    <title>DEEP ABYSS: EVOLUTION | Neon Predator Sim</title>
     <style>
-        * { user-select: none; touch-action: none; box-sizing: border-box; }
-        body { margin: 0; background: #000428; height: 100vh; overflow: hidden; font-family: 'Segoe UI', sans-serif; }
-        canvas { display: block; width: 100vw; height: 100vh; background: linear-gradient(to bottom, #004e92, #000428); transition: filter 0.3s; }
-
-        .overlay {
-            position: absolute; top: 15px; left: 15px;
-            color: #00f2ff; text-shadow: 0 0 8px rgba(0,0,0,0.8);
-            pointer-events: none; z-index: 10;
+        * {
+            user-select: none;
+            touch-action: none;
+            box-sizing: border-box;
         }
-        .hp-cont { width: 180px; height: 10px; background: rgba(0,0,0,0.4); border: 1px solid #00f2ff; border-radius: 5px; margin-top: 5px; overflow: hidden; }
-        .hp-fill { height: 100%; background: #00ff88; width: 100%; transition: width 0.2s; }
-        
-        .stats-right { position: absolute; top: 15px; right: 15px; text-align: right; color: #fff; font-size: 14px; pointer-events: none; }
-
-        /* Visual FX Layers */
-        #fxOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 100; opacity: 0; transition: opacity 0.2s; }
-        .ink-fx { background: radial-gradient(circle, transparent 20%, #000 80%); }
-        .shock-fx { background: #fff; }
-        .dark-fx { background: #000; }
-        
-        @keyframes strobe { 0% { opacity: 0; } 50% { opacity: 1; } 100% { opacity: 0; } }
-        .strobing { animation: strobe 0.1s infinite; }
+        body {
+            margin: 0;
+            background: #000;
+            height: 100vh;
+            overflow: hidden;
+            font-family: 'Segoe UI', 'Poppins', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+            background: radial-gradient(circle at 20% 30%, #012b44, #00101c);
+            cursor: crosshair;
+        }
+        /* UI Panels - futuristic */
+        .ui-panel {
+            position: absolute;
+            backdrop-filter: blur(8px);
+            background: rgba(0, 10, 20, 0.55);
+            border-radius: 24px;
+            border-left: 3px solid #0ff;
+            border-bottom: 1px solid rgba(0, 255, 255, 0.3);
+            padding: 8px 16px;
+            pointer-events: none;
+            z-index: 20;
+            font-weight: bold;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+        .top-left {
+            top: 18px;
+            left: 18px;
+            font-family: monospace;
+            letter-spacing: 1px;
+        }
+        .top-right {
+            top: 18px;
+            right: 18px;
+            text-align: right;
+            font-size: 14px;
+        }
+        .bottom-stats {
+            bottom: 18px;
+            left: 18px;
+            right: 18px;
+            background: rgba(0, 5, 12, 0.7);
+            border-radius: 38px;
+            backdrop-filter: blur(12px);
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 22px;
+            font-size: 14px;
+            font-weight: bold;
+            border: 1px solid rgba(0, 255, 200, 0.4);
+            font-family: monospace;
+        }
+        .stat-block {
+            display: flex;
+            gap: 18px;
+            color: #b0f0ff;
+            text-shadow: 0 0 5px #0af;
+        }
+        .stat-block span {
+            color: #ffd966;
+            margin-left: 6px;
+            font-size: 1.2em;
+        }
+        .hp-bar-container {
+            width: 180px;
+            height: 10px;
+            background: rgba(30, 30, 60, 0.8);
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 6px 0;
+            border: 1px solid #0ff;
+        }
+        .hp-fill {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, #0affa0, #00e0ff);
+            transition: width 0.1s linear;
+        }
+        .xp-bar {
+            width: 140px;
+            height: 6px;
+            background: #1a2a3a;
+            border-radius: 6px;
+            margin-top: 5px;
+        }
+        .xp-fill {
+            height: 100%;
+            width: 0%;
+            background: #ffb347;
+            border-radius: 6px;
+            transition: width 0.2s;
+        }
+        .badge {
+            font-size: 11px;
+            color: #7df9ff;
+            margin-top: 3px;
+        }
+        .manual-hint {
+            position: absolute;
+            bottom: 25px;
+            right: 20px;
+            background: rgba(0,0,0,0.5);
+            border-radius: 40px;
+            padding: 5px 12px;
+            font-size: 10px;
+            color: #0ff;
+            pointer-events: none;
+            font-family: monospace;
+            backdrop-filter: blur(4px);
+        }
+        @keyframes pulseWarning {
+            0% { text-shadow: 0 0 0px red; opacity: 0.6; }
+            100% { text-shadow: 0 0 12px #ff3366; opacity: 1; }
+        }
+        .warning {
+            animation: pulseWarning 0.6s infinite alternate;
+        }
     </style>
 </head>
 <body>
 
-<div id="fxOverlay"></div>
-
-<div class="overlay">
-    <div style="font-weight: bold; letter-spacing: 1px;">NEON PREDATOR [LVL <span id="lvl">1</span>]</div>
-    <div class="hp-cont"><div class="hp-fill" id="hpBar"></div></div>
-    <div id="timer" style="font-size: 11px; margin-top: 4px; opacity: 0.8;">SURVIVED: 0s</div>
-    <div style="font-size: 10px; color: #add8e6;">REGEN: 1 HP/s | AURA: <span id="auraStat">77</span>m</div>
+<div class="ui-panel top-left">
+    <div>🌀 ABYSS PREDATOR <span style="color:#0ff;">LVL <span id="lvlVal">1</span></span></div>
+    <div class="hp-bar-container"><div class="hp-fill" id="hpFill"></div></div>
+    <div style="display: flex; gap: 12px; margin-top: 5px;">
+        <div>❤️ <span id="hpText">100</span>/<span id="maxHpText">100</span></div>
+        <div>📏 <span id="sizeStat">22</span>cm</div>
+    </div>
+    <div class="xp-bar"><div class="xp-fill" id="xpFill"></div></div>
+    <div class="badge">⚡ XP: <span id="xpCurr">0</span> / <span id="nextXpReq">250</span></div>
 </div>
 
-<div class="stats-right">
-    💀 <span id="kills">0</span><br>
-    <span style="font-size: 11px; color: #ffd700;">XP: <span id="xpStat">0</span></span><br>
-    <span id="coord" style="font-size: 10px; opacity: 0.5;">X: 0 Y: 0</span>
+<div class="ui-panel top-right">
+    <div>💀 KILLS: <span id="killCount">0</span></div>
+    <div>⏱️ SURVIVAL: <span id="surviveSeconds">0</span>s</div>
+    <div>🐟 GROWTH RATE: <span id="growthBonus">1.0x</span></div>
+    <div>🌊 DEPTH ZONE: <span id="depthZone">Shallows</span></div>
 </div>
+
+<div class="bottom-stats">
+    <div class="stat-block">🎯 SPEED <span id="speedStat">2.2</span></div>
+    <div class="stat-block">💀 DMG AURA <span id="auraDmg">1.5</span>/s</div>
+    <div class="stat-block">🛡️ REGEN <span id="regenStat">1</span>/s</div>
+    <div class="stat-block">⚔️ THREATS NEAR <span id="threatCount">0</span></div>
+</div>
+<div class="manual-hint">👆 TAP & DRAG → SWIM | RELEASE → AUTO EXPLORE</div>
+
+<div id="globalFX" style="position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:999; mix-blend-mode: screen; opacity:0; transition: opacity 0.1s;"></div>
 
 <script>
-const canvas = document.createElement('canvas');
-const ctx = canvas.getContext('2d');
-document.body.appendChild(canvas);
-
-const WORLD_SIZE = 12000;
-let cam = { x: 0, y: 0 };
-let player = {
-    x: 6000, y: 6000, hp: 100, maxHp: 100,
-    lvl: 1, kills: 0, xp: 0, size: 22, speed: 2.2,
-    angle: 0, targetAngle: 0, isManual: false,
-    color: "#ffd700", startTime: Date.now()
-};
-
-let entities = [];
-let bubbles = [];
-let backgrounds = [];
-const fx = document.getElementById('fxOverlay');
-
-function init() {
-    window.onresize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
-    window.onresize();
-
-    // Mass Spawning
-    const counts = { fish: 300, squid: 80, shark: 40, whale: 15, jelly: 50, puffer: 40, angler: 20 };
-    Object.keys(counts).forEach(type => {
-        for(let i=0; i<counts[type]; i++) spawnEntity(type);
-    });
-
-    for(let i=0; i<200; i++) bubbles.push({x: Math.random()*WORLD_SIZE, y: Math.random()*WORLD_SIZE, r: Math.random()*3+1, s: Math.random()*2+0.5});
-    for(let i=0; i<15; i++) backgrounds.push({x: Math.random()*WORLD_SIZE, y: Math.random()*WORLD_SIZE, size: 400 + Math.random()*600, angle: Math.random()*Math.PI*2, s: 0.4});
-
-    requestAnimationFrame(loop);
-}
-
-function spawnEntity(type) {
-    let stats = {
-        fish: { size: 12, hp: 30, speed: 1.8, color: "#4fc3f7", dmg: 0.5 },
-        squid: { size: 20, hp: 70, speed: 1.4, color: "#e1bee7", dmg: 1.5 },
-        jelly: { size: 15, hp: 50, speed: 0.8, color: "#fff", dmg: 2 },
-        puffer: { size: 18, hp: 100, speed: 1.0, color: "#c0ca33", dmg: 3 },
-        shark: { size: 55, hp: 400, speed: 2.8, color: "#90a4ae", dmg: 4 },
-        angler: { size: 25, hp: 150, speed: 2.0, color: "#263238", dmg: 5 },
-        whale: { size: 180, hp: 4000, speed: 0.7, color: "#37474f", dmg: 0 }
-    };
-    let s = stats[type];
-    entities.push({
-        x: Math.random()*WORLD_SIZE, y: Math.random()*WORLD_SIZE,
-        type, hp: s.hp, maxHp: s.hp, size: s.size, speed: s.speed,
-        angle: Math.random()*Math.PI*2, color: s.color, dmg: s.dmg, stateTimer: 0
-    });
-}
-
-function triggerFX(type, duration) {
-    fx.className = type + '-fx';
-    if(type === 'shock') fx.classList.add('strobing');
-    fx.style.opacity = "1";
-    if(type === 'puffer') canvas.style.filter = "blur(8px)";
-    
-    setTimeout(() => {
-        fx.style.opacity = "0";
-        fx.classList.remove('strobing');
-        canvas.style.filter = "blur(0px)";
-    }, duration);
-}
-
-function drawFishy(x, y, size, angle, color, type, hpPercent, isPlayer = false) {
-    ctx.save();
-    ctx.translate(x, y);
-    if (!isPlayer) {
-        ctx.fillStyle = "rgba(0,0,0,0.3)";
-        ctx.fillRect(-15, -size - 10, 30, 2);
-        ctx.fillStyle = "#00ff88";
-        ctx.fillRect(-15, -size - 10, hpPercent * 30, 2);
-    }
-    ctx.rotate(angle);
-    ctx.fillStyle = color;
-    if(isPlayer) { ctx.shadowBlur = 25; ctx.shadowColor = color; }
-
-    if (type === 'jelly') {
-        ctx.beginPath(); ctx.arc(0, 0, size, Math.PI, 0); ctx.fill();
-        for(let i=0; i<3; i++) ctx.fillRect(-size + (i*size), 0, 2, size*1.5);
-    } else if (type === 'puffer') {
-        ctx.beginPath(); ctx.arc(0, 0, size, 0, Math.PI*2); ctx.fill();
-        for(let i=0; i<8; i++) { ctx.rotate(Math.PI/4); ctx.fillRect(size-2, -1, 5, 2); }
-    } else {
-        ctx.beginPath(); ctx.ellipse(0, 0, size, size/1.8, 0, 0, Math.PI*2); ctx.fill();
-        ctx.beginPath(); ctx.moveTo(-size, 0); ctx.lineTo(-size-12, -8); ctx.lineTo(-size-12, 8); ctx.fill();
-    }
-    if (isPlayer) { ctx.fillStyle = "#000"; ctx.beginPath(); ctx.arc(size/2, -2, 3, 0, Math.PI*2); ctx.fill(); }
-    ctx.restore();
-}
-
-function loop() {
-    // Movement Physics (Maintained)
-    if (!player.isManual) player.targetAngle += (Math.random() - 0.5) * 0.15;
-    player.angle += (player.targetAngle - player.angle) * 0.06;
-    player.x += Math.cos(player.angle) * player.speed;
-    player.y += Math.sin(player.angle) * player.speed;
-    
-    player.x = Math.max(0, Math.min(WORLD_SIZE, player.x));
-    player.y = Math.max(0, Math.min(WORLD_SIZE, player.y));
-    player.hp = Math.min(player.maxHp, player.hp + (1/60));
-
-    cam.x += (player.x - canvas.width/2 - cam.x) * 0.08;
-    cam.y += (player.y - canvas.height/2 - cam.y) * 0.08;
-
-    let aura = player.size * 3.6;
-
-    entities.forEach((e, i) => {
-        let d = Math.hypot(e.x - player.x, e.y - player.y);
-        if (d < aura) {
-            e.hp -= 1.5;
-            if (e.hp <= 0) {
-                player.kills++;
-                player.xp += Math.floor(e.size);
-                if (player.xp >= player.lvl * 250) { 
-                    player.lvl++; player.xp = 0; player.size += 6; 
-                    player.speed += 0.1; player.maxHp += 50; player.hp = player.maxHp; 
+    (function(){
+        // ---------- WORLD CONFIG ----------
+        const WORLD_SIZE = 14000;          // huge open ocean
+        let canvas = document.createElement('canvas');
+        let ctx = canvas.getContext('2d');
+        document.body.appendChild(canvas);
+        
+        // camera
+        let cam = { x: 0, y: 0 };
+        
+        // PLAYER - starts small, grows with kills and time alive
+        let player = {
+            x: WORLD_SIZE/2, y: WORLD_SIZE/2,
+            hp: 100, maxHp: 100,
+            baseMaxHp: 100,
+            lvl: 1,
+            kills: 0,
+            xp: 0,
+            size: 22,           // cm small fish start
+            baseSize: 22,
+            speed: 2.2,
+            baseSpeed: 2.2,
+            angle: 0,
+            targetAngle: 0,
+            manualControl: false,
+            color: "#ffcc44",
+            lastRegen: performance.now(),
+            totalAliveSeconds: 0,
+            damageAura: 1.5,
+            regenRate: 1.0
+        };
+        
+        // all entities: marine life + threats + neutral beauties
+        let entities = [];
+        let particles = [];       // impact sparkles / blood / bubbles
+        let decorations = [];     // ambient schools, light rays
+        
+        // FX overlay
+        const fxDiv = document.getElementById('globalFX');
+        
+        // helper: apply visual impact effects + screen shake
+        function applyVisualImpact(typeIntensity = "medium", positionX = null, positionY = null) {
+            // screen shake
+            if(typeIntensity === "heavy") {
+                canvas.style.transform = "translate(4px, -3px)";
+                setTimeout(() => canvas.style.transform = "translate(-2px, 2px)", 40);
+                setTimeout(() => canvas.style.transform = "translate(1px, -1px)", 80);
+                setTimeout(() => canvas.style.transform = "translate(0,0)", 120);
+                fxDiv.style.backgroundColor = "rgba(255, 60, 30, 0.4)";
+                fxDiv.style.opacity = "0.7";
+                setTimeout(() => fxDiv.style.opacity = "0", 180);
+            } else if(typeIntensity === "kill") {
+                canvas.style.transform = "translate(2px, 0px)";
+                setTimeout(() => canvas.style.transform = "translate(-1px, 1px)", 30);
+                setTimeout(() => canvas.style.transform = "translate(0,0)", 70);
+                fxDiv.style.backgroundColor = "rgba(255, 200, 50, 0.6)";
+                fxDiv.style.opacity = "0.9";
+                setTimeout(() => fxDiv.style.opacity = "0", 150);
+                // spawn explosion particles
+                for(let i=0;i<12;i++) {
+                    particles.push({
+                        x: (positionX || player.x) + (Math.random() - 0.5)*40,
+                        y: (positionY || player.y) + (Math.random() - 0.5)*40,
+                        vx: (Math.random() - 0.5)*6,
+                        vy: (Math.random() - 0.5)*6,
+                        life: 0.8,
+                        size: Math.random()*4+2,
+                        color: `hsl(${Math.random()*40 + 30}, 100%, 60%)`
+                    });
                 }
-                entities.splice(i, 1); spawnEntity(e.type);
+            } else {
+                // minor: bite effect
+                fxDiv.style.backgroundColor = "rgba(255, 100, 100, 0.3)";
+                fxDiv.style.opacity = "0.5";
+                setTimeout(() => fxDiv.style.opacity = "0", 100);
             }
         }
         
-        // Status FX Triggers
-        if (d < 150 && Date.now() > e.stateTimer) {
-            if (e.type === 'squid') triggerFX('ink', 800);
-            if (e.type === 'jelly') triggerFX('shock', 600);
-            if (e.type === 'puffer') triggerFX('puffer', 1200);
-            if (e.type === 'angler') triggerFX('dark', 1000);
-            e.stateTimer = Date.now() + 5000;
-            player.hp -= e.dmg * 2;
+        // Spawn creature types (richer ocean life)
+        const CREATURE_TYPES = {
+            // peaceful / prey
+            baitfish: { size: 8, hp: 12, speed: 1.9, color: "#88ddff", dmg: 0.1, threat: false, exp: 8, baseAggro: false },
+            crab: { size: 12, hp: 28, speed: 0.9, color: "#e67e22", dmg: 0.5, threat: false, exp: 12, baseAggro: false },
+            seahorse: { size: 7, hp: 8, speed: 1.2, color: "#f1c40f", dmg: 0, threat: false, exp: 5, baseAggro: false },
+            // neutral / interesting
+            turtle: { size: 32, hp: 140, speed: 0.6, color: "#2ecc71", dmg: 0.5, threat: false, exp: 28, baseAggro: false },
+            jellyfish: { size: 18, hp: 58, speed: 0.9, color: "#d583ff", dmg: 1.8, threat: true, exp: 20, baseAggro: false, effect:"sting" },
+            puffer: { size: 20, hp: 92, speed: 1.0, color: "#f39c12", dmg: 2.5, threat: true, exp: 32, baseAggro: true, effect:"spike" },
+            // threats
+            barracuda: { size: 42, hp: 210, speed: 2.8, color: "#bdc3c7", dmg: 4.5, threat: true, exp: 55, baseAggro: true },
+            electric_eel: { size: 35, hp: 170, speed: 1.7, color: "#f4d03f", dmg: 5, threat: true, exp: 50, baseAggro: true, effect:"shock" },
+            shark: { size: 70, hp: 430, speed: 2.3, color: "#7f8c8d", dmg: 7, threat: true, exp: 85, baseAggro: true },
+            giant_squid: { size: 90, hp: 680, speed: 1.5, color: "#9b59b6", dmg: 9, threat: true, exp: 110, baseAggro: true },
+            // apex boss-like
+            leviathan: { size: 190, hp: 2500, speed: 0.65, color: "#2c3e50", dmg: 18, threat: true, exp: 280, baseAggro: true, boss: true },
+            // extra life: glowing fish
+            angelfish: { size: 13, hp: 22, speed: 1.7, color: "#ffa07a", dmg: 0.2, threat: false, exp: 10, baseAggro: false }
+        };
+        
+        function spawnCreature(typeKey, customX=null, customY=null) {
+            const t = CREATURE_TYPES[typeKey];
+            if(!t) return;
+            entities.push({
+                x: customX !== null ? customX : Math.random() * WORLD_SIZE,
+                y: customY !== null ? customY : Math.random() * WORLD_SIZE,
+                type: typeKey,
+                hp: t.hp,
+                maxHp: t.hp,
+                size: t.size,
+                speed: t.speed,
+                angle: Math.random() * Math.PI * 2,
+                color: t.color,
+                dmg: t.dmg,
+                threat: t.threat,
+                exp: t.exp,
+                effect: t.effect || null,
+                stateTimer: 0,
+                lastAttack: 0
+            });
         }
-
-        let angleToP = Math.atan2(player.y - e.y, player.x - e.x);
-        if ((e.type === 'shark' || e.type === 'angler') && d < 700) e.angle += (angleToP - e.angle) * 0.05;
-        else e.angle += (Math.random()-0.5) * 0.06;
-
-        e.x += Math.cos(e.angle) * e.speed;
-        e.y += Math.sin(e.angle) * e.speed;
-        if (d < player.size + e.size) player.hp -= (e.dmg/60);
-    });
-
-    // Draw
-    ctx.clearRect(0,0, canvas.width, canvas.height);
-    
-    // Rays
-    ctx.fillStyle = "rgba(255,255,255,0.05)";
-    for(let i=0; i<8; i++) {
-        ctx.beginPath(); ctx.moveTo(canvas.width*0.12 * i, 0);
-        ctx.lineTo(canvas.width*0.12 * i + 200, canvas.height);
-        ctx.lineTo(canvas.width*0.12 * i - 200, canvas.height); ctx.fill();
-    }
-
-    ctx.save();
-    ctx.translate(-cam.x, -cam.y);
-    backgrounds.forEach(bg => {
-        ctx.fillStyle = "rgba(0,0,0,0.1)";
-        ctx.beginPath(); ctx.ellipse(bg.x, bg.y, bg.size, bg.size/3, bg.angle, 0, Math.PI*2); ctx.fill();
-    });
-    bubbles.forEach(b => {
-        ctx.fillStyle = "rgba(255,255,255,0.2)";
-        ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, Math.PI*2); ctx.fill();
-    });
-
-    entities.forEach(e => drawFishy(e.x, e.y, e.size, e.angle, e.color, e.type, e.hp/e.maxHp));
-    
-    // Aura
-    ctx.strokeStyle = "rgba(0, 242, 255, 0.4)";
-    ctx.setLineDash([12, 12]);
-    ctx.beginPath(); ctx.arc(player.x, player.y, aura, 0, Math.PI*2); ctx.stroke();
-    ctx.setLineDash([]);
-
-    drawFishy(player.x, player.y, player.size, player.angle, player.color, 'fish', 1, true);
-    ctx.restore();
-
-    // UI
-    document.getElementById('lvl').innerText = player.lvl;
-    document.getElementById('kills').innerText = player.kills;
-    document.getElementById('xpStat').innerText = player.xp;
-    document.getElementById('auraStat').innerText = Math.floor(aura);
-    document.getElementById('hpBar').style.width = (player.hp / player.maxHp * 100) + "%";
-    document.getElementById('timer').innerText = `SURVIVED: ${Math.floor((Date.now() - player.startTime)/1000)}s`;
-    document.getElementById('coord').innerText = `X: ${Math.floor(player.x)} Y: ${Math.floor(player.y)}`;
-    
-    if (player.hp <= 0) location.reload();
-    requestAnimationFrame(loop);
-}
-
-window.addEventListener('touchstart', (e) => {
-    player.isManual = true;
-    player.targetAngle = Math.atan2(e.touches[0].clientY - canvas.height/2, e.touches[0].clientX - canvas.width/2);
-    clearTimeout(window.ct);
-    window.ct = setTimeout(() => player.isManual = false, 3000);
-});
-
-init();
+        
+        // initial population: more life, more threats
+        function populateOcean() {
+            // abundant life ~500 total entities
+            const counts = {
+                baitfish: 90, crab: 35, seahorse: 25, angelfish: 40,
+                turtle: 12, jellyfish: 35, puffer: 28,
+                barracuda: 24, electric_eel: 18, shark: 16, giant_squid: 10, leviathan: 2
+            };
+            for(let [type, num] of Object.entries(counts)) {
+                for(let i=0; i<num; i++) spawnCreature(type);
+            }
+            // ambient decor particles: bubbles + plankton
+            for(let i=0;i<400;i++){
+                decorations.push({
+                    x: Math.random()*WORLD_SIZE,
+                    y: Math.random()*WORLD_SIZE,
+                    type: 'bubble',
+                    size: 1+Math.random()*4,
+                    speedY: 0.3+Math.random()*1.2
+                });
+            }
+            for(let i=0;i<120;i++){
+                decorations.push({
+                    x: Math.random()*WORLD_SIZE,
+                    y: Math.random()*WORLD_SIZE,
+                    type: 'plankton',
+                    size: 2+Math.random()*5,
+                    alpha: 0.3+Math.random()*0.5
+                });
+            }
+        }
+        
+        // update player growth (time alive + kills = exponential small boost)
+        let lastTimeUpdate = performance.now();
+        function updateGrowthAndStats(now) {
+            let dt = Math.min(0.05, (now - lastTimeUpdate)/1000);
+            if(dt<=0) return;
+            lastTimeUpdate = now;
+            player.totalAliveSeconds += dt;
+            // passive size growth from living (tiny permanent growth per minute)
+            let aliveGrowth = Math.floor(player.totalAliveSeconds / 90) * 0.4;  // every 90 sec +0.4 size
+            let killsGrowth = player.kills * 0.12;
+            let totalBonus = Math.min(85, aliveGrowth + killsGrowth); // cap max size
+            let newSize = player.baseSize + totalBonus;
+            player.size = Math.min(150, newSize);
+            // adjust speed & max HP proportionally
+            let sizeFactor = 0.7 + (player.size/130);
+            player.speed = Math.min(5.2, player.baseSpeed + (player.size/60));
+            player.maxHp = Math.floor(player.baseMaxHp + (player.size * 1.8) + (player.lvl * 12));
+            if(player.hp > player.maxHp) player.hp = player.maxHp;
+            // scaling damage aura
+            player.damageAura = 1.2 + (player.lvl * 0.45) + (player.size / 85);
+            player.regenRate = 0.9 + (player.lvl * 0.12);
+        }
+        
+        // XP & Leveling
+        function addXP(amount) {
+            player.xp += amount;
+            let required = player.lvl * 180;
+            while(player.xp >= required) {
+                player.xp -= required;
+                player.lvl++;
+                required = player.lvl * 180;
+                player.baseMaxHp += 38;
+                player.maxHp = player.baseMaxHp + Math.floor(player.size * 1.2);
+                player.hp = player.maxHp;
+                player.baseSpeed += 0.09;
+                // visual joy
+                applyVisualImpact("kill", player.x, player.y);
+            }
+            document.getElementById('nextXpReq').innerText = required;
+        }
+        
+        // enemy interaction + aura damage + collision
+        function processCombat(deltaTime) {
+            let auraRange = player.size * 3.2 + 35;
+            let threatNearby = 0;
+            for(let i=0; i<entities.length; i++) {
+                let e = entities[i];
+                let dx = e.x - player.x, dy = e.y - player.y;
+                let dist = Math.hypot(dx, dy);
+                // AURA damage on enemies
+                if(dist < auraRange && e.hp > 0) {
+                    let auraDmgVal = player.damageAura * deltaTime * 2.2;
+                    e.hp -= auraDmgVal;
+                    // visual particle on damage tick
+                    if(Math.random()<0.12) {
+                        particles.push({
+                            x: e.x + (Math.random()-0.5)*e.size,
+                            y: e.y + (Math.random()-0.5)*e.size,
+                            vx: (Math.random()-0.5)*2,
+                            vy: (Math.random()-0.5)*2,
+                            life: 0.4,
+                            size: 2,
+                            color: "#ffaa66"
+                        });
+                    }
+                    if(e.hp <= 0) {
+                        // kill reward!
+                        player.kills++;
+                        let gainExp = e.exp + Math.floor(e.size/4);
+                        addXP(gainExp);
+                        applyVisualImpact("kill", e.x, e.y);
+                        // respawn to keep ocean lively
+                        let newType = Object.keys(CREATURE_TYPES)[Math.floor(Math.random()*Object.keys(CREATURE_TYPES).length)];
+                        spawnCreature(newType, Math.random()*WORLD_SIZE, Math.random()*WORLD_SIZE);
+                        entities.splice(i,1);
+                        i--;
+                        continue;
+                    }
+                }
+                // enemy aggression: threats chase player if close
+                if(e.threat && e.hp > 0) {
+                    let aggroRange = 400 + player.size*0.6;
+                    let distToPlayer = Math.hypot(e.x - player.x, e.y - player.y);
+                    if(distToPlayer < aggroRange) {
+                        threatNearby++;
+                        let angleTo = Math.atan2(player.y - e.y, player.x - e.x);
+                        e.angle += (angleTo - e.angle) * 0.045;
+                        // attack player on collision
+                        if(distToPlayer < (player.size + e.size)*0.8 && (performance.now() - (e.lastAttack||0)) > 700) {
+                            let dmgTaken = e.dmg * (0.7 + Math.random()*0.6);
+                            player.hp -= dmgTaken;
+                            e.lastAttack = performance.now();
+                            applyVisualImpact("medium", player.x, player.y);
+                            // apply special effect
+                            if(e.effect === "shock") {
+                                fxDiv.style.backgroundColor = "rgba(200, 230, 255, 0.7)";
+                                fxDiv.style.opacity = "0.8";
+                                setTimeout(()=>fxDiv.style.opacity="0", 150);
+                                player.angle += 0.3;
+                            } else if(e.effect === "sting") {
+                                player.speed *= 0.85;
+                                setTimeout(()=> player.speed = Math.min(5.2, player.baseSpeed+(player.size/60)), 800);
+                            } else if(e.effect === "spike") {
+                                applyVisualImpact("heavy");
+                            }
+                            if(player.hp <= 0) gameOver();
+                        }
+                    } else {
+                        // wander
+                        e.angle += (Math.random() - 0.5)*0.12;
+                    }
+                } else if(!e.threat) {
+                    // Prey small flee from big player (size matters)
+                    let fleeDist = player.size * 2.2;
+                    let distToPlayer = Math.hypot(e.x - player.x, e.y - player.y);
+                    if(distToPlayer < fleeDist + 90 && player.size > e.size+5) {
+                        let fleeAngle = Math.atan2(e.y - player.y, e.x - player.x);
+                        e.angle = fleeAngle + (Math.random()-0.5)*0.8;
+                    } else {
+                        e.angle += (Math.random() - 0.5)*0.08;
+                    }
+                }
+                // movement & boundaries
+                e.x += Math.cos(e.angle) * e.speed * deltaTime * 2.2;
+                e.y += Math.sin(e.angle) * e.speed * deltaTime * 2.2;
+                e.x = Math.min(WORLD_SIZE-20, Math.max(20, e.x));
+                e.y = Math.min(WORLD_SIZE-20, Math.max(20, e.y));
+            }
+            document.getElementById('threatCount').innerText = threatNearby;
+        }
+        
+        // player health regen
+        function updateRegen(deltaTime) {
+            if(player.hp < player.maxHp) {
+                player.hp += player.regenRate * deltaTime * 1.2;
+                if(player.hp > player.maxHp) player.hp = player.maxHp;
+            }
+        }
+        
+        function gameOver() {
+            alert("💀 THE ABYSS CLAIMED YOU...\n" + "Kills: " + player.kills + " | Level: " + player.lvl + " | Time: " + Math.floor(player.totalAliveSeconds)+"s");
+            location.reload();
+        }
+        
+        // ---- RENDERING with rich underwater FX ----
+        function draw() {
+            if(!ctx) return;
+            ctx.clearRect(0,0, canvas.width, canvas.height);
+            ctx.save();
+            ctx.translate(-cam.x, -cam.y);
+            // Ocean gradient rays
+            for(let i=0;i<12;i++) {
+                ctx.beginPath();
+                ctx.moveTo((i*700)%WORLD_SIZE, 0);
+                ctx.lineTo(((i*700)%WORLD_SIZE)+400, canvas.height+500);
+                ctx.lineTo(((i*700)%WORLD_SIZE)-400, canvas.height+500);
+                ctx.fillStyle = `rgba(70, 180, 240, 0.02)`;
+                ctx.fill();
+            }
+            // plankton & bubbles
+            decorations.forEach(d => {
+                if(d.type === 'bubble') {
+                    ctx.beginPath();
+                    ctx.arc(d.x, d.y, d.size, 0, Math.PI*2);
+                    ctx.fillStyle = `rgba(180, 240, 255, 0.35)`;
+                    ctx.fill();
+                    d.y -= d.speedY * 0.8;
+                    if(d.y < -50) d.y = WORLD_SIZE+50;
+                } else {
+                    ctx.fillStyle = `rgba(100, 210, 150, ${d.alpha})`;
+                    ctx.beginPath();
+                    ctx.arc(d.x, d.y, d.size*0.5, 0, Math.PI*2);
+                    ctx.fill();
+                }
+            });
+            // draw all creatures
+            entities.forEach(e => {
+                let hpPercent = e.hp/e.maxHp;
+                ctx.save();
+                ctx.translate(e.x, e.y);
+                ctx.rotate(e.angle);
+                ctx.fillStyle = e.color;
+                ctx.shadowBlur = e.threat ? 12 : 3;
+                ctx.shadowColor = e.threat ? "#ff3300" : "#00aaff";
+                // fish body shapes vary
+                if(e.type === "jellyfish" || e.type === "giant_squid") {
+                    ctx.beginPath();
+                    ctx.ellipse(0, 0, e.size, e.size*0.7, 0, 0, Math.PI*2);
+                    ctx.fill();
+                    for(let i=0;i<4;i++) ctx.fillRect(-e.size+4, i*5-8, 2, e.size*0.6);
+                } else if(e.type === "leviathan") {
+                    ctx.fillStyle = "#1a2a3f";
+                    ctx.beginPath();
+                    ctx.ellipse(0, 0, e.size, e.size*0.5, 0, 0, Math.PI*2);
+                    ctx.fill();
+                    ctx.fillStyle = "#ff6600";
+                    ctx.fillRect(e.size*0.5,-5,12,10);
+                } else {
+                    ctx.beginPath();
+                    ctx.ellipse(0, 0, e.size, e.size*0.6, 0, 0, Math.PI*2);
+                    ctx.fill();
+                    ctx.fillStyle = "black";
+                    ctx.fillRect(e.size*0.4, -3, 3, 6);
+                }
+                // hp bar
+                if(e.hp < e.maxHp) {
+                    ctx.fillStyle = "#ff5555";
+                    ctx.fillRect(-e.size*0.8, -e.size-4, e.size*1.6 * hpPercent, 4);
+                }
+                ctx.restore();
+            });
+            
+            // player draw with glowing aura
+            ctx.save();
+            ctx.translate(player.x, player.y);
+            ctx.rotate(player.angle);
+            ctx.shadowBlur = 28;
+            ctx.shadowColor = "#ffaa44";
+            ctx.fillStyle = player.color;
+            ctx.beginPath();
+            ctx.ellipse(0, 0, player.size, player.size*0.65, 0, 0, Math.PI*2);
+            ctx.fill();
+            ctx.fillStyle = "#000";
+            ctx.fillRect(player.size*0.5, -4, 5, 8);
+            ctx.fillStyle = "white";
+            ctx.beginPath();
+            ctx.arc(player.size*0.25, -4, 3, 0, Math.PI*2);
+            ctx.fill();
+            ctx.restore();
+            
+            // particles effects
+            for(let i=0;i<particles.length;i++) {
+                let p = particles[i];
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
+                ctx.fill();
+                p.x += p.vx;
+                p.y += p.vy;
+                p.life -= 0.02;
+                if(p.life<=0) particles.splice(i,1);
+            }
+            ctx.restore();
+        }
+        
+        let lastFrameTime = 0;
+        let deltaAcc = 0;
+        function gameLoop(nowMs) {
+            let delta = Math.min(0.033, (nowMs - lastFrameTime)/1000);
+            if(delta <= 0) { lastFrameTime = nowMs; requestAnimationFrame(gameLoop); return; }
+            lastFrameTime = nowMs;
+            updateGrowthAndStats(nowMs);
+            processCombat(delta);
+            updateRegen(delta);
+            // player movement
+            if(!player.manualControl) {
+                player.targetAngle += (Math.random() - 0.5) * 0.12;
+            }
+            player.angle += (player.targetAngle - player.angle) * 0.09;
+            player.x += Math.cos(player.angle) * player.speed * delta * 5;
+            player.y += Math.sin(player.angle) * player.speed * delta * 5;
+            player.x = Math.min(WORLD_SIZE-15, Math.max(15, player.x));
+            player.y = Math.min(WORLD_SIZE-15, Math.max(15, player.y));
+            cam.x += (player.x - canvas.width/2 - cam.x) * 0.08;
+            cam.y += (player.y - canvas.height/2 - cam.y) * 0.08;
+            cam.x = Math.min(WORLD_SIZE-canvas.width, Math.max(0, cam.x));
+            cam.y = Math.min(WORLD_SIZE-canvas.height, Math.max(0, cam.y));
+            
+            draw();
+            // update UI
+            document.getElementById('lvlVal').innerText = player.lvl;
+            document.getElementById('killCount').innerText = player.kills;
+            document.getElementById('surviveSeconds').innerText = Math.floor(player.totalAliveSeconds);
+            document.getElementById('sizeStat').innerText = Math.floor(player.size);
+            document.getElementById('speedStat').innerText = player.speed.toFixed(1);
+            document.getElementById('auraDmg').innerText = player.damageAura.toFixed(1);
+            document.getElementById('regenStat').innerText = player.regenRate.toFixed(1);
+            document.getElementById('hpText').innerText = Math.floor(player.hp);
+            document.getElementById('maxHpText').innerText = player.maxHp;
+            document.getElementById('hpFill').style.width = (player.hp/player.maxHp*100)+"%";
+            document.getElementById('xpCurr').innerText = player.xp;
+            let xpPercent = (player.xp / (player.lvl*180))*100;
+            document.getElementById('xpFill').style.width = Math.min(100, xpPercent)+"%";
+            let zone = (player.y < 3500) ? "☀️ Coral Reef" : (player.y > 9500 ? "🌋 Abyss Trench" : "🌊 Open Ocean");
+            document.getElementById('depthZone').innerText = zone;
+            requestAnimationFrame(gameLoop);
+        }
+        
+        function init() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            window.addEventListener('resize', () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; });
+            populateOcean();
+            // touch controls
+            canvas.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                player.manualControl = true;
+                let rect = canvas.getBoundingClientRect();
+                let touchX = e.touches[0].clientX - rect.left;
+                let touchY = e.touches[0].clientY - rect.top;
+                let targetAng = Math.atan2(touchY - canvas.height/2, touchX - canvas.width/2);
+                player.targetAngle = targetAng;
+                clearTimeout(player.autoTimeout);
+                player.autoTimeout = setTimeout(() => { player.manualControl = false; }, 2800);
+            });
+            canvas.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+                let rect = canvas.getBoundingClientRect();
+                let touchX = e.touches[0].clientX - rect.left;
+                let touchY = e.touches[0].clientY - rect.top;
+                player.targetAngle = Math.atan2(touchY - canvas.height/2, touchX - canvas.width/2);
+            });
+            canvas.addEventListener('touchend', () => {
+                setTimeout(() => { if(!player.manualControl) player.manualControl = false; }, 100);
+            });
+            lastFrameTime = performance.now();
+            requestAnimationFrame(gameLoop);
+        }
+        init();
+    })();
 </script>
 </body>
 </html>
