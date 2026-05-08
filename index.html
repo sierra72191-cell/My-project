@@ -1,561 +1,735 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-  <title>Nova Realms • Copper Division</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      -webkit-tap-highlight-color: transparent;
-      user-select: none;
-    }
-
-    body {
-      min-height: 100vh;
-      background: radial-gradient(circle at 30% 20%, #0a0804 0%, #030201 100%);
-      font-family: 'Inter', 'Segoe UI', 'Poppins', system-ui, sans-serif;
-      padding: 20px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-      overflow-x: hidden;
-    }
-
-    /* ===== ANIMATED COPPER PARTICLES CANVAS ===== */
-    #particle-canvas {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      z-index: 1;
-    }
-
-    /* ===== ENERGY ZAP CANVAS (lightning between pillars) ===== */
-    #energy-canvas {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      z-index: 3;
-    }
-
-    /* ===== ANIMATED PILLARS - MASSIVE, GLOWING, ZAPPING ===== */
-    .pillar-left, .pillar-right {
-      position: fixed;
-      top: 0;
-      bottom: 0;
-      width: 32px;
-      z-index: 5;
-      background: linear-gradient(180deg, 
-        #ffb347 0%, 
-        #e08e2e 15%,
-        #b85c1a 30%,
-        #f5a442 45%,
-        #c9701e 60%,
-        #ffbf6e 75%,
-        #a65317 90%,
-        #ffc285 100%);
-      background-size: 100% 300%;
-      animation: pillarFlow 2s ease infinite, pillarGlow 1.2s alternate infinite;
-      box-shadow: 0 0 25px rgba(255,140,0,0.8), inset 0 0 15px rgba(255,215,0,0.6);
-      border-right: 2px solid #ffda99;
-    }
-
-    .pillar-left {
-      left: 8px;
-      border-radius: 0 30px 30px 0;
-    }
-
-    .pillar-right {
-      right: 8px;
-      border-radius: 30px 0 0 30px;
-      border-left: 2px solid #ffda99;
-      border-right: none;
-    }
-
-    @keyframes pillarFlow {
-      0% { background-position: 0% 0%; }
-      100% { background-position: 0% 100%; }
-    }
-
-    @keyframes pillarGlow {
-      0% { box-shadow: 0 0 15px rgba(255,120,0,0.6), inset 0 0 8px gold; filter: brightness(1);}
-      100% { box-shadow: 0 0 45px rgba(255,100,0,1), inset 0 0 25px #ffdd88; filter: brightness(1.2);}
-    }
-
-    /* spiral copper coils on pillars */
-    .pillar-left::before, .pillar-right::before {
-      content: "";
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: repeating-linear-gradient(45deg, 
-        rgba(0,0,0,0.4) 0px, 
-        rgba(0,0,0,0.4) 3px,
-        transparent 3px,
-        transparent 18px);
-      pointer-events: none;
-    }
-
-    /* energy orbs on pillars */
-    .pillar-left::after, .pillar-right::after {
-      content: "⚡";
-      position: absolute;
-      bottom: 15%;
-      font-size: 22px;
-      left: 50%;
-      transform: translateX(-50%);
-      animation: orbPulse 0.8s infinite alternate;
-      filter: drop-shadow(0 0 8px #ffaa33);
-      opacity: 0.9;
-    }
-
-    @keyframes orbPulse {
-      0% { opacity: 0.5; text-shadow: 0 0 5px orange; font-size: 20px;}
-      100% { opacity: 1; text-shadow: 0 0 18px #ff9933; font-size: 26px;}
-    }
-
-    /* ===== MAIN GLASS PANEL - BRIGHTER ===== */
-    .glass-panel {
-      position: relative;
-      z-index: 20;
-      max-width: 680px;
-      width: 100%;
-      background: rgba(10, 7, 3, 0.5);
-      backdrop-filter: blur(20px);
-      border-radius: 80px;
-      border: 1px solid rgba(255, 160, 60, 0.7);
-      padding: 32px 28px 42px;
-      box-shadow: 0 30px 55px -10px rgba(0,0,0,0.9), inset 0 1px 0 rgba(255,200,80,0.3), 0 0 30px rgba(255,120,0,0.2);
-    }
-
-    /* header with nova energy */
-    h1 {
-      font-family: 'Poppins', 'Impact', sans-serif;
-      font-weight: 800;
-      font-size: 2.2rem;
-      text-align: center;
-      letter-spacing: -0.5px;
-      margin-bottom: 4px;
-    }
-
-    .nova-title {
-      background: linear-gradient(135deg, #FFE6B0, #FFA447, #FF6A1A, #FFC875);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      animation: novaWave 3s ease infinite;
-      text-shadow: 0 0 20px rgba(255,100,0,0.5);
-      font-size: 2.5rem;
-    }
-
-    .copper-sub {
-      font-size: 1rem;
-      letter-spacing: 4px;
-      color: #f0ac6e;
-      text-shadow: 0 0 6px #ff8c33;
-      margin-top: -8px;
-    }
-
-    @keyframes novaWave {
-      0% { background-position: 0% 50%; filter: brightness(1);}
-      50% { background-position: 100% 50%; filter: brightness(1.2);}
-      100% { background-position: 0% 50%; filter: brightness(1);}
-    }
-
-    /* datetime */
-    .datetime-neon {
-      text-align: center;
-      font-family: 'JetBrains Mono', monospace;
-      font-weight: 500;
-      background: rgba(0,0,0,0.7);
-      width: fit-content;
-      margin: 16px auto 28px;
-      padding: 10px 24px;
-      border-radius: 60px;
-      color: #ffe0aa;
-      border: 1px solid #ffa042;
-      box-shadow: 0 0 16px rgba(255,100,0,0.5);
-      backdrop-filter: blur(4px);
-    }
-
-    /* stat cards - brighter edges */
-    .stat-card {
-      background: rgba(16, 10, 5, 0.65);
-      backdrop-filter: blur(12px);
-      border-radius: 56px;
-      padding: 20px 26px;
-      margin-bottom: 28px;
-      border: 1px solid rgba(255, 140, 30, 0.6);
-      transition: all 0.2s;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.5), inset 0 0 10px rgba(255,100,0,0.1);
-    }
-
-    .stat-label {
-      font-size: 0.85rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 2.5px;
-      color: #ffbc6e;
-      margin-bottom: 12px;
-    }
-
-    .stat-value {
-      font-size: 3.2rem;
-      font-weight: 800;
-      font-family: 'JetBrains Mono', monospace;
-      background: linear-gradient(145deg, #FFE4A8, #E69A3C);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      text-shadow: 0 0 12px rgba(255,100,0,0.4);
-      margin-bottom: 16px;
-    }
-
-    /* buttons */
-    .button-grid {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-    }
-
-    .copper-btn {
-      background: linear-gradient(115deg, #2c1d0e, #1a1108);
-      border: 1px solid #dd8f40;
-      padding: 12px 18px;
-      border-radius: 60px;
-      font-weight: bold;
-      font-size: 1rem;
-      color: #ffda9e;
-      cursor: pointer;
-      transition: 0.07s linear;
-      font-family: monospace;
-      flex: 1 0 auto;
-      min-width: 65px;
-      text-align: center;
-      backdrop-filter: blur(5px);
-    }
-
-    .copper-btn:active {
-      transform: translateY(2px);
-      background: #4a311c;
-      border-color: #ffbc6e;
-    }
-
-    .bank-btn {
-      background: linear-gradient(125deg, #aa6e2e, #6b3c16);
-      border-color: #ffcd84;
-      color: #fff2cf;
-      text-shadow: 0 0 6px orange;
-    }
-
-    .reset-small {
-      background: #1f160c;
-      border-color: #b87a3e;
-    }
-
-    .bank-glow {
-      background: rgba(30, 18, 6, 0.8);
-      border: 2px solid #ffb451;
-      box-shadow: 0 0 22px rgba(255, 100, 0, 0.4);
-    }
-
-    .footer {
-      text-align: center;
-      font-size: 0.7rem;
-      color: #ea9f4b;
-      margin-top: 22px;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Nova Realms: Hunger & Harvest</title>
+    <style>
+        * {
+            user-select: none;
+            touch-action: manipulation;
+            box-sizing: border-box;
+        }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: #1a1e1a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Courier New', monospace;
+            touch-action: none;
+            padding: 6px;
+        }
+        .game-container {
+            position: relative;
+            background: #2a2a2a;
+            border-radius: 28px;
+            box-shadow: 0 12px 28px black;
+            display: inline-block;
+        }
+        canvas {
+            display: block;
+            margin: 0 auto;
+            border-radius: 24px;
+            cursor: crosshair;
+            touch-action: none;
+            width: 100%;
+            height: auto;
+        }
+        .ui-overlay {
+            position: absolute;
+            bottom: 6px;
+            left: 6px;
+            right: 6px;
+            pointer-events: none;
+            z-index: 20;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .stats-panel {
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(8px);
+            border-radius: 40px;
+            padding: 6px 12px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            font-size: 11px;
+            font-weight: bold;
+            color: #ffefc0;
+            border: 1px solid #e0a235;
+            gap: 8px;
+            pointer-events: none;
+        }
+        .xp-bar-bg {
+            background: #3a2a1a;
+            border-radius: 20px;
+            height: 10px;
+            width: 100px;
+            overflow: hidden;
+            border: 1px solid #ccaa55;
+        }
+        .xp-bar-fill {
+            background: #aaf0a0;
+            width: 0%;
+            height: 100%;
+            border-radius: 20px;
+        }
+        .inventory-bar {
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(12px);
+            border-radius: 48px;
+            padding: 6px 12px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+            pointer-events: auto;
+            border: 1px solid #b87c3a;
+        }
+        .inv-slot {
+            background: #2c2418;
+            border-radius: 36px;
+            padding: 3px 10px;
+            font-size: 14px;
+            font-weight: bold;
+            color: #ffe1a0;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            border: 1px solid #daa342;
+            pointer-events: auto;
+            cursor: pointer;
+            transition: 0.05s linear;
+            white-space: nowrap;
+        }
+        .inv-slot:active { transform: scale(0.96); background:#1e1810; }
+        .craft-float {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 6px;
+            pointer-events: auto;
+            margin-bottom: 4px;
+        }
+        .float-btn {
+            background: #3d2b1cdf;
+            backdrop-filter: blur(4px);
+            border: 1px solid #f5bc70;
+            color: #ffefcf;
+            font-weight: bold;
+            border-radius: 60px;
+            padding: 5px 12px;
+            font-size: 11px;
+            font-family: monospace;
+            cursor: pointer;
+            transition: 0.05s linear;
+            touch-action: manipulation;
+        }
+        .float-btn:active { transform: scale(0.94); background:#2f210f; }
+        .toggle-active {
+            background: #6b8c3e;
+            border-color: #f9e45b;
+            color: white;
+            box-shadow: 0 0 6px #b5ff6a;
+        }
+        .message-tip {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            background: #000000bb;
+            color: #f5cd6d;
+            padding: 4px 12px;
+            border-radius: 28px;
+            font-size: 9px;
+            font-weight: bold;
+            font-family: monospace;
+            pointer-events: none;
+            z-index: 30;
+        }
+        @media (max-width: 700px) {
+            .stats-panel { font-size: 9px; padding: 4px 8px; }
+            .inv-slot { font-size: 10px; padding: 2px 8px; }
+            .float-btn { font-size: 9px; padding: 4px 8px; }
+        }
+    </style>
 </head>
 <body>
-
-<canvas id="particle-canvas"></canvas>
-<canvas id="energy-canvas"></canvas>
-
-<div class="pillar-left"></div>
-<div class="pillar-right"></div>
-
-<div class="glass-panel">
-  <h1><span class="nova-title">NOVA REALMS</span></h1>
-  <div class="copper-sub">⚡ COPPER DIVISION ⚡</div>
-  <div class="datetime-neon">
-    <span id="dateDisplay"></span> &nbsp;⟁&nbsp; <span id="timeDisplay"></span>
-  </div>
-
-  <!-- Received -->
-  <div class="stat-card">
-    <div class="stat-label">📦 LBS RECEIVED · TODAY</div>
-    <div class="stat-value" id="receivedValue">0</div>
-    <div class="button-grid">
-      <button class="copper-btn" id="addReceived1">+1</button>
-      <button class="copper-btn" id="addReceived5">+5</button>
-      <button class="copper-btn" id="addReceived10">+10</button>
-      <button class="copper-btn" id="addReceived50">+50</button>
-      <button class="copper-btn reset-small" id="resetReceivedBtn">↺</button>
+<div class="game-container">
+    <canvas id="gameCanvas" width="1000" height="700"></canvas>
+    <div class="ui-overlay">
+        <div class="stats-panel">
+            <span>❤️ <span id="hpVal">500</span>/<span id="maxHpVal">500</span></span>
+            <span>⚔️ Lv.<span id="lvlVal">1</span></span>
+            <span>🌀 RING:<span id="ringDmg">1</span></span>
+            <span>🌞 DAY <span id="dayVal">1</span>/99</span>
+            <span>🍗 HUNGER:<span id="hungerVal">100</span>%</span>
+            <span>🕷️ KILLS:<span id="killsVal">0</span></span>
+            <div class="xp-bar-bg"><div class="xp-bar-fill" id="xpFill"></div></div>
+        </div>
+        <div class="craft-float" id="floatCraft">
+            <button class="float-btn" id="craftCrossbowBtn">🔨 CROSSBOW</button>
+            <button class="float-btn" id="craftBoltsBtn">🏹 BOLTS +5</button>
+            <button class="float-btn" id="craftCampfireBtn">🔥 CAMPFIRE</button>
+            <button class="float-btn" id="craftWallBtn">🧱 WALL</button>
+            <button class="float-btn" id="craftTowerBtn">🗼 TOWER</button>
+            <button class="float-btn" id="toggleTillBtn" style="background:#5a4a2a;">🌾 TILL MODE</button>
+        </div>
+        <div class="inventory-bar" id="inventoryBar"></div>
     </div>
-  </div>
-
-  <!-- Refined -->
-  <div class="stat-card">
-    <div class="stat-label">⚙️ LBS REFINED · TODAY</div>
-    <div class="stat-value" id="refinedValue">0</div>
-    <div class="button-grid">
-      <button class="copper-btn" id="addRefined1">+1</button>
-      <button class="copper-btn" id="addRefined5">+5</button>
-      <button class="copper-btn" id="addRefined10">+10</button>
-      <button class="copper-btn" id="addRefined50">+50</button>
-      <button class="copper-btn reset-small" id="resetRefinedBtn">↺</button>
-    </div>
-  </div>
-
-  <!-- Banked -->
-  <div class="stat-card bank-glow">
-    <div class="stat-label">🏦 TOTAL COPPER BANKED · PERMANENT</div>
-    <div class="stat-value" id="bankedValue">0</div>
-    <div class="button-grid">
-      <button class="copper-btn bank-btn" id="addToBankBtn">⚡ ADD REFINED TO VAULT ⚡</button>
-    </div>
-    <div style="font-size:11px; margin-top:12px; color:#f5b362;">Deposit today's refined → permanent copper reserve</div>
-  </div>
-
-  <div style="display: flex; gap: 14px; justify-content: center; margin: 10px 0 5px;">
-    <button class="copper-btn reset-small" id="resetDailyBtn">🔄 RESET TODAY</button>
-    <button class="copper-btn reset-small" id="fullResetBtn">⚠️ NUKE ALL</button>
-  </div>
-  <div class="footer">⚡ copper energy pillars · arc lightning ⚡</div>
+    <div class="message-tip" id="tipMsg">🌱 TILL MODE: toggle, tap ground → till soil. Plant seeds & eat to survive!</div>
 </div>
 
 <script>
-  // ========== ENERGY ZAPS BETWEEN PILLARS ==========
-  const energyCanvas = document.getElementById('energy-canvas');
-  let energyCtx = energyCanvas.getContext('2d');
-  
-  function resizeEnergyCanvas() {
-    energyCanvas.width = window.innerWidth;
-    energyCanvas.height = window.innerHeight;
-  }
-
-  let zapPhase = 0;
-  function drawLightning() {
-    if (!energyCtx) return;
-    energyCtx.clearRect(0, 0, energyCanvas.width, energyCanvas.height);
-    
-    const leftX = 24;    // pillar left edge approx
-    const rightX = energyCanvas.width - 24;
-    const topY = 20;
-    const bottomY = energyCanvas.height - 20;
-    
-    // draw multiple random arcs (zaps) from left to right pillar, and bottom to top
-    for (let i = 0; i < 4; i++) {
-      let startY = 50 + Math.sin(Date.now() * 0.003 + i) * 30 + i * 80;
-      let endY = energyCanvas.height - 80 + Math.cos(Date.now() * 0.004 + i) * 40;
-      
-      energyCtx.beginPath();
-      energyCtx.moveTo(leftX + 8, startY);
-      // chaotic zap line
-      let midX = (leftX + rightX) / 2 + (Math.sin(Date.now() * 0.008 + i) * 35);
-      let midY = (startY + endY) / 2 + (Math.cos(Date.now() * 0.01) * 45);
-      energyCtx.quadraticCurveTo(midX, midY, rightX - 8, endY);
-      energyCtx.strokeStyle = `rgba(255, 140, 30, ${0.3 + Math.sin(Date.now() * 0.01) * 0.2})`;
-      energyCtx.lineWidth = 2.5;
-      energyCtx.shadowBlur = 12;
-      energyCtx.shadowColor = '#ff9933';
-      energyCtx.stroke();
-      
-      // secondary mini zaps
-      energyCtx.beginPath();
-      energyCtx.moveTo(leftX + 4, startY + 15);
-      energyCtx.lineTo(rightX - 12, endY - 25);
-      energyCtx.strokeStyle = `rgba(255,100,20,0.5)`;
-      energyCtx.lineWidth = 1.5;
-      energyCtx.stroke();
-    }
-    
-    // cross zaps top-bottom
-    energyCtx.beginPath();
-    energyCtx.moveTo(leftX + 12, 30);
-    energyCtx.lineTo(rightX - 12, 50);
-    energyCtx.lineTo(leftX + 20, 90);
-    energyCtx.strokeStyle = `rgba(255, 180, 60, 0.6)`;
-    energyCtx.stroke();
-    
-    energyCtx.shadowBlur = 0;
-    requestAnimationFrame(drawLightning);
-  }
-
-  // ========== COPPER PARTICLES ==========
-  const canvas = document.getElementById('particle-canvas');
-  let ctx = canvas.getContext('2d');
-  let particles = [];
-
-  function resizeCanvas() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-  }
-
-  class CopperParticle {
-    constructor() {
-      this.x = Math.random() * canvas.width;
-      this.y = Math.random() * canvas.height;
-      this.size = Math.random() * 4 + 1;
-      this.speedX = (Math.random() - 0.5) * 0.5;
-      this.speedY = (Math.random() - 0.5) * 0.4 + 0.2;
-      this.opacity = Math.random() * 0.7 + 0.3;
-      this.glow = Math.random() > 0.6;
-    }
-    update() {
-      this.x += this.speedX;
-      this.y += this.speedY;
-      if (this.x < -20) this.x = canvas.width + 20;
-      if (this.x > canvas.width + 20) this.x = -20;
-      if (this.y < -20) this.y = canvas.height + 20;
-      if (this.y > canvas.height + 20) this.y = -20;
-    }
-    draw() {
-      ctx.beginPath();
-      ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-      if (this.glow) ctx.shadowBlur = 10;
-      ctx.fillStyle = `rgba(255, 150, 50, ${this.opacity})`;
-      ctx.fill();
-      ctx.shadowBlur = 0;
-    }
-  }
-
-  function initParticles(count = 120) {
-    particles = [];
-    for (let i = 0; i < count; i++) particles.push(new CopperParticle());
-  }
-
-  function animateParticles() {
-    if (!ctx) return;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    for (let p of particles) {
-      p.update();
-      p.draw();
-    }
-    requestAnimationFrame(animateParticles);
-  }
-
-  function startParticles() {
-    resizeCanvas();
-    initParticles(130);
-    animateParticles();
-  }
-
-  window.addEventListener('resize', () => {
-    resizeCanvas();
-    resizeEnergyCanvas();
-    initParticles(130);
-  });
-
-  // ========== APP LOGIC ==========
-  const STORAGE = {
-    lastDate: "copper_lastDate",
-    dailyReceived: "copper_dailyReceived",
-    dailyRefined: "copper_dailyRefined",
-    totalBanked: "copper_totalBanked",
-  };
-  function getTodayStr() { return new Date().toISOString().split('T')[0]; }
-  let state = { dailyReceived: 0, dailyRefined: 0, totalBanked: 0 };
-
-  function loadData() {
-    let lastDate = localStorage.getItem(STORAGE.lastDate);
-    let today = getTodayStr();
-    let totalBanked = parseFloat(localStorage.getItem(STORAGE.totalBanked)) || 0;
-    if (lastDate === today) {
-      state.dailyReceived = parseFloat(localStorage.getItem(STORAGE.dailyReceived)) || 0;
-      state.dailyRefined = parseFloat(localStorage.getItem(STORAGE.dailyRefined)) || 0;
-    } else {
-      state.dailyReceived = 0; state.dailyRefined = 0;
-      localStorage.setItem(STORAGE.lastDate, today);
-      localStorage.setItem(STORAGE.dailyReceived, 0);
-      localStorage.setItem(STORAGE.dailyRefined, 0);
-    }
-    state.totalBanked = totalBanked;
-  }
-  function saveDaily() {
-    localStorage.setItem(STORAGE.dailyReceived, state.dailyReceived);
-    localStorage.setItem(STORAGE.dailyRefined, state.dailyRefined);
-    localStorage.setItem(STORAGE.totalBanked, state.totalBanked);
-    localStorage.setItem(STORAGE.lastDate, getTodayStr());
-  }
-  function updateUI() {
-    document.getElementById('receivedValue').innerText = Math.floor(state.dailyReceived);
-    document.getElementById('refinedValue').innerText = Math.floor(state.dailyRefined);
-    document.getElementById('bankedValue').innerText = Math.floor(state.totalBanked);
-  }
-  function addReceived(amt) { state.dailyReceived += amt; if(state.dailyReceived<0) state.dailyReceived=0; saveDaily(); updateUI(); triggerParticleBurst(); }
-  function addRefined(amt) {
-    let newRef = state.dailyRefined + amt;
-    if (newRef <= state.dailyReceived) state.dailyRefined = newRef;
-    else { state.dailyRefined = state.dailyReceived; showToast("⚠️ Refined can't exceed received", "#b6491a"); }
-    if(state.dailyRefined<0) state.dailyRefined=0;
-    saveDaily(); updateUI(); triggerParticleBurst();
-  }
-  function resetReceived() { state.dailyReceived=0; if(state.dailyRefined>0) state.dailyRefined=0; saveDaily(); updateUI(); }
-  function resetRefined() { state.dailyRefined=0; saveDaily(); updateUI(); }
-  function addRefinedToBank() {
-    if(state.dailyRefined>0) {
-      state.totalBanked += state.dailyRefined;
-      state.dailyRefined=0;
-      saveDaily(); updateUI(); showToast(`✅ Banked! Total: ${Math.floor(state.totalBanked)} lbs`, "#2a752a");
-      triggerParticleBurst(25);
-    } else showToast("No refined copper to bank", "#b4551a");
-  }
-  function resetDaily() { state.dailyReceived=0; state.dailyRefined=0; saveDaily(); updateUI(); showToast("Today's data reset","#ad6733"); }
-  function fullReset() { if(confirm("NUKE ALL DATA? Total Banked will be lost")) { state.dailyReceived=0; state.dailyRefined=0; state.totalBanked=0; localStorage.setItem(STORAGE.lastDate, getTodayStr()); saveDaily(); updateUI(); showToast("System wiped","#8a3a14"); } }
-  function showToast(msg,bg) {
-    let t=document.createElement('div'); t.innerText=msg; t.style.position='fixed'; t.style.bottom='25px'; t.style.left='20px'; t.style.right='20px'; t.style.backgroundColor=bg; t.style.color='#fff0cf'; t.style.padding='14px'; t.style.borderRadius='60px'; t.style.textAlign='center'; t.style.fontWeight='bold'; t.style.zIndex='9999'; t.style.backdropFilter='blur(8px)'; document.body.appendChild(t); setTimeout(()=>t.remove(),1600);
-  }
-  function checkDateChange() {
-    let stored = localStorage.getItem(STORAGE.lastDate);
-    let today = getTodayStr();
-    if(stored !== today) { state.dailyReceived=0; state.dailyRefined=0; localStorage.setItem(STORAGE.lastDate, today); localStorage.setItem(STORAGE.dailyReceived,0); localStorage.setItem(STORAGE.dailyRefined,0); updateUI(); showToast("🪙 New day - received & refined reset","#d48a38"); }
-  }
-  function triggerParticleBurst(extra=14) { for(let i=0;i<extra;i++) particles.push(new CopperParticle()); if(particles.length>250) particles=particles.slice(-200); }
-  function updateDateTime() {
-    const now=new Date();
-    document.getElementById('dateDisplay').innerText = now.toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});
-    document.getElementById('timeDisplay').innerText = now.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-  }
-  function bindEvents() {
-    document.getElementById('addReceived1').onclick=()=>addReceived(1);
-    document.getElementById('addReceived5').onclick=()=>addReceived(5);
-    document.getElementById('addReceived10').onclick=()=>addReceived(10);
-    document.getElementById('addReceived50').onclick=()=>addReceived(50);
-    document.getElementById('resetReceivedBtn').onclick=resetReceived;
-    document.getElementById('addRefined1').onclick=()=>addRefined(1);
-    document.getElementById('addRefined5').onclick=()=>addRefined(5);
-    document.getElementById('addRefined10').onclick=()=>addRefined(10);
-    document.getElementById('addRefined50').onclick=()=>addRefined(50);
-    document.getElementById('resetRefinedBtn').onclick=resetRefined;
-    document.getElementById('addToBankBtn').onclick=addRefinedToBank;
-    document.getElementById('resetDailyBtn').onclick=resetDaily;
-    document.getElementById('fullResetBtn').onclick=fullReset;
-  }
-
-  function init() {
-    startParticles();
-    resizeEnergyCanvas();
-    drawLightning();
-    bindEvents();
-    loadData();
-    updateUI();
-    updateDateTime();
-    setInterval(()=>{ updateDateTime(); checkDateChange(); },1000);
-  }
-  init();
+    (function(){
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        let camera = { x: 0, y: 0 };
+        const MAP_SIZE = 4200;
+        
+        // Player
+        let player = {
+            x: MAP_SIZE/2, y: MAP_SIZE/2,
+            hp: 500, maxHp: 500,
+            level: 1, xp: 0,
+            ringDamage: 1,
+            hasCrossbow: false,
+            selectedWeapon: null,
+            boltCount: 0,
+            moveTarget: null,
+            hunger: 100,    // percent
+        };
+        
+        // Game state
+        let game = {
+            day: 1,
+            dayTimer: 120,
+            kills: 0,
+            gameOver: false,
+            victory: false,
+            tillMode: false      // till toggle
+        };
+        
+        // World objects
+        let resources = [];      // trees / stone
+        let structures = [];     // walls, towers, campfires
+        let farmlands = [];      // {x,y, planted: 'carrot'/'corn'/'apple'/'wheat', growth:0, stage:0}
+        let enemies = [];
+        let projectiles = [];
+        
+        // Inventory / materials
+        let wood = 12;
+        let stone = 8;
+        let seeds = { carrot: 3, corn: 2, apple: 1, wheat: 3 };
+        let foodItems = { carrot: 8, corn: 10, apple: 12, wheat: 6 }; // hunger restore
+        
+        // XP needed
+        function getXPneeded() { return player.level * 20; }
+        
+        function updateUI() {
+            document.getElementById('hpVal').innerText = Math.floor(player.hp);
+            document.getElementById('maxHpVal').innerText = player.maxHp;
+            document.getElementById('lvlVal').innerText = player.level;
+            document.getElementById('ringDmg').innerText = player.ringDamage;
+            document.getElementById('dayVal').innerText = `${game.day}`;
+            document.getElementById('hungerVal').innerText = Math.floor(player.hunger);
+            document.getElementById('killsVal').innerText = game.kills;
+            let xpPercent = (player.xp / getXPneeded()) * 100;
+            document.getElementById('xpFill').style.width = Math.min(100, xpPercent) + '%';
+            renderInventoryBar();
+        }
+        
+        function renderInventoryBar() {
+            const bar = document.getElementById('inventoryBar');
+            bar.innerHTML = '';
+            let resDiv = document.createElement('div'); resDiv.className = 'inv-slot';
+            resDiv.innerHTML = `<span>🪵</span> ${wood}  <span>🪨</span> ${stone}`;
+            bar.appendChild(resDiv);
+            let boltsDiv = document.createElement('div'); boltsDiv.className = 'inv-slot';
+            boltsDiv.innerHTML = `<span>🏹</span> ${player.boltCount}`;
+            bar.appendChild(boltsDiv);
+            let seedsDiv = document.createElement('div'); seedsDiv.className = 'inv-slot';
+            seedsDiv.innerHTML = `<span>🥕${seeds.carrot||0} 🌽${seeds.corn||0} 🍎${seeds.apple||0} 🌾${seeds.wheat||0}</span>`;
+            bar.appendChild(seedsDiv);
+            if(player.hasCrossbow){
+                let bowSlot = document.createElement('div'); bowSlot.className = 'inv-slot';
+                bowSlot.innerHTML = `<span>🏹🔫</span> CROSSBOW`;
+                bowSlot.addEventListener('touchstart', (e)=>{ e.preventDefault(); equipCrossbow(); });
+                bowSlot.addEventListener('mousedown', (e)=>{ e.preventDefault(); equipCrossbow(); });
+                bar.appendChild(bowSlot);
+            }
+        }
+        
+        function equipCrossbow(){
+            if(!player.hasCrossbow) return;
+            player.selectedWeapon = 'crossbow';
+            showTip("🔫 Crossbow ready — tap enemy to fire", 1000);
+        }
+        
+        function addDPSPopup(x,y, dmg, isAcid=false){
+            const div = document.createElement('div');
+            div.className = 'dps-pop';
+            div.innerText = isAcid ? `💧-${dmg}` : `-${dmg}`;
+            let canvasRect = canvas.getBoundingClientRect();
+            let screenX = (x - camera.x) * (canvas.width/ canvas.clientWidth) + canvasRect.left;
+            let screenY = (y - camera.y) * (canvas.height/ canvas.clientHeight) + canvasRect.top;
+            div.style.position = 'fixed';
+            div.style.left = screenX + 'px';
+            div.style.top = screenY + 'px';
+            document.body.appendChild(div);
+            setTimeout(()=> div.remove(), 500);
+        }
+        
+        function showTip(msg, duration=1800){
+            let tipDiv = document.getElementById('tipMsg');
+            tipDiv.innerText = msg;
+            tipDiv.style.opacity = '1';
+            setTimeout(()=> { if(tipDiv.innerText === msg) tipDiv.style.opacity = '0.7'; }, duration);
+        }
+        
+        // Ring damage
+        function applyRingDamage(){
+            let ringRadius = 75 + player.level * 5;
+            for(let i=0;i<enemies.length;i++){
+                let e = enemies[i];
+                if(Math.hypot(e.x - player.x, e.y - player.y) < ringRadius){
+                    e.hp -= player.ringDamage;
+                    addDPSPopup(e.x, e.y, player.ringDamage);
+                    if(e.hp <= 0){
+                        let dropStone = (e.type === 'snail') ? 3 : 1;
+                        stone += dropStone;
+                        showTip(`+${dropStone}🪨`, 400);
+                        enemies.splice(i,1);
+                        game.kills++;
+                        player.xp += 12;
+                        checkLevelUp();
+                        i--;
+                    }
+                }
+            }
+        }
+        
+        function checkLevelUp(){
+            let needed = getXPneeded();
+            while(player.xp >= needed){
+                player.level++;
+                player.xp -= needed;
+                player.maxHp += 20;
+                player.hp = player.maxHp;
+                player.ringDamage += 1;
+                showTip(`✨ LVL UP! +20 HP | RING +1`, 1000);
+                needed = getXPneeded();
+                updateUI();
+            }
+        }
+        
+        // --- Spiders & Snails (more spiders)
+        function spawnEnemies(){
+            let maxEnemies = 22 + Math.floor(game.day/5);
+            if(enemies.length < maxEnemies){
+                let isSnail = (Math.random() < 0.12); // more spiders now
+                let side = Math.floor(Math.random()*4);
+                let x,y;
+                let margin = 440;
+                if(side===0){ x = player.x + 480 + Math.random()*320; y = player.y - 260 + Math.random()*500;}
+                else if(side===1){ x = player.x - 800 + Math.random()*320; y = player.y - 260 + Math.random()*500;}
+                else if(side===2){ x = player.x - 260 + Math.random()*500; y = player.y + 500 + Math.random()*300;}
+                else { x = player.x - 260 + Math.random()*500; y = player.y - 820 + Math.random()*300;}
+                x = Math.min(MAP_SIZE-50, Math.max(50,x));
+                y = Math.min(MAP_SIZE-50, Math.max(50,y));
+                if(isSnail){
+                    enemies.push({ x,y, hp:50, type:'snail', speed: 38, dmg:1, attackTimer:0, rangedCooldown:0 });
+                } else {
+                    enemies.push({ x,y, hp:50, type:'spider', speed: 112, dmg:1, attackTimer:0 });
+                }
+            }
+        }
+        
+        function updateEnemies(deltaSec){
+            for(let i=0;i<enemies.length;i++){
+                let e = enemies[i];
+                let distToPlayer = Math.hypot(e.x - player.x, e.y - player.y);
+                let activeRange = (e.type === 'snail') ? 400 : 330;
+                if(distToPlayer < activeRange){
+                    let angle = Math.atan2(player.y - e.y, player.x - e.x);
+                    let move = e.speed * deltaSec;
+                    e.x += Math.cos(angle) * move;
+                    e.y += Math.sin(angle) * move;
+                    if(e.type === 'snail' && e.rangedCooldown <=0 && distToPlayer < 300){
+                        projectiles.push({ x:e.x, y:e.y, angle:angle, speed:300, damage:1, traveled:0, hit:false });
+                        e.rangedCooldown = 2.3;
+                    }
+                    if(e.rangedCooldown>0) e.rangedCooldown -= deltaSec;
+                    if(distToPlayer < 42 && player.hp>0 && e.attackTimer<=0){
+                        player.hp -= e.dmg;
+                        addDPSPopup(player.x, player.y, e.dmg);
+                        e.attackTimer = 1.0;
+                        if(player.hp<=0) gameOver();
+                    }
+                }
+                if(e.attackTimer>0) e.attackTimer -= deltaSec;
+                // collision with walls
+                for(let s of structures){
+                    if(s.type === 'wall' && Math.hypot(e.x - s.x, e.y - s.y) < 48){
+                        let angle = Math.atan2(e.y - s.y, e.x - s.x);
+                        e.x += Math.cos(angle)*15;
+                        e.y += Math.sin(angle)*15;
+                    }
+                }
+                e.x = Math.min(MAP_SIZE-25, Math.max(25, e.x));
+                e.y = Math.min(MAP_SIZE-25, Math.max(25, e.y));
+                if(e.hp <=0){
+                    let dropStone = (e.type === 'snail') ? 3 : 1;
+                    stone += dropStone;
+                    enemies.splice(i,1);
+                    game.kills++;
+                    player.xp += 12;
+                    checkLevelUp();
+                    i--;
+                }
+            }
+        }
+        
+        function updateProjectiles(delta){
+            for(let i=0;i<projectiles.length;i++){
+                let p = projectiles[i];
+                let step = p.speed * delta;
+                p.x += Math.cos(p.angle)*step;
+                p.y += Math.sin(p.angle)*step;
+                p.traveled += step;
+                if(Math.hypot(p.x - player.x, p.y - player.y) < 28){
+                    player.hp -= p.damage;
+                    addDPSPopup(player.x, player.y, p.damage, true);
+                    projectiles.splice(i,1);
+                    if(player.hp<=0) gameOver();
+                    i--;
+                } else if(p.traveled>600 || p.x<0 || p.x>MAP_SIZE || p.y<0 || p.y>MAP_SIZE){
+                    projectiles.splice(i,1);
+                    i--;
+                }
+            }
+        }
+        
+        function updateTowers(delta){
+            for(let s of structures){
+                if(s.type === 'tower'){
+                    s.cooldown = (s.cooldown||0) - delta;
+                    if(s.cooldown <=0){
+                        let closest = null; let minDist = 380;
+                        for(let e of enemies){
+                            let d = Math.hypot(e.x - s.x, e.y - s.y);
+                            if(d < minDist){ minDist = d; closest = e; }
+                        }
+                        if(closest){
+                            closest.hp -= 10;
+                            addDPSPopup(closest.x, closest.y, 10);
+                            s.cooldown = 1.0;
+                            if(closest.hp<=0){
+                                let idx = enemies.indexOf(closest);
+                                if(idx!==-1) enemies.splice(idx,1);
+                                game.kills++; player.xp+=12; checkLevelUp();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Hunger system + food consumption
+        function updateHunger(delta){
+            if(game.gameOver) return;
+            player.hunger -= delta * 3.5; // lose ~3.5% per sec -> starve in ~30 sec
+            if(player.hunger <= 0){
+                player.hp -= delta * 18;
+                player.hunger = 0;
+                if(player.hp <=0) gameOver();
+            }
+            if(player.hunger > 100) player.hunger = 100;
+            updateUI();
+        }
+        
+        function eatFood(type){
+            let restore = { carrot: 18, corn: 22, apple: 25, wheat: 20 };
+            if(seeds[type] > 0){
+                seeds[type]--;
+                player.hunger = Math.min(100, player.hunger + restore[type]);
+                showTip(`🍽️ Ate ${type} +${restore[type]} hunger`, 800);
+                updateUI();
+            } else showTip(`No ${type} seeds/harvest!`, 800);
+        }
+        
+        // --- Farming: Till Land + Plant
+        function tillSoil(worldX, worldY){
+            let exists = farmlands.some(f => Math.hypot(f.x - worldX, f.y - worldY) < 32);
+            if(!exists){
+                farmlands.push({ x: worldX, y: worldY, planted: null, growth: 0, ready: false });
+                showTip("🌾 Tilled soil! Tap again to plant a seed.", 1000);
+            } else {
+                let plot = farmlands.find(f => Math.hypot(f.x - worldX, f.y - worldY) < 32);
+                if(plot && !plot.planted){
+                    showQuickPlantMenu(plot, worldX, worldY);
+                } else if(plot && plot.ready){
+                    // harvest
+                    let crop = plot.planted;
+                    if(crop && seeds[crop] !== undefined){
+                        let gain = { carrot: 4, corn: 3, apple: 2, wheat: 5 };
+                        let foodValue = gain[crop];
+                        seeds[crop] = (seeds[crop] || 0) + foodValue;
+                        showTip(`🌿 Harvested ${crop}! +${foodValue} seeds`, 800);
+                        plot.planted = null; plot.ready = false; plot.growth = 0;
+                        updateUI();
+                    }
+                } else if(plot && plot.planted && !plot.ready){
+                    showTip(`⏳ ${plot.planted} is growing...`, 700);
+                }
+            }
+        }
+        
+        function showQuickPlantMenu(plot, wx, wy){
+            let choice = prompt("Plant: carrot, corn, apple, wheat").toLowerCase();
+            if(['carrot','corn','apple','wheat'].includes(choice) && seeds[choice] > 0){
+                seeds[choice]--;
+                plot.planted = choice;
+                plot.growth = 0;
+                plot.ready = false;
+                showTip(`🌱 Planted ${choice}! It will grow over time.`, 1000);
+                updateUI();
+            } else showTip(`No ${choice} seeds or invalid`, 800);
+        }
+        
+        function updateFarming(delta){
+            for(let plot of farmlands){
+                if(plot.planted && !plot.ready){
+                    plot.growth += delta;
+                    let growTime = 18; // seconds
+                    if(plot.growth >= growTime){
+                        plot.ready = true;
+                        showTip(`✨ ${plot.planted} is ready to harvest!`, 1000);
+                    }
+                }
+            }
+        }
+        
+        // Movement, resources, etc
+        function updatePlayerMovement(delta){
+            if(player.moveTarget){
+                let dx = player.moveTarget.x - player.x;
+                let dy = player.moveTarget.y - player.y;
+                let dist = Math.hypot(dx,dy);
+                if(dist < 14) player.moveTarget = null;
+                else {
+                    let speed = 240;
+                    let step = Math.min(speed * delta, dist);
+                    let angle = Math.atan2(dy,dx);
+                    player.x += Math.cos(angle)*step;
+                    player.y += Math.sin(angle)*step;
+                }
+            }
+            player.x = Math.min(MAP_SIZE-30, Math.max(30, player.x));
+            player.y = Math.min(MAP_SIZE-30, Math.max(30, player.y));
+        }
+        
+        function gameOver(){
+            if(game.gameOver) return;
+            game.gameOver = true;
+            showTip("💀 STARVED/DIED. Refresh to try again", 3000);
+            setTimeout(()=> location.reload(), 2800);
+        }
+        
+        function initResources(){
+            for(let i=0;i<180;i++){
+                let type = Math.random()<0.6 ? 'tree' : 'stone';
+                resources.push({
+                    x: 100 + Math.random()*(MAP_SIZE-200),
+                    y: 100 + Math.random()*(MAP_SIZE-200),
+                    type, tapsLeft: 10,
+                    woodGain: type==='tree'?3:0, stoneGain: type==='stone'?2:0
+                });
+            }
+        }
+        
+        function handleResourceTap(x,y){
+            for(let i=0;i<resources.length;i++){
+                let r = resources[i];
+                if(Math.hypot(x - r.x, y - r.y) < 40 && r.tapsLeft>0){
+                    r.tapsLeft--;
+                    if(r.tapsLeft<=0){
+                        wood += r.woodGain;
+                        stone += r.stoneGain;
+                        showTip(`+${r.woodGain||0}🪵 +${r.stoneGain||0}🪨`, 500);
+                        resources.splice(i,1);
+                    } else showTip(`🔨 ${r.tapsLeft} taps`, 280);
+                    updateUI();
+                    break;
+                }
+            }
+        }
+        
+        // Crafting
+        function craftCrossbow(){ if(!player.hasCrossbow && wood>=10 && stone>=8){ wood-=10; stone-=8; player.hasCrossbow=true; showTip("CROSSBOW ready!"); updateUI();} else showTip("Need 10🪵 8🪨",600);}
+        function craftBolts(){ if(wood>=3 && stone>=2){ wood-=3; stone-=2; player.boltCount+=5; showTip("+5 bolts"); updateUI();} else showTip("Need 3🪵2🪨",600);}
+        function craftCampfire(){ if(wood>=15 && stone>=10){ wood-=15; stone-=10; structures.push({x:player.x, y:player.y, type:'campfire'}); showTip("🔥 Campfire (safe zone)"); updateUI();} else showTip("Need 15/10",600);}
+        function craftWall(){ if(wood>=12 && stone>=8){ wood-=12; stone-=8; structures.push({x:player.x, y:player.y, type:'wall', hp:50}); showTip("🧱 Wall built"); updateUI();} else showTip("Need 12/8",600);}
+        function craftTower(){ if(wood>=20 && stone>=15){ wood-=20; stone-=15; structures.push({x:player.x, y:player.y, type:'tower', cooldown:0}); showTip("🗼 Tower online"); updateUI();} else showTip("Need 20/15",600);}
+        
+        function fireCrossbow(tx, ty){
+            if(!player.hasCrossbow || player.selectedWeapon!=='crossbow'){ showTip("Equip crossbow",600); return false;}
+            if(player.boltCount<=0){ showTip("No bolts",600); return false;}
+            let hitIdx = -1;
+            for(let i=0;i<enemies.length;i++){
+                let e=enemies[i];
+                if(Math.hypot(e.x - tx, e.y - ty) < 55 && Math.hypot(e.x-player.x, e.y-player.y)<400){ hitIdx=i; break; }
+            }
+            if(hitIdx!==-1){
+                let e=enemies[hitIdx];
+                e.hp -= 28;
+                addDPSPopup(e.x, e.y, 28);
+                player.boltCount--;
+                if(e.hp<=0){
+                    stone += (e.type==='snail'?3:1);
+                    enemies.splice(hitIdx,1);
+                    game.kills++; player.xp+=12; checkLevelUp();
+                }
+                updateUI(); return true;
+            } else { player.boltCount--; showTip("Miss!",500); updateUI(); return false; }
+        }
+        
+        function updateDayNight(delta){
+            if(game.gameOver) return;
+            game.dayTimer -= delta;
+            if(game.dayTimer <= 0){
+                game.day++;
+                game.dayTimer = 120;
+                if(game.day > 99){ game.victory=true; showTip("VICTORY! 99 DAYS!",4000); game.gameOver=true; setTimeout(()=>location.reload(),5000);}
+                else showTip(`🌞 DAY ${game.day}`, 1000);
+                updateUI();
+            }
+        }
+        
+        function applySafeZones(){
+            for(let s of structures){
+                if(s.type === 'campfire' && Math.hypot(player.x - s.x, player.y - s.y) < 110){
+                    if(player.hp < player.maxHp && Math.random()<0.03) player.hp++;
+                    for(let e of enemies){
+                        if(Math.hypot(e.x - s.x, e.y - s.y) < 130){
+                            let angle = Math.atan2(e.y - s.y, e.x - s.x);
+                            e.x += Math.cos(angle)*70*0.016;
+                            e.y += Math.sin(angle)*70*0.016;
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Drawing with farm plots
+        function draw(){
+            camera.x = player.x - canvas.width/2;
+            camera.y = player.y - canvas.height/2;
+            camera.x = Math.min(MAP_SIZE - canvas.width, Math.max(0, camera.x));
+            camera.y = Math.min(MAP_SIZE - canvas.height, Math.max(0, camera.y));
+            ctx.fillStyle = "#5c5c4a";
+            ctx.fillRect(0,0,canvas.width,canvas.height);
+            for(let i=0;i<400;i++){ ctx.fillStyle="#6e6e58"; ctx.fillRect((i*67)%canvas.width, (i*29)%canvas.height, 3,3); }
+            // resources
+            for(let r of resources){
+                let sx=r.x-camera.x, sy=r.y-camera.y;
+                ctx.fillStyle=r.type==='tree'?"#4fae4f":"#b8a87a";
+                ctx.fillRect(sx-14,sy-14,28,28);
+                ctx.fillStyle="#ffefb0"; ctx.font="bold 14px monospace"; ctx.fillText(`${r.tapsLeft}`,sx-7,sy-12);
+            }
+            // farmlands
+            for(let f of farmlands){
+                let sx=f.x-camera.x, sy=f.y-camera.y;
+                ctx.fillStyle = "#8b6946"; ctx.fillRect(sx-18, sy-12, 36, 24);
+                ctx.fillStyle = "#c9a87b"; ctx.fillRect(sx-16, sy-10, 32, 20);
+                if(f.planted && !f.ready) { ctx.fillStyle="#5a8f3a"; ctx.fillRect(sx-10, sy-6, 20, 12); ctx.fillStyle="#b5ff8a"; ctx.fillText("🌱", sx-4, sy+2);}
+                else if(f.ready) { ctx.fillStyle="#f5bc70"; ctx.fillRect(sx-10, sy-6, 20, 12); ctx.fillStyle="gold"; ctx.fillText("✨", sx-3, sy+2);}
+                else if(!f.planted) ctx.fillStyle="#b8865b"; ctx.fillRect(sx-12, sy-8, 24, 16);
+            }
+            // structures
+            for(let s of structures){
+                let sx=s.x-camera.x, sy=s.y-camera.y;
+                if(s.type==='campfire'){ ctx.fillStyle="#ff8844"; ctx.beginPath(); ctx.arc(sx,sy,22,0,Math.PI*2); ctx.fill(); ctx.fillStyle="orange"; ctx.fillRect(sx-8,sy-8,16,16);}
+                else if(s.type==='wall'){ ctx.fillStyle="#ad7a48"; ctx.fillRect(sx-22,sy-14,44,28);}
+                else if(s.type==='tower'){ ctx.fillStyle="#b87a4a"; ctx.fillRect(sx-14,sy-28,28,56); ctx.fillStyle="#acd"; ctx.fillRect(sx-4,sy-34,8,10);}
+            }
+            // enemies
+            for(let e of enemies){
+                let sx=e.x-camera.x, sy=e.y-camera.y;
+                if(e.type==='spider'){ ctx.fillStyle="#4a2a1a"; ctx.beginPath(); ctx.ellipse(sx,sy,16,12,0,0,2*Math.PI); ctx.fill(); ctx.fillStyle="#000"; ctx.fillRect(sx-6,sy-4,4,4); ctx.fillRect(sx+2,sy-4,4,4);}
+                else{ ctx.fillStyle="#7a9a52"; ctx.beginPath(); ctx.ellipse(sx,sy,20,14,0,0,2*Math.PI); ctx.fill(); ctx.fillStyle="#3c5a1e"; ctx.fillRect(sx-8,sy-2,4,4); ctx.fillRect(sx+4,sy-2,4,4);}
+            }
+            for(let p of projectiles){ let sx=p.x-camera.x, sy=p.y-camera.y; ctx.fillStyle="#b5ff6a"; ctx.beginPath(); ctx.arc(sx,sy,6,0,2*Math.PI); ctx.fill();}
+            let px=player.x-camera.x, py=player.y-camera.y;
+            ctx.fillStyle="#ffffff"; ctx.fillRect(px-16,py-16,32,32);
+            ctx.beginPath(); ctx.arc(px,py,36+player.level*2,0,2*Math.PI); ctx.strokeStyle="#ffcc88"; ctx.lineWidth=2.5; ctx.stroke();
+            if(player.selectedWeapon==='crossbow'){ ctx.beginPath(); ctx.arc(px,py,28,0,2*Math.PI); ctx.strokeStyle="red"; ctx.lineWidth=3; ctx.stroke();}
+            updateUI();
+        }
+        
+        // Input handling: till mode vs move/harvest
+        function handleCanvasTap(e){
+            if(game.gameOver) return;
+            e.preventDefault();
+            let rect = canvas.getBoundingClientRect();
+            let scaleX = canvas.width/rect.width, scaleY=canvas.height/rect.height;
+            let cx, cy;
+            if(e.touches){ cx=e.touches[0].clientX; cy=e.touches[0].clientY; }
+            else { cx=e.clientX; cy=e.clientY; }
+            let tapX = (cx - rect.left)*scaleX;
+            let tapY = (cy - rect.top)*scaleY;
+            let worldX = tapX + camera.x;
+            let worldY = tapY + camera.y;
+            if(player.selectedWeapon === 'crossbow'){ fireCrossbow(worldX, worldY); player.selectedWeapon=null; return; }
+            if(game.tillMode){ tillSoil(worldX, worldY); return; }
+            let hit=false;
+            for(let r of resources){ if(Math.hypot(worldX-r.x, worldY-r.y)<40){ handleResourceTap(worldX,worldY); hit=true; break; }}
+            if(!hit) player.moveTarget = {x:worldX, y:worldY};
+        }
+        
+        let lastTime=performance.now();
+        function gameLoop(now){
+            let delta=Math.min(0.033, (now-lastTime)/1000);
+            if(delta>0){
+                lastTime=now;
+                if(!game.gameOver){
+                    updatePlayerMovement(delta);
+                    updateEnemies(delta);
+                    updateProjectiles(delta);
+                    applyRingDamage();
+                    updateTowers(delta);
+                    applySafeZones();
+                    updateFarming(delta);
+                    updateHunger(delta);
+                    spawnEnemies();
+                    updateDayNight(delta);
+                }
+                draw();
+            }
+            requestAnimationFrame(gameLoop);
+        }
+        
+        function bindEvents(){
+            canvas.addEventListener('touchstart', handleCanvasTap, {passive:false});
+            canvas.addEventListener('mousedown', handleCanvasTap);
+            document.getElementById('craftCrossbowBtn').onclick = (e)=>{ e.preventDefault(); craftCrossbow(); updateUI();};
+            document.getElementById('craftBoltsBtn').onclick = (e)=>{ e.preventDefault(); craftBolts(); updateUI();};
+            document.getElementById('craftCampfireBtn').onclick = (e)=>{ e.preventDefault(); craftCampfire(); updateUI();};
+            document.getElementById('craftWallBtn').onclick = (e)=>{ e.preventDefault(); craftWall(); updateUI();};
+            document.getElementById('craftTowerBtn').onclick = (e)=>{ e.preventDefault(); craftTower(); updateUI();};
+            let tillBtn = document.getElementById('toggleTillBtn');
+            tillBtn.onclick = (e)=>{ e.preventDefault(); game.tillMode = !game.tillMode; tillBtn.classList.toggle('toggle-active', game.tillMode); showTip(game.tillMode?"🌾 TILL MODE ON: tap ground to till/plant":"⚔️ TILL MODE OFF", 900); };
+        }
+        
+        initResources();
+        bindEvents();
+        updateUI();
+        requestAnimationFrame(gameLoop);
+        lastTime=performance.now();
+        showTip("🌽 New: TILL MODE → farm food to survive hunger! More spiders, floating UI", 4000);
+    })();
 </script>
 </body>
 </html>
