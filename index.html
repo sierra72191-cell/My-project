@@ -3,502 +3,747 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>GLITCH DASH - Rhythm Runner</title>
+    <title>Nova Realms: White Cube Survival</title>
     <style>
         * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
             user-select: none;
-            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+            box-sizing: border-box;
         }
-
         body {
-            background: #0a0a1a;
+            margin: 0;
+            min-height: 100vh;
+            background: #2b2b2b;
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
             font-family: 'Courier New', monospace;
-            overflow: hidden;
-            touch-action: manipulation;
+            touch-action: none; /* prevent pull-to-refresh */
         }
-
+        .game-container {
+            position: relative;
+            background: #3a3a3a;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
         canvas {
             display: block;
-            width: 100%;
-            height: 100%;
-            cursor: pointer;
-            touch-action: manipulation;
+            margin: 0 auto;
+            border-radius: 16px;
+            cursor: crosshair;
+            touch-action: none;
         }
-
-        #ui {
-            position: fixed;
-            top: 10px;
+        .ui-overlay {
+            position: absolute;
+            bottom: 0;
             left: 0;
             right: 0;
+            pointer-events: none;
+            z-index: 10;
+            padding: 12px;
+        }
+        .stats-panel {
+            background: rgba(0,0,0,0.75);
+            backdrop-filter: blur(4px);
+            border-radius: 20px;
+            padding: 8px 16px;
+            margin-bottom: 10px;
             display: flex;
+            flex-wrap: wrap;
             justify-content: space-between;
-            padding: 10px 20px;
-            color: #0ff;
-            text-shadow: 0 0 5px #0ff;
-            font-weight: bold;
-            font-size: 18px;
-            z-index: 10;
-            pointer-events: none;
-            font-family: monospace;
-        }
-
-        #score {
-            background: rgba(0,0,0,0.7);
-            padding: 5px 12px;
-            border-radius: 20px;
-            backdrop-filter: blur(4px);
-        }
-
-        #best {
-            background: rgba(0,0,0,0.7);
-            padding: 5px 12px;
-            border-radius: 20px;
-            backdrop-filter: blur(4px);
-        }
-
-        #game-over {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            text-align: center;
-            z-index: 20;
-            pointer-events: none;
-            display: none;
-        }
-
-        #game-over h1 {
-            color: #f0f;
-            font-size: 48px;
-            text-shadow: 0 0 20px #f0f;
-            letter-spacing: 5px;
-        }
-
-        #game-over p {
-            color: #fff;
-            margin-top: 20px;
-            font-size: 20px;
-        }
-
-        .tap-instruction {
-            position: fixed;
-            bottom: 30px;
-            left: 0;
-            right: 0;
-            text-align: center;
-            color: rgba(255,255,255,0.5);
             font-size: 14px;
+            font-weight: bold;
+            color: #ffdd99;
+            text-shadow: 1px 1px 0 #000;
+            border: 1px solid #ffaa44;
             pointer-events: none;
-            z-index: 10;
         }
-
-        @keyframes glitchText {
-            0%, 100% { transform: skew(0deg, 0deg); opacity: 1; }
-            95% { transform: skew(5deg, 2deg); opacity: 0.8; }
+        .inventory-bar {
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(8px);
+            border-radius: 40px;
+            padding: 8px 12px;
+            margin-bottom: 12px;
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            pointer-events: auto;
+            border: 1px solid #aaa;
+            justify-content: center;
+            scrollbar-width: thin;
         }
-
-        .glitch-text {
-            animation: glitchText 0.1s infinite;
+        .inv-slot {
+            background: #2c2c2c;
+            border-radius: 32px;
+            padding: 6px 14px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #f5e2b0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            border: 1px solid #777;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.5), 0 2px 3px rgba(255,255,200,0.2);
+            pointer-events: auto;
+            touch-action: manipulation;
+            cursor: pointer;
+            transition: 0.05s linear;
+        }
+        .inv-slot:active {
+            transform: scale(0.96);
+            background: #1f1f1f;
+        }
+        .inv-slot span {
+            font-size: 22px;
+        }
+        .craft-row {
+            display: flex;
+            gap: 12px;
+            justify-content: space-between;
+            margin-top: 6px;
+        }
+        .craft-btn {
+            background: #5a3e1a;
+            border: none;
+            color: #ffe1a0;
+            font-weight: bold;
+            border-radius: 40px;
+            padding: 5px 12px;
+            font-size: 12px;
+            pointer-events: auto;
+            touch-action: manipulation;
+            font-family: monospace;
+            font-weight: bold;
+        }
+        .dps-pop {
+            position: absolute;
+            font-size: 20px;
+            font-weight: bold;
+            color: #ff5555;
+            text-shadow: 0 0 3px black;
+            pointer-events: none;
+            z-index: 200;
+            font-family: monospace;
+            white-space: nowrap;
+            animation: floatUp 0.5s ease-out forwards;
+        }
+        @keyframes floatUp {
+            0% { opacity: 1; transform: translateY(0px); }
+            100% { opacity: 0; transform: translateY(-35px); }
+        }
+        .message-tip {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: #000000aa;
+            color: #ccc;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-family: monospace;
+            pointer-events: none;
+        }
+        @media (max-width: 700px) {
+            .stats-panel { font-size: 11px; padding: 6px 12px; }
+            .inv-slot { padding: 4px 10px; font-size: 14px; }
         }
     </style>
 </head>
 <body>
-    <canvas id="gameCanvas"></canvas>
-    <div id="ui">
-        <span id="score">SCORE: 0</span>
-        <span id="best">BEST: 0</span>
+<div class="game-container">
+    <canvas id="gameCanvas" width="1000" height="700"></canvas>
+    <div class="ui-overlay">
+        <div class="stats-panel" id="statsPanel">
+            <span>❤️ HP: <span id="hpVal">500</span>/500</span>
+            <span>⚔️ LVL: <span id="lvlVal">1</span></span>
+            <span>🌀 RING: <span id="ringDmg">1</span></span>
+            <span>🌞 DAY: <span id="dayVal">1</span>/99</span>
+            <span>⏱️ TIME: <span id="timeLeft">120</span>s</span>
+            <span>🕷️ KILLS: <span id="killsVal">0</span></span>
+        </div>
+        <div class="inventory-bar" id="inventoryBar">
+            <!-- dynamic slots -->
+        </div>
+        <div class="craft-row" id="craftRow">
+            <button class="craft-btn" id="craftCrossbowBtn">🔨 CRAFT CROSSBOW (10w/8s)</button>
+            <button class="craft-btn" id="craftBoltsBtn">🏹 CRAFT BOLTS (3w/2s) +5</button>
+            <button class="craft-btn" id="craftCampfireBtn">🔥 CAMPFIRE (15w/10s)</button>
+            <button class="craft-btn" id="craftWallBtn">🧱 WALL (12w/8s)</button>
+            <button class="craft-btn" id="craftTowerBtn">🗼 TOWER (20w/15s)</button>
+        </div>
     </div>
-    <div id="game-over">
-        <h1>⚡ GLITCHED ⚡</h1>
-        <p>TAP TO RISE AGAIN</p>
-    </div>
-    <div class="tap-instination">⚡ TAP ANYWHERE - JUMP ⚡</div>
+    <div class="message-tip" id="tipMsg">📱 TAP GROUND → MOVE | 🟩 CUBE RING DAMAGE | 🔫 CROSSBOW: TAP SLOT → HOLD & RELEASE</div>
+</div>
 
-    <script>
-        (function(){
-            // ---------- CANVAS ----------
-            const canvas = document.getElementById('gameCanvas');
-            const ctx = canvas.getContext('2d');
-            
-            // ---------- GAME STATE ----------
-            let gameRunning = true;
-            let score = 0;
-            let bestScore = localStorage.getItem('glitchBest') || 0;
-            let frame = 0;
-            let glitchIntensity = 0;
-            let bassDrop = false;
-            let beatPulse = 0;
-            
-            // Cube properties
-            let cube = {
-                x: 100,
-                y: 0,
-                vy: 0,
-                width: 35,
-                height: 35,
-                grounded: true,
-                shape: 'cube', // cube, triangle, diamond, glitch
-                shapeTimer: 0
-            };
-            
-            const GRAVITY = 0.8;
-            const JUMP_POWER = -11;
-            const GROUND_Y = 500;
-            
-            cube.y = GROUND_Y - cube.height;
-            
-            // Obstacles
-            let obstacles = [];
-            let obstacleTimer = 0;
-            let lastObstacleFrame = 0;
-            
-            // Parallax / background
-            let bgOffset = 0;
-            
-            // Audio context (Web Audio for bass drops)
-            let audioCtx = null;
-            let bassGain = null;
-            let isAudioReady = false;
-            
-            // Glitch effects array
-            let glitchFrames = 0;
-            
-            // Best score UI
-            document.getElementById('best').innerText = `BEST: ${bestScore}`;
-            
-            // ---------- RESIZE ----------
-            function resizeCanvas() {
-                canvas.width = window.innerWidth;
-                canvas.height = window.innerHeight;
+<script>
+    (function(){
+        // ---------- CANVAS ----------
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // center camera follows cube
+        let camera = { x: 0, y: 0 };
+        const MAP_SIZE = 3600;   // large movable map
+        let worldOffsetX = 0, worldOffsetY = 0;
+
+        // ---------- GAME STATE ----------
+        let player = {
+            x: MAP_SIZE/2,
+            y: MAP_SIZE/2,
+            hp: 500,
+            maxHp: 500,
+            level: 1,
+            xp: 0,
+            ringDamage: 1,
+            dmgPerSecond: 1,    // melee? we use ring + crossbow, but enemies also 1 dps. we'll apply ring damage per frame approx
+            hasCrossbow: false,
+            selectedWeapon: null, // 'crossbow' or null
+            holdingCrossbow: false,
+            boltCount: 0,
+            moveTarget: null // {x, y}
+        };
+
+        let game = {
+            day: 1,
+            dayTimer: 120,      // seconds
+            lastTimestamp: 0,
+            kills: 0,
+            gameOver: false,
+            victory: false
+        };
+
+        // resources on map
+        let resources = [];
+        // structures
+        let structures = []; // {x,y, type, hp, attackCooldown?}
+        // enemies
+        let enemies = [];
+
+        // crafting materials
+        let wood = 5;   // start with a few to test
+        let stone = 5;
+
+        // ---- helpers ----
+        function updateUI() {
+            document.getElementById('hpVal').innerText = `${player.hp}/${player.maxHp}`;
+            document.getElementById('lvlVal').innerText = player.level;
+            document.getElementById('ringDmg').innerText = player.ringDamage;
+            document.getElementById('dayVal').innerText = `${game.day}/99`;
+            let secs = Math.floor(game.dayTimer);
+            document.getElementById('timeLeft').innerText = secs;
+            document.getElementById('killsVal').innerText = game.kills;
+            // inventory bar rendering
+            renderInventoryBar();
+        }
+
+        function renderInventoryBar() {
+            const bar = document.getElementById('inventoryBar');
+            bar.innerHTML = '';
+            // wood / stone display
+            let resDiv = document.createElement('div');
+            resDiv.className = 'inv-slot';
+            resDiv.innerHTML = `<span>🪵</span> ${wood}  <span>🪨</span> ${stone}`;
+            bar.appendChild(resDiv);
+            // bolts
+            let boltsDiv = document.createElement('div');
+            boltsDiv.className = 'inv-slot';
+            boltsDiv.innerHTML = `<span>🏹</span> ${player.boltCount}`;
+            bar.appendChild(boltsDiv);
+            // crossbow if owned
+            if(player.hasCrossbow){
+                let bowSlot = document.createElement('div');
+                bowSlot.className = 'inv-slot';
+                bowSlot.innerHTML = `<span>🏹🔫</span> CROSSBOW`;
+                bowSlot.addEventListener('touchstart', (e) => { e.preventDefault(); equipCrossbow(); });
+                bowSlot.addEventListener('mousedown', (e) => { e.preventDefault(); equipCrossbow(); });
+                bar.appendChild(bowSlot);
             }
-            window.addEventListener('resize', resizeCanvas);
-            resizeCanvas();
-            
-            // ---------- INIT AUDIO (on first tap) ----------
-            function initAudio() {
-                if (audioCtx) return;
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                bassGain = audioCtx.createGain();
-                bassGain.gain.value = 0.7;
-                bassGain.connect(audioCtx.destination);
-                
-                // Create bass oscillator loop (dummy but effective)
-                function playBassDrop() {
-                    if (!audioCtx || !gameRunning) return;
-                    const now = audioCtx.currentTime;
-                    const osc = audioCtx.createOscillator();
-                    const gain = audioCtx.createGain();
-                    osc.type = 'sawtooth';
-                    osc.frequency.value = 60;
-                    gain.gain.value = 0.5;
-                    osc.connect(gain);
-                    gain.connect(audioCtx.destination);
-                    osc.start();
-                    gain.gain.exponentialRampToValueAtTime(0.00001, now + 0.3);
-                    osc.stop(now + 0.3);
-                    
-                    // extra bass rumble
-                    const osc2 = audioCtx.createOscillator();
-                    const gain2 = audioCtx.createGain();
-                    osc2.type = 'triangle';
-                    osc2.frequency.value = 80;
-                    gain2.gain.value = 0.3;
-                    osc2.connect(gain2);
-                    gain2.connect(audioCtx.destination);
-                    osc2.start();
-                    gain2.gain.exponentialRampToValueAtTime(0.00001, now + 0.2);
-                    osc2.stop(now + 0.2);
-                }
-                
-                // Piano notes (random melody)
-                function playPianoNote() {
-                    if (!audioCtx || !gameRunning) return;
-                    const notes = [261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 493.88];
-                    const randomNote = notes[Math.floor(Math.random() * notes.length)];
-                    const now = audioCtx.currentTime;
-                    const osc = audioCtx.createOscillator();
-                    const gain = audioCtx.createGain();
-                    osc.type = 'sine';
-                    osc.frequency.value = randomNote;
-                    gain.gain.value = 0.2;
-                    osc.connect(gain);
-                    gain.connect(audioCtx.destination);
-                    osc.start();
-                    gain.gain.exponentialRampToValueAtTime(0.00001, now + 0.6);
-                    osc.stop(now + 0.6);
-                }
-                
-                // Schedule rhythmic bass drops + piano
-                let lastBeat = 0;
-                function beatLoop() {
-                    if (!gameRunning && audioCtx) return;
-                    const now = audioCtx.currentTime;
-                    if (now - lastBeat > 0.9) { // every ~0.9 sec
-                        lastBeat = now;
-                        bassDrop = true;
-                        playBassDrop();
-                        // random piano over melody
-                        if (Math.random() > 0.5) playPianoNote();
-                        // trigger visual glitch spike
-                        glitchIntensity = 0.8;
-                        beatPulse = 15;
+            // campfire quick craft?
+        }
+
+        function equipCrossbow(){
+            if(!player.hasCrossbow) return;
+            player.selectedWeapon = 'crossbow';
+            showTip("Crossbow equipped — tap ground to fire! Tap slot again to unequip.", 1500);
+        }
+
+        function addDPSPopup(x,y, dmg){
+            const div = document.createElement('div');
+            div.className = 'dps-pop';
+            div.innerText = `-${dmg}`;
+            let canvasRect = canvas.getBoundingClientRect();
+            let screenX = (x - camera.x) * (canvas.width/ (canvas.width)) + canvasRect.left;
+            let screenY = (y - camera.y) * (canvas.height/ (canvas.height)) + canvasRect.top;
+            div.style.position = 'fixed';
+            div.style.left = screenX + 'px';
+            div.style.top = screenY + 'px';
+            document.body.appendChild(div);
+            setTimeout(()=> div.remove(), 500);
+        }
+
+        function showTip(msg, duration=2000){
+            let tipDiv = document.getElementById('tipMsg');
+            tipDiv.style.opacity = '1';
+            tipDiv.innerText = msg;
+            setTimeout(()=> {
+                if(tipDiv.innerText === msg) tipDiv.style.opacity = '0.5';
+            }, duration);
+        }
+
+        // damage ring (passive aoe)
+        function applyRingDamage(){
+            const ringRadius = 70 + player.level * 5;
+            for(let i=0;i<enemies.length;i++){
+                const e = enemies[i];
+                const dx = e.x - player.x;
+                const dy = e.y - player.y;
+                const dist = Math.hypot(dx,dy);
+                if(dist < ringRadius){
+                    e.hp -= player.ringDamage;
+                    addDPSPopup(e.x, e.y, player.ringDamage);
+                    if(e.hp <= 0){
+                        enemies.splice(i,1);
+                        game.kills++;
+                        player.xp += 10;
+                        checkLevelUp();
+                        i--;
                     }
-                    requestAnimationFrame(() => {
-                        if(gameRunning) setTimeout(beatLoop, 400);
-                    });
                 }
-                
-                // start the loop only if game running
-                if(gameRunning) beatLoop();
-                isAudioReady = true;
             }
-            
-            // ---------- OBSTACLE GEN ----------
-            function generateObstacle() {
-                const types = ['spike', 'saw', 'block', 'glitchBlock'];
-                const type = types[Math.floor(Math.random() * types.length)];
-                obstacles.push({
-                    x: canvas.width,
-                    y: GROUND_Y - 35,
-                    width: 30,
-                    height: 35,
-                    type: type,
-                    passed: false
+        }
+
+        function checkLevelUp(){
+            let needed = player.level * 20;
+            if(player.xp >= needed){
+                player.level++;
+                player.xp -= needed;
+                player.maxHp += 20;
+                player.hp = player.maxHp;
+                player.ringDamage += 1;
+                showTip(`LEVEL UP! +20 HP, Ring DMG ${player.ringDamage}`, 1000);
+                updateUI();
+                checkLevelUp();
+            }
+        }
+
+        // enemy spawn logic: no autoswarm to center, only activate near player
+        function spawnEnemies(){
+            if(enemies.length < 8 + Math.floor(game.day/10)){
+                let side = Math.floor(Math.random()*4);
+                let x,y;
+                let margin = 400;
+                if(side===0){ x = player.x + 400 + Math.random()*300; y = player.y -200 + Math.random()*400;}
+                else if(side===1){ x = player.x - 700 + Math.random()*300; y = player.y -200 + Math.random()*400;}
+                else if(side===2){ x = player.x -200 + Math.random()*400; y = player.y + 400 + Math.random()*300;}
+                else { x = player.x -200 + Math.random()*400; y = player.y - 700 + Math.random()*300;}
+                x = Math.min(MAP_SIZE-50, Math.max(50,x));
+                y = Math.min(MAP_SIZE-50, Math.max(50,y));
+                enemies.push({
+                    x: x, y: y, hp: 50, maxHp:50, type:'spider',
+                    size: 24, speed: 45, dmg:1, attackTimer:0
                 });
-                
-                // double trouble sometimes!
-                if (Math.random() < 0.25 && gameRunning) {
-                    obstacles.push({
-                        x: canvas.width + 90,
-                        y: GROUND_Y - 50,
-                        width: 28,
-                        height: 50,
-                        type: 'saw',
-                        passed: false
-                    });
-                }
             }
-            
-            // ---------- UPDATE ----------
-            function updateGame() {
-                if (!gameRunning) return;
-                
-                frame++;
-                
-                // Score increments over time
-                score += 0.2;
-                document.getElementById('score').innerText = `SCORE: ${Math.floor(score)}`;
-                if (Math.floor(score) > bestScore) {
-                    bestScore = Math.floor(score);
-                    localStorage.setItem('glitchBest', bestScore);
-                    document.getElementById('best').innerText = `BEST: ${bestScore}`;
-                }
-                
-                // Rhythm glitch intensity gradually fades
-                glitchIntensity *= 0.95;
-                if (bassDrop) {
-                    bassDrop = false;
-                }
-                if (beatPulse > 0) beatPulse -= 0.5;
-                
-                // Shape morphing every 4 secs
-                cube.shapeTimer++;
-                if (cube.shapeTimer > 120) { // ~2 sec at 60fps? adjusted
-                    cube.shapeTimer = 0;
-                    const shapes = ['cube', 'triangle', 'diamond', 'glitch'];
-                    let newShape = shapes[Math.floor(Math.random() * shapes.length)];
-                    cube.shape = newShape;
-                    glitchIntensity = 0.6;
-                }
-                
-                // Parallax
-                bgOffset = (bgOffset + 4) % 200;
-                
-                // Physics
-                cube.vy += GRAVITY;
-                cube.y += cube.vy;
-                
-                if (cube.y >= GROUND_Y - cube.height) {
-                    cube.y = GROUND_Y - cube.height;
-                    cube.vy = 0;
-                    cube.grounded = true;
-                } else {
-                    cube.grounded = false;
-                }
-                
-                if (cube.y < 0) cube.y = 0;
-                
-                // Obstacles logic
-                if (obstacleTimer <= 0 && gameRunning) {
-                    generateObstacle();
-                    obstacleTimer = 45 + Math.random() * 30; // frames between obstacles
-                } else {
-                    obstacleTimer--;
-                }
-                
-                for (let i = 0; i < obstacles.length; i++) {
-                    const obs = obstacles[i];
-                    obs.x -= 6.5;
-                    
-                    // collision detection (AABB)
-                    if (!obs.passed && obs.x < cube.x + cube.width && obs.x + obs.width > cube.x &&
-                        obs.y < cube.y + cube.height && obs.y + obs.height > cube.y) {
-                        // DIE! with audio and glitch explosion
-                        gameRunning = false;
-                        if (audioCtx) {
-                            // death sound: horrible bass crunch
-                            const deathOsc = audioCtx.createOscillator();
-                            const deathGain = audioCtx.createGain();
-                            deathOsc.type = 'square';
-                            deathOsc.frequency.value = 40;
-                            deathGain.gain.value = 0.5;
-                            deathOsc.connect(deathGain);
-                            deathGain.connect(audioCtx.destination);
-                            deathOsc.start();
-                            deathGain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.4);
-                            deathOsc.stop(audioCtx.currentTime + 0.4);
-                        }
-                        glitchIntensity = 2.0;
-                        document.getElementById('game-over').style.display = 'block';
-                        break;
-                    }
-                    
-                    // scoring per obstacle passed
-                    if (!obs.passed && obs.x + obs.width < cube.x) {
-                        obs.passed = true;
-                        score += 15;
-                        // piano happy note
-                        if (audioCtx && isAudioReady) {
-                            const noteOsc = audioCtx.createOscillator();
-                            const noteGain = audioCtx.createGain();
-                            noteOsc.type = 'sine';
-                            noteOsc.frequency.value = 523.25;
-                            noteGain.gain.value = 0.15;
-                            noteOsc.connect(noteGain);
-                            noteGain.connect(audioCtx.destination);
-                            noteOsc.start();
-                            noteGain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.3);
-                            noteOsc.stop(audioCtx.currentTime + 0.3);
+        }
+
+        function updateEnemies(deltaSec){
+            for(let i=0;i<enemies.length;i++){
+                let e = enemies[i];
+                // distance based aggro (only if near player)
+                let distToPlayer = Math.hypot(e.x - player.x, e.y - player.y);
+                let activeRange = 280;
+                if(distToPlayer < activeRange){
+                    let angle = Math.atan2(player.y - e.y, player.x - e.x);
+                    let move = e.speed * deltaSec;
+                    e.x += Math.cos(angle) * move;
+                    e.y += Math.sin(angle) * move;
+                    // attack
+                    if(distToPlayer < 38 && player.hp>0){
+                        if(e.attackTimer <=0){
+                            player.hp -= e.dmg;
+                            addDPSPopup(player.x, player.y, e.dmg);
+                            e.attackTimer = 1.0;
+                            if(player.hp <=0) gameOver();
                         }
                     }
                 }
-                
-                obstacles = obstacles.filter(obs => obs.x + obs.width > 0);
+                if(e.attackTimer>0) e.attackTimer -= deltaSec;
+                // wall collision 
+                for(let s of structures){
+                    if(s.type === 'wall'){
+                        let wallRadius = 32;
+                        let dx = e.x - s.x, dy = e.y - s.y;
+                        let dist = Math.hypot(dx,dy);
+                        if(dist < wallRadius+18){
+                            let angle = Math.atan2(dy,dx);
+                            let overlap = (wallRadius+18) - dist;
+                            e.x += Math.cos(angle)*overlap;
+                            e.y += Math.sin(angle)*overlap;
+                        }
+                    }
+                }
+                // clamp map
+                e.x = Math.min(MAP_SIZE-20, Math.max(20, e.x));
+                e.y = Math.min(MAP_SIZE-20, Math.max(20, e.y));
+                if(e.hp<=0){
+                    enemies.splice(i,1);
+                    game.kills++;
+                    player.xp+=10;
+                    checkLevelUp();
+                    i--;
+                }
             }
-            
-            // ---------- DRAW : GLITCH MASTERPIECE ----------
-            function draw() {
-                // Apply glitch transform if intensity > 0.1
-                ctx.save();
-                if (glitchIntensity > 0.1) {
-                    const shiftX = (Math.random() - 0.5) * 12 * glitchIntensity;
-                    const shiftY = (Math.random() - 0.5) * 6 * glitchIntensity;
-                    ctx.translate(shiftX, shiftY);
-                    // RGB split effect
-                    if (glitchIntensity > 0.4) {
-                        ctx.shadowBlur = 0;
-                        const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                        for (let i = 0; i < imgData.data.length; i += 4) {
-                            if (Math.random() < 0.05 * glitchIntensity) {
-                                imgData.data[i] = 255;     // R
-                                imgData.data[i+1] = 0;     // G
-                                imgData.data[i+2] = 255;   // B
+        }
+
+        // structures: towers attack
+        function updateTowers(deltaSec){
+            for(let s of structures){
+                if(s.type === 'tower'){
+                    if(!s.cooldown) s.cooldown=0;
+                    s.cooldown -= deltaSec;
+                    if(s.cooldown <=0){
+                        let closest = null;
+                        let minDist = 300;
+                        for(let e of enemies){
+                            let d = Math.hypot(e.x - s.x, e.y - s.y);
+                            if(d < minDist){
+                                minDist = d;
+                                closest = e;
                             }
                         }
-                        ctx.putImageData(imgData, 0, 0);
-                    }
-                }
-                
-                // ---- BACKGROUND ----
-                const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
-                grad.addColorStop(0, '#0a0020');
-                grad.addColorStop(1, '#1a0035');
-                ctx.fillStyle = grad;
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                
-                // Neon grid
-                ctx.strokeStyle = '#0ff';
-                ctx.lineWidth = 2;
-                ctx.globalAlpha = 0.3 + (beatPulse / 40);
-                for (let i = 0; i < canvas.width + 60; i += 60) {
-                    ctx.beginPath();
-                    ctx.moveTo(i - bgOffset % 60, canvas.height);
-                    ctx.lineTo(i - bgOffset % 60 + 20, GROUND_Y);
-                    ctx.stroke();
-                }
-                ctx.globalAlpha = 1;
-                
-                // Ground
-                ctx.fillStyle = '#2a0a4a';
-                ctx.fillRect(0, GROUND_Y, canvas.width, 10);
-                ctx.fillStyle = '#f0f';
-                ctx.fillRect(0, GROUND_Y + 5, canvas.width, 5);
-                
-                // Beat flash
-                if (beatPulse > 2) {
-                    ctx.fillStyle = `rgba(255, 0, 255, ${Math.min(0.3, beatPulse / 30)})`;
-                    ctx.fillRect(0, 0, canvas.width, canvas.height);
-                }
-                
-                // ---- OBSTACLES ----
-                for (let obs of obstacles) {
-                    if (obs.type === 'spike') {
-                        ctx.fillStyle = '#ff3366';
-                        ctx.beginPath();
-                        ctx.moveTo(obs.x + obs.width/2, obs.y);
-                        ctx.lineTo(obs.x, obs.y + obs.height);
-                        ctx.lineTo(obs.x + obs.width, obs.y + obs.height);
-                        ctx.fill();
-                    } else if (obs.type === 'saw') {
-                        ctx.fillStyle = '#ffaa33';
-                        ctx.shadowBlur = 10;
-                        ctx.shadowColor = '#ff6600';
-                        ctx.beginPath();
-                        for (let i = 0; i < 8; i++) {
-                            let angle = (i * Math.PI * 2 / 8);
-                            let x1 = obs.x + obs.width/2 + Math.cos(angle) * 15;
-                            let y1 = obs.y + obs.height/2 + Math.sin(angle) * 15;
-                            if(i===0) ctx.moveTo(x1, y1);
-                            else ctx.lineTo(x1, y1);
+                        if(closest){
+                            closest.hp -= 8;
+                            addDPSPopup(closest.x, closest.y, 8);
+                            s.cooldown = 1.2;
+                            if(closest.hp<=0){
+                                let idx = enemies.indexOf(closest);
+                                if(idx!==-1) enemies.splice(idx,1);
+                                game.kills++;
+                                player.xp+=10;
+                                checkLevelUp();
+                            }
                         }
-                        ctx.fill();
-                        ctx.shadowBlur = 0;
-                    } else if (obs.type === 'block') {
-                        ctx.fillStyle = '#33ccff';
-                        ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
-                    } else {
-                        // glitchBlock
-                        ctx.fillStyle = '#00ffcc';
-                        ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
-                        ctx.fillStyle = '#ff00ff';
-                        ctx.fillRect(obs.x + 4, obs.y + 4, obs.width-8, obs.height-8);
                     }
                 }
-                
-                // ---- PLAYER CUBE / SHAPE SHIFTING ----
-                ctx.shadowBlur = 15;
-                ctx.shadowColor = '#0ff';
-                ctx.fillStyle = '#ff44ee';
-                if (cube.shape === 'cube') {
-                    ctx.fillRect(cube.x, cube.y, cube.width, cube.height);
-                    ctx.fillStyle = '#ffffff';
-                    ctx.fillRect(cube.x+8, cube.y+8, 6, 6);
-                    ctx.fillRect(cube.x+22, cube.y+8, 6, 6);
-                } else if (cube.shape === 'triangle') {
-                    ctx.beginPath();
-                    ctx.moveTo(cube.x + cube.width/2, cube.y);
-                    ctx.lineTo(cube.x, cube.y + cube.height);
-                    ctx.lineTo(cube.x + cube.width, cube.y + cube.height);
-                    ctx.fill();
-                } else if (cube.shape === 'diamond') {
-                    ctx.beginPath();
-                    ctx.moveTo(cube.x + cube.width/2, cube.y);
-                    ctx.lineTo(cube.x + cube.width, cube.y + cube.height/2);
-                    ctx.lineTo(cube.x + 
+                if(s.type === 'campfire'){
+                    // safe zone: enemies get pushed? but we just rely on no damage inside later
+                }
+            }
+        }
+
+        function updatePlayerMovement(deltaSec){
+            if(player.moveTarget){
+                let dx = player.moveTarget.x - player.x;
+                let dy = player.moveTarget.y - player.y;
+                let dist = Math.hypot(dx,dy);
+                if(dist < 8){
+                    player.moveTarget = null;
+                } else {
+                    let speed = 210; // units per sec
+                    let step = Math.min(speed * deltaSec, dist);
+                    let angle = Math.atan2(dy,dx);
+                    player.x += Math.cos(angle) * step;
+                    player.y += Math.sin(angle) * step;
+                }
+            }
+            // boundaries
+            player.x = Math.min(MAP_SIZE-28, Math.max(28, player.x));
+            player.y = Math.min(MAP_SIZE-28, Math.max(28, player.y));
+        }
+
+        function gameOver(){
+            game.gameOver = true;
+            showTip("💀 YOU DIED. RESTARTING... refresh or click restart", 3000);
+            setTimeout(()=> location.reload(), 2800);
+        }
+
+        // resource nodes (tree/stone)
+        function initResources(){
+            for(let i=0;i<120;i++){
+                let type = Math.random()<0.6 ? 'tree' : 'stone';
+                resources.push({
+                    x: 200 + Math.random() * (MAP_SIZE-400),
+                    y: 200 + Math.random() * (MAP_SIZE-400),
+                    type: type,
+                    tapsNeeded: 10,
+                    tapsLeft: 10,
+                    resourceWood: type==='tree'? 3:0,
+                    resourceStone: type==='stone'? 2:0,
+                });
+            }
+        }
+
+        function handleResourceTap(x,y){
+            for(let i=0;i<resources.length;i++){
+                let r = resources[i];
+                let dist = Math.hypot(x - r.x, y - r.y);
+                if(dist < 35 && r.tapsLeft >0){
+                    r.tapsLeft--;
+                    if(r.tapsLeft <=0){
+                        if(r.type === 'tree') wood += r.resourceWood;
+                        else stone += r.resourceStone;
+                        resources.splice(i,1);
+                        showTip(`+${r.type==='tree'? r.resourceWood : r.resourceStone} ${r.type==='tree'?'🪵':'🪨'}`, 400);
+                    } else {
+                        showTip(`💪 TAP! ${r.tapsLeft} left`, 250);
+                    }
+                    updateUI();
+                    break;
+                }
+            }
+        }
+
+        // crafting
+        function craftCrossbow(){
+            if(!player.hasCrossbow && wood>=10 && stone>=8){
+                wood-=10; stone-=8;
+                player.hasCrossbow=true;
+                showTip("Crafted CROSSBOW! Equip from inventory.", 1500);
+                updateUI();
+            } else if(player.hasCrossbow) showTip("Already have crossbow!", 800);
+            else showTip("Need 10 wood, 8 stone", 800);
+        }
+        function craftBolts(){
+            if(wood>=3 && stone>=2){
+                wood-=3; stone-=2;
+                player.boltCount += 5;
+                showTip("+5 Bolts", 600);
+                updateUI();
+            } else showTip("Need 3 wood, 2 stone", 600);
+        }
+        function craftCampfire(){
+            if(wood>=15 && stone>=10){
+                wood-=15; stone-=10;
+                structures.push({x:player.x, y:player.y, type:'campfire', radius:120});
+                showTip("Campfire placed! Safe zone.", 1000);
+                updateUI();
+            } else showTip("Need 15 wood, 10 stone", 800);
+        }
+        function craftWall(){
+            if(wood>=12 && stone>=8){
+                wood-=12; stone-=8;
+                structures.push({x:player.x, y:player.y, type:'wall', hp:50, maxHp:50});
+                showTip("Wall placed (50 HP)", 800);
+                updateUI();
+            } else showTip("Need 12 wood, 8 stone", 800);
+        }
+        function craftTower(){
+            if(wood>=20 && stone>=15){
+                wood-=20; stone-=15;
+                structures.push({x:player.x, y:player.y, type:'tower', cooldown:0, range:280});
+                showTip("Auto-tower built!", 1000);
+                updateUI();
+            } else showTip("Need 20 wood, 15 stone", 800);
+        }
+
+        function fireCrossbow(targetX, targetY){
+            if(!player.hasCrossbow || player.selectedWeapon !== 'crossbow') return false;
+            if(player.boltCount <=0){
+                showTip("No bolts! Craft some.", 800);
+                return false;
+            }
+            let dx = targetX - player.x;
+            let dy = targetY - player.y;
+            let angle = Math.atan2(dy,dx);
+            let hit = false;
+            for(let i=0;i<enemies.length;i++){
+                let e = enemies[i];
+                let toEnemyX = e.x - player.x;
+                let toEnemyY = e.y - player.y;
+                let distToEnemy = Math.hypot(toEnemyX, toEnemyY);
+                let angleDiff = Math.abs(Math.atan2(toEnemyY, toEnemyX) - angle);
+                if(distToEnemy < 180 && Math.abs(angleDiff) < 0.4){
+                    e.hp -= 25;
+                    addDPSPopup(e.x, e.y, 25);
+                    player.boltCount--;
+                    if(e.hp <=0){
+                        enemies.splice(i,1);
+                        game.kills++;
+                        player.xp+=10;
+                        checkLevelUp();
+                    }
+                    hit=true;
+                    break;
+                }
+            }
+            if(!hit){
+                // miss
+                player.boltCount--;
+                showTip("Miss!", 400);
+            }
+            updateUI();
+            return hit;
+        }
+
+        // day & night & game over
+        function updateDayNight(deltaSec){
+            if(game.gameOver) return;
+            game.dayTimer -= deltaSec;
+            if(game.dayTimer <= 0){
+                game.day++;
+                game.dayTimer = 120;
+                if(game.day > 99){
+                    game.victory=true;
+                    showTip("🌟 VICTORY! SURVIVED 99 DAYS! 🌟", 4000);
+                    game.gameOver=true;
+                    setTimeout(()=> location.reload(), 5000);
+                } else {
+                    showTip(`Day ${game.day} begins.`, 1000);
+                }
+                updateUI();
+            }
+        }
+
+        // safezone logic: campfire prevents enemy damage? also make enemies flee or not?
+        function applySafeZones(){
+            let inSafe = false;
+            for(let s of structures){
+                if(s.type === 'campfire'){
+                    let dist = Math.hypot(player.x - s.x, player.y - s.y);
+                    if(dist < 90){
+                        inSafe = true;
+                        break;
+                    }
+                }
+            }
+            // if safe, cancel incoming attack? we also can heal small regen
+            if(inSafe){
+                // gentle regen
+                if(player.hp < player.maxHp && Math.random()<0.02) player.hp = Math.min(player.maxHp, player.hp+1);
+            }
+            // enemies avoid entering campfire? for simplicity they can't attack within radius
+            for(let s of structures){
+                if(s.type === 'campfire'){
+                    for(let e of enemies){
+                        let distToCamp = Math.hypot(e.x - s.x, e.y - s.y);
+                        if(distToCamp < 100){
+                            let angle = Math.atan2(e.y - s.y, e.x - s.x);
+                            e.x += Math.cos(angle)*65*0.016;
+                            e.y += Math.sin(angle)*65*0.016;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Draw everything + movable camera
+        function draw(){
+            camera.x = player.x - canvas.width/2;
+            camera.y = player.y - canvas.height/2;
+            camera.x = Math.min(MAP_SIZE - canvas.width, Math.max(0, camera.x));
+            camera.y = Math.min(MAP_SIZE - canvas.height, Math.max(0, camera.y));
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            // gray pattern
+            ctx.fillStyle = "#5a5a5a";
+            ctx.fillRect(0,0,canvas.width,canvas.height);
+            for(let i=0;i<200;i++){ ctx.fillStyle="#6e6e6e"; ctx.fillRect((i*37)%canvas.width, (i*19)%canvas.height, 4,4); }
+            // draw resources
+            for(let r of resources){
+                let screenX = r.x - camera.x;
+                let screenY = r.y - camera.y;
+                if(r.type === 'tree') ctx.fillStyle = "#3c9e3c";
+                else ctx.fillStyle = "#8c8c8c";
+                ctx.beginPath(); ctx.rect(screenX-12, screenY-12, 24,24); ctx.fill();
+                ctx.fillStyle = "white"; ctx.font = "bold 14px monospace";
+                ctx.fillText(`${r.tapsLeft}`, screenX-6, screenY-10);
+            }
+            // structures
+            for(let s of structures){
+                let sx = s.x - camera.x, sy = s.y - camera.y;
+                if(s.type === 'campfire'){ ctx.fillStyle="#ff9933"; ctx.beginPath(); ctx.arc(sx,sy,22,0,Math.PI*2); ctx.fill(); ctx.fillStyle="orange"; ctx.fillRect(sx-8,sy-8,16,16);}
+                else if(s.type === 'wall'){ ctx.fillStyle="#9c7c5c"; ctx.fillRect(sx-18,sy-12,36,24); ctx.fillStyle="#6a4e2e"; ctx.fillRect(sx-18,sy-12,36,6);}
+                else if(s.type === 'tower'){ ctx.fillStyle="#aa8866"; ctx.fillRect(sx-12,sy-22,24,44); ctx.fillStyle="brown"; ctx.fillRect(sx-6,sy-32,12,12);}
+            }
+            // enemies
+            for(let e of enemies){
+                let sx = e.x - camera.x, sy = e.y - camera.y;
+                ctx.fillStyle = "#4a2a1a";
+                ctx.beginPath(); ctx.ellipse(sx,sy,16,12,0,0,Math.PI*2); ctx.fill();
+                ctx.fillStyle = "#000000"; ctx.fillRect(sx-6,sy-4,4,4); ctx.fillRect(sx+2,sy-4,4,4);
+                for(let i=0;i<4;i++){ ctx.beginPath(); ctx.moveTo(sx+Math.sin(i)*14, sy+Math.cos(i)*12); ctx.lineTo(sx+Math.sin(i+0.5)*22, sy+Math.cos(i+0.5)*16); ctx.lineWidth=3; ctx.strokeStyle="#3a2a1a"; ctx.stroke();}
+            }
+
+            // player white cube
+            let px = player.x - camera.x, py = player.y - camera.y;
+            ctx.fillStyle = "#f0f0f0"; ctx.shadowBlur=8; ctx.fillRect(px-15, py-15, 30,30);
+            ctx.fillStyle = "#aaaaaa"; ctx.beginPath(); ctx.arc(px, py, 30+player.level*2, 0, Math.PI*2); ctx.strokeStyle = "#ffcc88"; ctx.lineWidth=2; ctx.stroke();
+            ctx.fillStyle = "#000"; ctx.fillRect(px-3, py-18, 6,8); 
+            // crosshair if aiming
+            if(player.selectedWeapon === 'crossbow'){
+                ctx.beginPath(); ctx.arc(px, py, 22, 0, Math.PI*2); ctx.strokeStyle="red"; ctx.lineWidth=2; ctx.stroke();
+            }
+            ctx.shadowBlur=0;
+            updateUI();
+        }
+
+        // input handling
+        function handleCanvasTap(e){
+            if(game.gameOver) return;
+            e.preventDefault();
+            let rect = canvas.getBoundingClientRect();
+            let scaleX = canvas.width/rect.width;
+            let scaleY = canvas.height/rect.height;
+            let tapX, tapY;
+            if(e.touches){
+                tapX = (e.touches[0].clientX - rect.left) * scaleX;
+                tapY = (e.touches[0].clientY - rect.top) * scaleY;
+            } else {
+                tapX = (e.clientX - rect.left) * scaleX;
+                tapY = (e.clientY - rect.top) * scaleY;
+            }
+            let worldX = tapX + camera.x;
+            let worldY = tapY + camera.y;
+            if(player.selectedWeapon === 'crossbow'){
+                fireCrossbow(worldX, worldY);
+                player.selectedWeapon = null;
+            } else {
+                let tappedResource = false;
+                for(let r of resources){
+                    if(Math.hypot(worldX - r.x, worldY - r.y) < 35){
+                        handleResourceTap(worldX, worldY);
+                        tappedResource = true;
+                        break;
+                    }
+                }
+                if(!tappedResource) player.moveTarget = {x: worldX, y: worldY };
+            }
+        }
+        
+        // animation loop
+        let lastTime = performance.now();
+        function gameLoop(now){
+            let delta = Math.min(0.033, (now - lastTime)/1000);
+            if(delta<=0){ lastTime=now; requestAnimationFrame(gameLoop); return; }
+            lastTime=now;
+            if(!game.gameOver){
+                updatePlayerMovement(delta);
+                updateEnemies(delta);
+                applyRingDamage();
+                updateTowers(delta);
+                applySafeZones();
+                spawnEnemies();
+                updateDayNight(delta);
+            }
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        function bindEvents(){
+            canvas.addEventListener('touchstart', handleCanvasTap, {passive:false});
+            canvas.addEventListener('mousedown', handleCanvasTap);
+            document.getElementById('craftCrossbowBtn').addEventListener('click', (e)=>{ e.preventDefault(); craftCrossbow(); updateUI();});
+            document.getElementById('craftBoltsBtn').addEventListener('click', (e)=>{ e.preventDefault(); craftBolts(); updateUI();});
+            document.getElementById('craftCampfireBtn').addEventListener('click', (e)=>{ e.preventDefault(); craftCampfire(); updateUI();});
+            document.getElementById('craftWallBtn').addEventListener('click', (e)=>{ e.preventDefault(); craftWall(); updateUI();});
+            document.getElementById('craftTowerBtn').addEventListener('click', (e)=>{ e.preventDefault(); craftTower(); updateUI();});
+        }
+
+        initResources();
+        bindEvents();
+        updateUI();
+        requestAnimationFrame(gameLoop);
+        lastTime = performance.now();
+        showTip("🌲 Tap trees/stones 10x to gather. Craft crossbow first!", 3000);
+    })();
+</script>
+</body>
+</html>
