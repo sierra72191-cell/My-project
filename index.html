@@ -3,112 +3,244 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Nova Realms: Swarm Edition</title>
+    <title>Deep Sea Aura</title>
     <style>
-        * { user-select: none; touch-action: none; box-sizing: border-box; outline: none; }
-        body { margin: 0; background: #0a0c0a; height: 100vh; width: 100vw; overflow: hidden; font-family: monospace; color: #eee; }
+        * { user-select: none; touch-action: none; box-sizing: border-box; }
+        body { margin: 0; background: #00121d; height: 100vh; overflow: hidden; font-family: 'Segoe UI', sans-serif; }
         
-        canvas { display: block; width: 100%; height: 100%; object-fit: cover; }
+        canvas { display: block; width: 100vw; height: 100vh; background: linear-gradient(to bottom, #004e92, #000428); }
 
-        /* Sleeker Top Bar */
-        .top-ui {
-            position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
-            background: rgba(0,0,0,0.8); border: 1px solid #444; border-radius: 30px;
-            padding: 4px 15px; display: flex; gap: 12px; align-items: center; z-index: 10; font-size: 11px;
+        /* Minimalist Underwater UI */
+        .game-ui {
+            position: absolute; top: 20px; left: 20px;
+            color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            pointer-events: none; z-index: 10;
         }
-        .xp-bar { width: 80px; height: 6px; background: #222; border-radius: 3px; overflow: hidden; border: 1px solid #555; }
-        .xp-fill { height: 100%; background: #00ffcc; width: 0%; }
+        .stat-line { font-size: 14px; font-weight: bold; margin-bottom: 5px; letter-spacing: 1px; }
+        .hp-bar-bg { width: 150px; height: 8px; background: rgba(255,255,255,0.2); border-radius: 4px; overflow: hidden; }
+        .hp-fill { height: 100%; background: #00ff88; width: 100%; transition: width 0.3s; }
 
-        /* Micro Side Buttons */
-        .side-btns {
-            position: absolute; right: 10px; top: 55%; transform: translateY(-50%);
-            display: flex; flex-direction: column; gap: 5px; z-index: 10;
-        }
-        .btn {
-            background: rgba(40,40,40,0.9); border: 1px solid #666; color: #fff;
-            padding: 8px; border-radius: 6px; font-size: 9px; width: 65px; text-align: center;
-        }
-        .btn:active { background: #e0a235; color: #000; }
-        .active-mode { background: #4a6723 !important; border-color: #b5ff6a; }
-
-        /* Bottom Inventory Bar */
-        .inv-bar {
-            position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
-            background: rgba(0,0,0,0.85); border: 1px solid #b87c3a; border-radius: 12px;
-            padding: 5px 12px; display: flex; gap: 10px; z-index: 10; font-size: 12px;
+        .kill-counter {
+            position: absolute; top: 20px; right: 20px;
+            color: #ff4b4b; font-weight: bold; font-size: 18px; text-align: right;
         }
 
-        #plantSelect {
-            display: none; position: absolute; bottom: 60px; left: 50%; transform: translateX(-50%);
-            background: #1a1a1a; border: 2px solid #6b8c3e; border-radius: 10px; padding: 8px; gap: 8px;
-        }
+        #timer { font-size: 12px; color: #add8e6; }
     </style>
 </head>
 <body>
 
-<div class="top-ui">
-    <span>❤️ <span id="hp">500</span></span>
-    <span>🍗 <span id="hunger">100</span>%</span>
-    <span>⚔️ Lv.<span id="lvl">1</span></span>
-    <div class="xp-bar"><div class="xp-fill" id="xpF"></div></div>
-    <span>🌞 <span id="day">1</span></span>
+<div class="game-ui">
+    <div class="stat-line">SIZE LVL: <span id="lvl">1</span></div>
+    <div class="hp-bar-bg"><div class="hp-fill" id="hpBar"></div></div>
+    <div id="timer">SURVIVED: 0s</div>
 </div>
 
-<div class="side-btns">
-    <button class="btn" id="tillBtn">🌾 TILL</button>
-    <button class="btn" onclick="craft('wall')">🧱 WALL</button>
-    <button class="btn" onclick="craft('tower')">🗼 TOWER</button>
-    <button class="btn" onclick="craft('fire')">🔥 CAMP</button>
-    <button class="btn" onclick="craft('bolt')">🏹 BOLTS</button>
-</div>
-
-<div id="plantSelect">
-    <button class="btn" onclick="confirmPlant('carrot')">🥕</button>
-    <button class="btn" onclick="confirmPlant('corn')">🌽</button>
-    <button class="btn" onclick="confirmPlant('apple')">🍎</button>
-</div>
-
-<div class="inv-bar" id="inv">
-    <span>🪵 0</span><span>🪨 0</span><span>🏹 0</span>
+<div class="kill-counter">
+    💀 <span id="kills">0</span><br>
+    <small style="font-size: 10px; color: #fff;">FISHY KILLS</small>
 </div>
 
 <script>
 const canvas = document.createElement('canvas');
-document.body.appendChild(canvas);
 const ctx = canvas.getContext('2d');
+document.body.appendChild(canvas);
 
-const MAP_SIZE = 4000;
+const WORLD_SIZE = 4000;
 let cam = { x: 0, y: 0 };
-let player = { x: 2000, y: 2000, hp: 500, maxHp: 500, hunger: 100, lvl: 1, xp: 0, bolts: 0, target: null };
-let resources = [], enemies = [], structures = [], plots = [], particles = [];
-let wood = 12, stone = 8, day = 1, tillMode = false, selectedPlot = null;
+let player = {
+    x: 2000, y: 2000,
+    hp: 100, maxHp: 100,
+    lvl: 1, kills: 0,
+    size: 15, speed: 1.5,
+    angle: 0, targetAngle: 0,
+    isManual: false,
+    startTime: Date.now()
+};
 
-// Initial Setup
+let entities = []; // Other fish
+let bubbles = [];
+
 function init() {
-    window.onresize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
+    window.onresize = () => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    };
     window.onresize();
-    spawnWorld();
+
+    // Populate the sea
+    for(let i=0; i<80; i++) spawnFish(true);
+    for(let i=0; i<40; i++) spawnBubble();
+
     requestAnimationFrame(loop);
 }
 
-function spawnWorld() {
-    for(let i=0; i<150; i++) spawnRes();
-}
-
-function spawnRes() {
-    resources.push({
-        x: Math.random()*MAP_SIZE, y: Math.random()*MAP_SIZE,
-        type: Math.random() > 0.4 ? 'tree' : 'rock', taps: 10
+function spawnFish(init = false) {
+    let x = init ? Math.random() * WORLD_SIZE : (Math.random() < 0.5 ? player.x - 1000 : player.x + 1000);
+    let y = init ? Math.random() * WORLD_SIZE : (Math.random() < 0.5 ? player.y - 1000 : player.y + 1000);
+    entities.push({
+        x: x, y: y,
+        hp: 50,
+        size: 10 + Math.random() * 20,
+        speed: 1 + Math.random(),
+        angle: Math.random() * Math.PI * 2,
+        color: `hsl(${Math.random() * 360}, 60%, 60%)`,
+        state: 'wander'
     });
 }
 
-function spawnEnemy() {
-    if(enemies.length > 40) return;
-    const side = Math.random() * 4;
-    let x = (Math.random() < 0.5) ? player.x - 800 : player.x + 800;
-    let y = (Math.random() < 0.5) ? player.y - 800 : player.y + 800;
-    const type = Math.random() > 0.3 ? 'spider' : 'snail';
-    enemies.push({ x, y, type, hp: 50, alert: false });
+function spawnBubble() {
+    bubbles.push({
+        x: Math.random() * WORLD_SIZE,
+        y: Math.random() * WORLD_SIZE,
+        r: 1 + Math.random() * 4,
+        speed: 0.5 + Math.random()
+    });
+}
+
+function update() {
+    // 1. Autonomous Intelligence
+    if (!player.isManual) {
+        // Drift and wander
+        player.targetAngle += (Math.random() - 0.5) * 0.1;
+    }
+    
+    // Smooth angle transition
+    let diff = player.targetAngle - player.angle;
+    player.angle += diff * 0.05;
+
+    // Movement
+    player.x += Math.cos(player.angle) * player.speed;
+    player.y += Math.sin(player.angle) * player.speed;
+
+    // Camera follow
+    cam.x += (player.x - canvas.width/2 - cam.x) * 0.1;
+    cam.y += (player.y - canvas.height/2 - cam.y) * 0.1;
+
+    // 2. Aura Ring Logic
+    let auraRadius = player.size * 3.5;
+    entities.forEach((f, index) => {
+        let d = Math.hypot(f.x - player.x, f.y - player.y);
+        
+        // Attack logic
+        if (d < auraRadius) {
+            f.hp -= 0.5; // Damage within ring
+            if (f.hp <= 0) {
+                entities.splice(index, 1);
+                player.kills++;
+                levelUp();
+                spawnFish(); // Keep world populated
+            }
+        }
+
+        // Enemy AI (Aggressive if close)
+        if (d < 200) {
+            f.state = 'attack';
+            let angleToPlayer = Math.atan2(player.y - f.y, player.x - f.x);
+            f.angle += (angleToPlayer - f.angle) * 0.02;
+            
+            if (d < player.size + f.size) {
+                player.hp -= 0.1; // 1 damage per second roughly
+            }
+        } else {
+            f.state = 'wander';
+            f.angle += (Math.random() - 0.5) * 0.05;
+        }
+
+        f.x += Math.cos(f.angle) * f.speed;
+        f.y += Math.sin(f.angle) * f.speed;
+    });
+
+    // Bubbles
+    bubbles.forEach(b => {
+        b.y -= b.speed;
+        if (b.y < cam.y - 100) b.y = cam.y + canvas.height + 100;
+    });
+
+    // Stats UI Update
+    document.getElementById('lvl').innerText = player.lvl;
+    document.getElementById('kills').innerText = player.kills;
+    document.getElementById('hpBar').style.width = (player.hp / player.maxHp * 100) + "%";
+    document.getElementById('timer').innerText = `SURVIVED: ${Math.floor((Date.now() - player.startTime)/1000)}s`;
+
+    if (player.hp <= 0) location.reload();
+}
+
+function levelUp() {
+    if (player.kills % 5 === 0) {
+        player.lvl++;
+        player.size += 5;
+        player.speed += 0.2;
+        player.maxHp += 20;
+        player.hp = player.maxHp;
+    }
+}
+
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Light Rays (From your reference image)
+    let grd = ctx.createLinearGradient(canvas.width/2, 0, canvas.width/2, 400);
+    grd.addColorStop(0, "rgba(255,255,255,0.2)");
+    grd.addColorStop(1, "transparent");
+    ctx.fillStyle = grd;
+    ctx.fillRect(0,0, canvas.width, canvas.height);
+
+    ctx.save();
+    ctx.translate(-cam.x, -cam.y);
+
+    // Draw Bubbles
+    ctx.fillStyle = "rgba(255,255,255,0.3)";
+    bubbles.forEach(b => {
+        ctx.beginPath();
+        ctx.arc(b.x, b.y, b.r, 0, Math.PI*2);
+        ctx.fill();
+    });
+
+    // Draw Aura Ring
+    ctx.strokeStyle = "rgba(0, 255, 255, 0.4)";
+    ctx.lineWidth = 3;
+    ctx.setLineDash([10, 10]);
+    ctx.beginPath();
+    ctx.arc(player.x, player.y, player.size * 3.5, 0, Math.PI*2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Draw Entities
+    entities.forEach(f => {
+        ctx.save();
+        ctx.translate(f.x, f.y);
+        ctx.rotate(f.angle);
+        ctx.fillStyle = f.color;
+        // Simple Fish Shape
+        ctx.beginPath();
+        ctx.ellipse(0, 0, f.size, f.size/2, 0, 0, Math.PI*2);
+        ctx.fill();
+        // Tail
+        ctx.beginPath();
+        ctx.moveTo(-f.size, 0);
+        ctx.lineTo(-f.size - 10, -10);
+        ctx.lineTo(-f.size - 10, 10);
+        ctx.fill();
+        ctx.restore();
+    });
+
+    // Draw Our Fishy
+    ctx.save();
+    ctx.translate(player.x, player.y);
+    ctx.rotate(player.angle);
+    ctx.fillStyle = "#fff";
+    ctx.beginPath();
+    ctx.ellipse(0, 0, player.size, player.size/1.8, 0, 0, Math.PI*2);
+    ctx.fill();
+    // Eye
+    ctx.fillStyle = "#000";
+    ctx.beginPath();
+    ctx.arc(player.size/2, -2, 2, 0, Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+
+    ctx.restore();
 }
 
 function loop() {
@@ -117,176 +249,16 @@ function loop() {
     requestAnimationFrame(loop);
 }
 
-function update() {
-    // Player Move
-    if(player.target) {
-        let dx = player.target.x - player.x, dy = player.target.y - player.y;
-        let d = Math.hypot(dx, dy);
-        if(d > 5) { player.x += dx/d * 5; player.y += dy/d * 5; }
-    }
-
-    cam.x = player.x - canvas.width/2;
-    cam.y = player.y - canvas.height/2;
-
-    // Orbit Ring Logic
-    let ringSize = 60 + (player.lvl * 10);
-    enemies.forEach((e, i) => {
-        let d = Math.hypot(e.x - player.x, e.y - player.y);
-        
-        // Line of Sight Swarm
-        if(d < 400) e.alert = true;
-        if(e.alert) {
-            let angle = Math.atan2(player.y - e.y, player.x - e.x);
-            e.x += Math.cos(angle) * (e.type === 'spider' ? 3 : 1.5);
-            e.y += Math.sin(angle) * (e.type === 'spider' ? 3 : 1.5);
-        }
-
-        // Ring Damage
-        if(d < ringSize) {
-            e.hp -= 0.5; // Damage per frame/sec
-            if(e.hp <= 0) { 
-                enemies.splice(i, 1); 
-                player.xp += 10; 
-                if(player.xp >= player.lvl * 50) { player.lvl++; player.xp = 0; player.maxHp += 50; player.hp = player.maxHp; }
-            }
-        }
-
-        // Player Contact Damage
-        if(d < 30) player.hp -= 0.1;
-    });
-
-    // Tower Defense logic
-    structures.forEach(s => {
-        if(s.type === 'tower') {
-            enemies.forEach(e => {
-                if(Math.hypot(s.x-e.x, s.y-e.y) < 150) e.hp -= 0.2;
-            });
-        }
-    });
-
-    // Auto-Respawn
-    if(Math.random() < 0.02) spawnEnemy();
-    player.hunger -= 0.005;
+// Controls
+window.addEventListener('touchstart', (e) => {
+    player.isManual = true;
+    const touch = e.touches[0];
+    player.targetAngle = Math.atan2(touch.clientY - canvas.height/2, touch.clientX - canvas.width/2);
     
-    updateUI();
-}
-
-function draw() {
-    ctx.fillStyle = '#1a1d1a';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.save();
-    ctx.translate(-cam.x, -cam.y);
-
-    // Grid
-    ctx.strokeStyle = '#222';
-    for(let i=0; i<MAP_SIZE; i+=200) {
-        ctx.strokeRect(i, 0, 200, MAP_SIZE);
-        ctx.strokeRect(0, i, MAP_SIZE, 200);
-    }
-
-    // Plots
-    plots.forEach(p => {
-        ctx.fillStyle = '#5d4037'; // Brown soil
-        ctx.fillRect(p.x-25, p.y-25, 50, 50);
-        if(p.planted) {
-            ctx.fillStyle = p.growth >= 100 ? 'gold' : '#2ecc71';
-            ctx.fillRect(p.x-10, p.y-10, 20, 20);
-            if(!p.ready && p.growth < 100) p.growth += 0.1;
-        }
-    });
-
-    // Structures
-    structures.forEach(s => {
-        ctx.fillStyle = s.type === 'wall' ? '#111' : (s.type === 'fire' ? '#e67e22' : '#3498db');
-        ctx.fillRect(s.x-20, s.y-20, 40, 40);
-        if(s.type === 'tower') {
-            ctx.strokeStyle = 'rgba(52, 152, 219, 0.3)';
-            ctx.beginPath(); ctx.arc(s.x, s.y, 150, 0, Math.PI*2); ctx.stroke();
-        }
-    });
-
-    // Resources
-    resources.forEach(r => {
-        ctx.fillStyle = r.type === 'tree' ? '#27ae60' : '#7f8c8d';
-        ctx.fillRect(r.x-20, r.y-20, 40, 40);
-        ctx.fillStyle = '#fff'; ctx.font = '10px Arial';
-        ctx.fillText(r.taps, r.x-5, r.y-25);
-    });
-
-    // Enemies
-    enemies.forEach(e => {
-        ctx.fillStyle = e.type === 'spider' ? '#000' : '#555';
-        ctx.fillRect(e.x-18, e.y-18, 36, 36);
-        // Visual "legs" or impact
-        ctx.strokeStyle = ctx.fillStyle;
-        ctx.strokeRect(e.x-22, e.y-22, 44, 44);
-    });
-
-    // Player & Orbit Ring
-    ctx.fillStyle = '#fff';
-    ctx.fillRect(player.x-15, player.y-15, 30, 30);
-    ctx.strokeStyle = 'cyan';
-    ctx.lineWidth = 2;
-    ctx.beginPath(); 
-    ctx.arc(player.x, player.y, 60 + (player.lvl*10), 0, Math.PI*2); 
-    ctx.stroke();
-
-    ctx.restore();
-}
-
-function updateUI() {
-    document.getElementById('hp').innerText = Math.floor(player.hp);
-    document.getElementById('hunger').innerText = Math.floor(player.hunger);
-    document.getElementById('lvl').innerText = player.lvl;
-    document.getElementById('day').innerText = day;
-    document.getElementById('xpF').style.width = (player.xp / (player.lvl*50) * 100) + "%";
-    document.getElementById('inv').innerHTML = `<span>🪵 ${wood}</span> <span>🪨 ${stone}</span> <span>🏹 ${player.bolts}</span>`;
-}
-
-canvas.addEventListener('touchstart', (e) => {
-    const rect = canvas.getBoundingClientRect();
-    const tx = e.touches[0].clientX - rect.left, ty = e.touches[0].clientY - rect.top;
-    const wx = tx + cam.x, wy = ty + cam.y;
-
-    if(tillMode) {
-        let p = plots.find(p => Math.hypot(p.x-wx, p.y-wy) < 50);
-        if(!p) plots.push({x: wx, y: wy, planted: null, growth: 0});
-        else { selectedPlot = p; document.getElementById('plantSelect').style.display = 'flex'; }
-        return;
-    }
-
-    let res = resources.find(r => Math.hypot(r.x-wx, r.y-wy) < 50);
-    if(res) {
-        res.taps--;
-        if(res.taps <= 0) {
-            if(res.type === 'tree') wood += 5; else stone += 5;
-            resources.splice(resources.indexOf(res), 1);
-            spawnRes(); // Respawn elsewhere
-        }
-    } else {
-        player.target = { x: wx, y: wy };
-    }
+    // Release manual control after 3 seconds of no touching
+    clearTimeout(window.controlTimeout);
+    window.controlTimeout = setTimeout(() => player.isManual = false, 3000);
 });
-
-function craft(item) {
-    if(item === 'wall' && wood >= 5) { wood -= 5; structures.push({x: player.x, y: player.y, type: 'wall'}); }
-    if(item === 'tower' && wood >= 15 && stone >= 10) { wood -= 15; stone -= 10; structures.push({x: player.x, y: player.y, type: 'tower'}); }
-    if(item === 'fire' && wood >= 10) { wood -= 10; structures.push({x: player.x, y: player.y, type: 'fire'}); }
-    if(item === 'bolt' && wood >= 2) { wood -= 2; player.bolts += 5; }
-}
-
-document.getElementById('tillBtn').onclick = () => {
-    tillMode = !tillMode;
-    document.getElementById('tillBtn').classList.toggle('active-mode');
-};
-
-function confirmPlant(type) {
-    if(selectedPlot) {
-        selectedPlot.planted = type;
-        selectedPlot.growth = 0;
-        document.getElementById('plantSelect').style.display = 'none';
-    }
-}
 
 init();
 </script>
