@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-  <title>Copper Realms - Command Center</title>
+  <title>Copper Realms - Pillared Command Center</title>
   <style>
     * {
       margin: 0;
@@ -13,164 +13,244 @@
     }
 
     body {
-      background: linear-gradient(145deg, #1a0f05 0%, #2c1a0a 100%);
+      background: linear-gradient(145deg, #0f0a05 0%, #1f1409 100%);
       font-family: 'Segoe UI', 'Roboto', 'Impact', 'Arial Black', sans-serif;
-      padding: 20px;
+      padding: 16px;
       min-height: 100vh;
       display: flex;
       justify-content: center;
       align-items: center;
+      position: relative;
     }
 
-    /* Main container - big tap targets */
+    /* ===== SPIRAL PILLERS ===== */
+    .pillar-left, .pillar-right {
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      width: 28px;
+      background: repeating-linear-gradient(
+        180deg,
+        #b87333 0px,
+        #d4943f 8px,
+        #7a3e1a 16px,
+        #cd7f32 24px,
+        #e0a44c 32px,
+        #b87333 40px
+      );
+      box-shadow: 0 0 20px rgba(205, 127, 50, 0.6), inset 0 0 12px rgba(255,215,0,0.3);
+      z-index: 10;
+      animation: copperShimmer 3s ease-in-out infinite;
+    }
+
+    .pillar-left {
+      left: 0;
+      border-right: 2px solid #f0bc6e;
+    }
+
+    .pillar-right {
+      right: 0;
+      border-left: 2px solid #f0bc6e;
+    }
+
+    /* Spiral grooves on pillars */
+    .pillar-left::before, .pillar-right::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: repeating-linear-gradient(
+        45deg,
+        rgba(0,0,0,0.3) 0px,
+        rgba(0,0,0,0.3) 2px,
+        transparent 2px,
+        transparent 12px
+      );
+      pointer-events: none;
+    }
+
+    /* Animated metallic shimmer */
+    @keyframes copperShimmer {
+      0% { filter: brightness(1) drop-shadow(0 0 2px #ffb347); }
+      50% { filter: brightness(1.15) drop-shadow(0 0 8px #ff8c00); }
+      100% { filter: brightness(1) drop-shadow(0 0 2px #ffb347); }
+    }
+
+    /* Spiral coil accents on pillars */
+    .pillar-left::after, .pillar-right::after {
+      content: "⤸⤸⤸⤸⤸⤸⤸⤸⤸⤸⤸⤸⤸⤸";
+      position: absolute;
+      bottom: 20%;
+      left: 4px;
+      font-size: 14px;
+      white-space: nowrap;
+      transform: rotate(90deg) scaleX(-1);
+      color: #ffd699;
+      opacity: 0.5;
+      letter-spacing: 4px;
+      pointer-events: none;
+    }
+
+    .pillar-right::after {
+      content: "⤸⤸⤸⤸⤸⤸⤸⤸⤸⤸⤸⤸⤸⤸";
+      transform: rotate(-90deg);
+      right: 4px;
+      left: auto;
+    }
+
+    /* Main container */
     .container {
       max-width: 600px;
       width: 100%;
       margin: 0 auto;
-      background: rgba(0, 0, 0, 0.5);
+      background: rgba(10, 6, 3, 0.75);
       border-radius: 64px;
       padding: 24px 20px 40px;
-      backdrop-filter: blur(2px);
-      box-shadow: 0 20px 35px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,215,130,0.2);
-      border: 1px solid rgba(205, 127, 50, 0.4);
+      backdrop-filter: blur(8px);
+      box-shadow: 0 25px 45px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,200,100,0.3);
+      border: 1px solid rgba(205, 127, 50, 0.7);
+      position: relative;
+      z-index: 2;
     }
 
-    /* Header */
+    /* Header with bold copper */
     h1 {
       font-family: 'Impact', 'Arial Black', sans-serif;
-      font-size: 3.2rem;
+      font-size: 3rem;
       text-align: center;
-      letter-spacing: 3px;
-      background: linear-gradient(135deg, #FDB72A 0%, #CD7F32 40%, #B87333 80%);
+      letter-spacing: 4px;
+      background: linear-gradient(135deg, #FDB72A 0%, #CD7F32 35%, #E6A155 65%, #B87333 100%);
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
-      text-shadow: 0 2px 5px rgba(0,0,0,0.3);
+      text-shadow: 0 2px 8px rgba(0,0,0,0.5);
       margin-bottom: 8px;
       word-break: keep-all;
     }
 
-    /* Date/Time panel */
+    /* Date/Time panel - glowing */
     .datetime {
       text-align: center;
       font-family: monospace;
       font-weight: bold;
-      font-size: 1.2rem;
-      background: #2e241d;
+      font-size: 1.15rem;
+      background: #1f160ed9;
       display: inline-block;
       width: 100%;
       padding: 12px;
       border-radius: 60px;
       margin: 15px 0 25px;
-      color: #e7b874;
-      border: 1px solid #c27e3a;
-      box-shadow: inset 0 0 8px rgba(0,0,0,0.5), 0 4px 8px rgba(0,0,0,0.2);
+      color: #f5bc70;
+      border: 1px solid #cd7f32;
+      box-shadow: 0 0 12px rgba(205,127,50,0.4), inset 0 0 6px rgba(0,0,0,0.5);
     }
 
-    /* Card style for stats */
+    /* Stat cards */
     .stat-card {
-      background: #1f160e;
+      background: linear-gradient(125deg, #1c130b, #110b06);
       border-radius: 48px;
-      padding: 18px 20px;
-      margin-bottom: 25px;
-      border-left: 8px solid #cd7f32;
-      box-shadow: 0 8px 12px rgba(0,0,0,0.3);
+      padding: 18px 22px;
+      margin-bottom: 28px;
+      border-left: 6px solid #e09d42;
+      box-shadow: 0 8px 18px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,215,0,0.2);
     }
 
     .stat-label {
       font-size: 1rem;
       font-weight: bold;
       text-transform: uppercase;
-      letter-spacing: 1px;
-      color: #c98f4b;
-      margin-bottom: 8px;
+      letter-spacing: 2px;
+      color: #e0a44c;
+      margin-bottom: 10px;
     }
 
     .stat-value {
-      font-size: 2.2rem;
+      font-size: 2.4rem;
       font-weight: 800;
       font-family: monospace;
-      color: #ffcd94;
-      text-shadow: 0 2px 3px black;
-      letter-spacing: 1px;
+      color: #ffe0a3;
+      text-shadow: 0 0 5px #ff9f2e;
+      letter-spacing: 2px;
+      margin-bottom: 14px;
     }
 
-    /* Button row */
+    /* Button rows - now includes +10 +5 +1 */
     .button-row {
       display: flex;
-      gap: 18px;
-      margin-top: 15px;
+      gap: 14px;
+      margin-top: 12px;
       flex-wrap: wrap;
     }
 
     .copper-btn {
       flex: 1;
-      background: radial-gradient(circle at 30% 10%, #e09d42, #a0522d);
+      background: radial-gradient(circle at 30% 25%, #e8a850, #a5511f);
       border: none;
-      padding: 16px 10px;
+      padding: 14px 6px;
       border-radius: 60px;
-      font-size: 1.4rem;
+      font-size: 1.2rem;
       font-weight: bold;
-      font-family: 'Segoe UI', 'Roboto', 'Impact', sans-serif;
-      color: #2a1808;
-      text-shadow: 0 1px 0 #ffce8e;
-      box-shadow: 0 5px 0 #5e2e14;
-      transition: 0.07s linear;
+      font-family: monospace;
+      color: #221000;
+      text-shadow: 0 1px 0 #ffcf8a;
+      box-shadow: 0 4px 0 #5c2b0e;
+      transition: 0.06s linear;
       cursor: pointer;
       text-align: center;
-      letter-spacing: 1px;
-      min-width: 100px;
+      min-width: 70px;
     }
 
     .copper-btn:active {
       transform: translateY(3px);
-      box-shadow: 0 2px 0 #5e2e14;
+      box-shadow: 0 1px 0 #5c2b0e;
     }
 
-    /* Reset/nuke small button */
-    .reset-area {
-      margin-top: 15px;
-      text-align: center;
-    }
-    .small-btn {
-      background: #3a2a1c;
-      border: 1px solid #b87333;
-      padding: 10px 20px;
-      border-radius: 50px;
-      color: #cf9f5e;
-      font-weight: bold;
-      font-size: 0.9rem;
-      cursor: pointer;
-    }
-    .small-btn:active {
-      background: #201608;
+    /* Special small increment buttons */
+    .copper-btn.small-add {
+      background: radial-gradient(circle at 30% 25%, #c9823a, #8a3f16);
+      font-size: 1rem;
     }
 
+    .reset-btn {
+      background: radial-gradient(#7a4e2a, #4f2c12);
+      color: #ffcb8a;
+      text-shadow: none;
+      box-shadow: 0 4px 0 #2d180a;
+    }
+
+    /* Total banked card */
     .total-banked {
-      background: linear-gradient(115deg, #2c1d10, #1e130b);
-      border: 2px solid #f0b45a;
+      background: linear-gradient(115deg, #2b1a0c, #170f07);
+      border: 2px solid #e7b15a;
     }
-
     .total-banked .stat-value {
-      font-size: 2.6rem;
-      color: #f7bc5a;
+      font-size: 2.8rem;
+      color: #ffcd82;
     }
 
+    /* Footer */
     footer {
       text-align: center;
       margin-top: 20px;
       font-size: 0.7rem;
-      color: #9b7a48;
+      color: #b87a3c;
+      letter-spacing: 1px;
     }
   </style>
 </head>
 <body>
 
+<!-- SPIRAL PILLERS holding up the website -->
+<div class="pillar-left"></div>
+<div class="pillar-right"></div>
+
 <div class="container">
   <h1>⚡ COPPER REALMS ⚡</h1>
   <div class="datetime">
-    <span id="dateDisplay">--</span> &nbsp;|&nbsp; 
-    <span id="timeDisplay">--:--:--</span>
+    <span id="dateDisplay"></span> &nbsp;⛁&nbsp; 
+    <span id="timeDisplay"></span>
   </div>
 
   <!-- Lbs Received -->
@@ -178,9 +258,11 @@
     <div class="stat-label">📦 LBS RECEIVED (TODAY)</div>
     <div class="stat-value" id="receivedValue">0</div>
     <div class="button-row">
-      <button class="copper-btn" id="addReceived50">+50 lbs</button>
-      <button class="copper-btn" id="addReceived100">+100 lbs</button>
-      <button class="copper-btn" id="resetReceivedBtn">↺ RESET</button>
+      <button class="copper-btn small-add" id="addReceived1">+1 lb</button>
+      <button class="copper-btn small-add" id="addReceived5">+5 lbs</button>
+      <button class="copper-btn small-add" id="addReceived10">+10 lbs</button>
+      <button class="copper-btn small-add" id="addReceived50">+50 lbs</button>
+      <button class="copper-btn reset-btn" id="resetReceivedBtn">↺ RESET</button>
     </div>
   </div>
 
@@ -189,33 +271,34 @@
     <div class="stat-label">⚙️ LBS REFINED (TODAY)</div>
     <div class="stat-value" id="refinedValue">0</div>
     <div class="button-row">
-      <button class="copper-btn" id="addRefined50">+50 lbs</button>
-      <button class="copper-btn" id="addRefined100">+100 lbs</button>
-      <button class="copper-btn" id="resetRefinedBtn">↺ RESET</button>
+      <button class="copper-btn small-add" id="addRefined1">+1 lb</button>
+      <button class="copper-btn small-add" id="addRefined5">+5 lbs</button>
+      <button class="copper-btn small-add" id="addRefined10">+10 lbs</button>
+      <button class="copper-btn small-add" id="addRefined50">+50 lbs</button>
+      <button class="copper-btn reset-btn" id="resetRefinedBtn">↺ RESET</button>
     </div>
   </div>
 
-  <!-- Total Copper Banked (persistent across days) -->
+  <!-- Total Copper Banked -->
   <div class="stat-card total-banked">
     <div class="stat-label">🏦 TOTAL COPPER BANKED (ALL TIME)</div>
     <div class="stat-value" id="bankedValue">0</div>
     <div class="button-row">
-      <button class="copper-btn" id="addToBankBtn" style="background: radial-gradient(#b87333, #7a3e1a);">➕ ADD TODAY'S REFINED TO BANK</button>
+      <button class="copper-btn" id="addToBankBtn" style="background: radial-gradient(#d68f3a, #8a451d);">✨ ADD TODAY'S REFINED TO BANK ✨</button>
     </div>
-    <div style="margin-top: 12px; font-size:0.8rem; color:#c27e4a;">*Tap to move today's refined lbs into permanent bank</div>
+    <div style="margin-top: 12px; font-size:0.75rem; color:#e7a352;">Tap to move refined lbs → permanent vault</div>
   </div>
 
-  <!-- Quick actions -->
-  <div class="reset-area">
-    <button class="small-btn" id="resetDailyBtn">🔄 RESET TODAY'S RECEIVED & REFINED</button>
-    <button class="small-btn" id="fullResetBtn" style="margin-left:10px;">⚠️ NUKE ALL DATA ⚠️</button>
+  <!-- Utilities -->
+  <div class="reset-area" style="display: flex; gap: 12px; justify-content: center; margin-top: 12px;">
+    <button class="small-btn" id="resetDailyBtn" style="background:#2f2216; border:1px solid #c27e3a; padding:10px 18px; border-radius:40px; color:#f0bc6e;">🔄 RESET TODAY</button>
+    <button class="small-btn" id="fullResetBtn" style="background:#2f2216; border:1px solid #a03e1a; padding:10px 18px; border-radius:40px; color:#e6955c;">⚠️ NUKE ALL</button>
   </div>
-  <footer>copper realms • command center • auto-save</footer>
+  <footer>spiral pillars of copper • command center • auto‑save</footer>
 </div>
 
 <script>
-  // ---------- STORAGE KEYS ----------
-  // For daily reset detection: we store last active date + per-day values + bank
+  // Storage keys
   const STORAGE = {
     lastDate: "copper_lastDate",
     dailyReceived: "copper_dailyReceived",
@@ -223,47 +306,38 @@
     totalBanked: "copper_totalBanked",
   };
 
-  // Helper: get today's date string YYYY-MM-DD
   function getTodayStr() {
-    const d = new Date();
-    return d.toISOString().split('T')[0];
+    return new Date().toISOString().split('T')[0];
   }
 
-  // Load or initialize data, resetting daily values if a new day
+  let state = {
+    dailyReceived: 0,
+    dailyRefined: 0,
+    totalBanked: 0
+  };
+
   function loadData() {
     let lastDate = localStorage.getItem(STORAGE.lastDate);
     let today = getTodayStr();
-    let dailyReceived = 0;
-    let dailyRefined = 0;
     let totalBanked = parseFloat(localStorage.getItem(STORAGE.totalBanked)) || 0;
 
     if (lastDate === today) {
-      // same day, load daily values as they were
-      dailyReceived = parseFloat(localStorage.getItem(STORAGE.dailyReceived)) || 0;
-      dailyRefined = parseFloat(localStorage.getItem(STORAGE.dailyRefined)) || 0;
+      state.dailyReceived = parseFloat(localStorage.getItem(STORAGE.dailyReceived)) || 0;
+      state.dailyRefined = parseFloat(localStorage.getItem(STORAGE.dailyRefined)) || 0;
     } else {
-      // new day! we reset daily values but keep totalBanked
-      // also we could decide to automatically add nothing — user manually adds refined to bank.
-      dailyReceived = 0;
-      dailyRefined = 0;
-      // Save new date and clear daily counters
+      state.dailyReceived = 0;
+      state.dailyRefined = 0;
       localStorage.setItem(STORAGE.lastDate, today);
       localStorage.setItem(STORAGE.dailyReceived, 0);
       localStorage.setItem(STORAGE.dailyRefined, 0);
     }
-
-    // ensure Lbs Refined cannot exceed Received? not necessary but can show integrity later
-    return { dailyReceived, dailyRefined, totalBanked };
+    state.totalBanked = totalBanked;
   }
-
-  // Update UI, save to localStorage
-  let state = loadData();
 
   function saveDaily() {
     localStorage.setItem(STORAGE.dailyReceived, state.dailyReceived);
     localStorage.setItem(STORAGE.dailyRefined, state.dailyRefined);
     localStorage.setItem(STORAGE.totalBanked, state.totalBanked);
-    // Keep lastDate fresh (but we already set date once. still, ensure it matches today)
     localStorage.setItem(STORAGE.lastDate, getTodayStr());
   }
 
@@ -271,7 +345,6 @@
     document.getElementById('receivedValue').innerText = Math.floor(state.dailyReceived);
     document.getElementById('refinedValue').innerText = Math.floor(state.dailyRefined);
     document.getElementById('bankedValue').innerText = Math.floor(state.totalBanked);
-    // optional: if refined > received, visual warn? but not needed.
   }
 
   function addReceived(amount) {
@@ -282,21 +355,12 @@
   }
 
   function addRefined(amount) {
-    // can't refine more than received today? Keep realistic: but for flexibility, let's cap refined <= received
     let newRefined = state.dailyRefined + amount;
     if (newRefined <= state.dailyReceived) {
       state.dailyRefined = newRefined;
     } else {
-      // if trying to refine beyond received, just set refined = received
       state.dailyRefined = state.dailyReceived;
-      // subtle alert feel
-      let toast = document.createElement('div');
-      toast.innerText = "⚠️ Can't refine more than received today!";
-      toast.style.position = 'fixed'; toast.style.bottom='20px'; toast.style.left='20px'; toast.style.right='20px';
-      toast.style.backgroundColor='#a1301a'; toast.style.color='#ffbf87'; toast.style.padding='12px'; toast.style.borderRadius='40px';
-      toast.style.textAlign='center'; toast.style.fontWeight='bold'; toast.style.zIndex='999';
-      document.body.appendChild(toast);
-      setTimeout(()=> toast.remove(), 1500);
+      showFloatingMsg("⚠️ Can't refine more than received today!", "#b0451a");
     }
     if (state.dailyRefined < 0) state.dailyRefined = 0;
     saveDaily();
@@ -305,10 +369,7 @@
 
   function resetReceived() {
     state.dailyReceived = 0;
-    // if refined > received now, refined should also reset to keep logic clean
-    if (state.dailyRefined > state.dailyReceived) {
-      state.dailyRefined = 0;
-    }
+    if (state.dailyRefined > state.dailyReceived) state.dailyRefined = 0;
     saveDaily();
     updateUI();
   }
@@ -319,93 +380,99 @@
     updateUI();
   }
 
-  // Add today's refined amount to total banked
   function addRefinedToBank() {
     if (state.dailyRefined > 0) {
       state.totalBanked += state.dailyRefined;
-      // After adding to bank, we set dailyRefined = 0 (since it's banked)
       state.dailyRefined = 0;
-      // Received remains the same (already processed incoming material)
       saveDaily();
       updateUI();
-      // subtle feedback
-      let msg = document.createElement('div');
-      msg.innerText = `✅ ${Math.floor(state.dailyRefined)} lbs banked! Well done.`;
-      msg.style.position='fixed'; msg.style.bottom='70px'; msg.style.left='20px'; msg.style.right='20px';
-      msg.style.backgroundColor='#2c6e2c'; msg.style.color='#f9e2a1'; msg.style.padding='12px'; msg.style.borderRadius='40px';
-      msg.style.textAlign='center'; msg.style.fontWeight='bold';
-      document.body.appendChild(msg);
-      setTimeout(()=> msg.remove(), 1500);
-      // actual value now refined = 0 after banking, but we have to re-show
+      showFloatingMsg(`✅ ${Math.floor(state.totalBanked)} total banked!`, "#2a6b2a");
     } else {
-      let warn = document.createElement('div');
-      warn.innerText = "No refined lbs to bank today!";
-      warn.style.position='fixed'; warn.style.bottom='70px'; warn.style.left='20px'; warn.style.right='20px';
-      warn.style.backgroundColor='#ad4c2c'; warn.style.color='#ffe2b5'; warn.style.padding='12px'; warn.style.borderRadius='40px';
-      warn.style.textAlign='center';
-      document.body.appendChild(warn);
-      setTimeout(()=> warn.remove(), 1500);
+      showFloatingMsg("No refined lbs to bank today!", "#8b3a1a");
     }
   }
 
-  // Reset only daily (received & refined) but keep bank
   function resetDaily() {
     state.dailyReceived = 0;
     state.dailyRefined = 0;
     saveDaily();
     updateUI();
+    showFloatingMsg("Today's stats reset", "#a35e2a");
   }
 
-  // Full nuclear reset
   function fullReset() {
-    if (confirm("⚠️ NUKE ALL DATA? Total Banked will be erased. Proceed?")) {
+    if (confirm("⚠️ PERMANENT: erase ALL Copper Realms data?")) {
       state.dailyReceived = 0;
       state.dailyRefined = 0;
       state.totalBanked = 0;
       localStorage.setItem(STORAGE.lastDate, getTodayStr());
       saveDaily();
       updateUI();
+      showFloatingMsg("System nuked. Start fresh.", "#6a2e0e");
     }
   }
 
-  // check for date change while app is open every minute
+  function showFloatingMsg(text, bgColor) {
+    let msg = document.createElement('div');
+    msg.innerText = text;
+    msg.style.position = 'fixed';
+    msg.style.bottom = '30px';
+    msg.style.left = '20px';
+    msg.style.right = '20px';
+    msg.style.backgroundColor = bgColor;
+    msg.style.color = '#ffe6c7';
+    msg.style.padding = '14px';
+    msg.style.borderRadius = '60px';
+    msg.style.textAlign = 'center';
+    msg.style.fontWeight = 'bold';
+    msg.style.zIndex = '999';
+    msg.style.fontFamily = 'monospace';
+    msg.style.boxShadow = '0 4px 20px black';
+    msg.style.border = '1px solid #ffc285';
+    document.body.appendChild(msg);
+    setTimeout(() => msg.remove(), 1700);
+  }
+
   function checkDateChange() {
     let storedDate = localStorage.getItem(STORAGE.lastDate);
     let today = getTodayStr();
     if (storedDate !== today) {
-      // day changed while app is open -> reset daily values
       state.dailyReceived = 0;
       state.dailyRefined = 0;
       localStorage.setItem(STORAGE.lastDate, today);
       localStorage.setItem(STORAGE.dailyReceived, 0);
       localStorage.setItem(STORAGE.dailyRefined, 0);
       updateUI();
+      showFloatingMsg("🪙 New day! Received & Refined reset", "#876b42");
     }
   }
 
-  // update date/time display
   function updateDateTime() {
     const now = new Date();
-    const options = { year: 'numeric', month: 'long', day: 'numeric' };
-    document.getElementById('dateDisplay').innerText = now.toLocaleDateString(undefined, options);
-    document.getElementById('timeDisplay').innerText = now.toLocaleTimeString([], { hour: '2-digit', minute:'2-digit', second:'2-digit' });
+    document.getElementById('dateDisplay').innerText = now.toLocaleDateString(undefined, { year:'numeric', month:'short', day:'numeric' });
+    document.getElementById('timeDisplay').innerText = now.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit', second:'2-digit' });
   }
 
-  // attach all listeners
   function bindEvents() {
+    document.getElementById('addReceived1').addEventListener('click', () => addReceived(1));
+    document.getElementById('addReceived5').addEventListener('click', () => addReceived(5));
+    document.getElementById('addReceived10').addEventListener('click', () => addReceived(10));
     document.getElementById('addReceived50').addEventListener('click', () => addReceived(50));
-    document.getElementById('addReceived100').addEventListener('click', () => addReceived(100));
     document.getElementById('resetReceivedBtn').addEventListener('click', resetReceived);
+    
+    document.getElementById('addRefined1').addEventListener('click', () => addRefined(1));
+    document.getElementById('addRefined5').addEventListener('click', () => addRefined(5));
+    document.getElementById('addRefined10').addEventListener('click', () => addRefined(10));
     document.getElementById('addRefined50').addEventListener('click', () => addRefined(50));
-    document.getElementById('addRefined100').addEventListener('click', () => addRefined(100));
     document.getElementById('resetRefinedBtn').addEventListener('click', resetRefined);
+    
     document.getElementById('addToBankBtn').addEventListener('click', addRefinedToBank);
     document.getElementById('resetDailyBtn').addEventListener('click', resetDaily);
     document.getElementById('fullResetBtn').addEventListener('click', fullReset);
   }
 
-  // initial sync, updateUI and timer
   function init() {
+    loadData();
     bindEvents();
     updateUI();
     updateDateTime();
@@ -413,9 +480,7 @@
       updateDateTime();
       checkDateChange();
     }, 1000);
-    // add touch/click robustness
   }
-
   init();
 </script>
 </body>
