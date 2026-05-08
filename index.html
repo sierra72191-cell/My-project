@@ -2,738 +2,503 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-    <title>SURVIVAL REALMS · SNAILS & TOWERS</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>GLITCH DASH - Rhythm Runner</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
             user-select: none;
+            -webkit-tap-highlight-color: transparent;
         }
+
         body {
-            background: #1a1a1a;
-            overflow: hidden;
+            background: #0a0a1a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
             font-family: 'Courier New', monospace;
-            touch-action: none;
+            overflow: hidden;
+            touch-action: manipulation;
         }
+
         canvas {
             display: block;
-            position: fixed;
-            top: 0;
-            left: 0;
             width: 100%;
             height: 100%;
-            cursor: crosshair;
-        }
-        .hud {
-            position: fixed;
-            top: 8px;
-            left: 8px;
-            background: rgba(0,0,0,0.85);
-            backdrop-filter: blur(10px);
-            padding: 6px 12px;
-            border-radius: 16px;
-            color: #0f0;
-            font-family: monospace;
-            font-size: 11px;
-            font-weight: bold;
-            z-index: 20;
-            border-left: 3px solid #0f0;
-            pointer-events: none;
-        }
-        .stats-right {
-            position: fixed;
-            top: 8px;
-            right: 8px;
-            background: rgba(0,0,0,0.85);
-            backdrop-filter: blur(10px);
-            padding: 6px 12px;
-            border-radius: 16px;
-            color: #ffaa44;
-            font-family: monospace;
-            font-size: 11px;
-            z-index: 20;
-            text-align: right;
-            pointer-events: none;
-        }
-        .inventory-bar {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0,0,0,0.9);
-            backdrop-filter: blur(12px);
-            padding: 8px 12px;
-            border-radius: 40px;
-            display: flex;
-            gap: 8px;
-            z-index: 30;
-            border: 1px solid gold;
-            overflow-x: auto;
-            max-width: 95%;
-        }
-        .inv-slot {
-            background: #2a2a2a;
-            padding: 6px 10px;
-            border-radius: 20px;
-            text-align: center;
-            font-size: 11px;
-            font-weight: bold;
-            color: white;
-            min-width: 65px;
             cursor: pointer;
-            transition: 0.05s linear;
-            border: 1px solid #555;
+            touch-action: manipulation;
         }
-        .inv-slot:active { transform: scale(0.95); background: #3a6a3a; }
-        .selected { background: #3a8a3a; border: 2px solid #ffcc44; box-shadow: 0 0 10px gold; }
-        .day-cycle {
+
+        #ui {
             position: fixed;
-            bottom: 100px;
-            right: 20px;
+            top: 10px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 20px;
+            color: #0ff;
+            text-shadow: 0 0 5px #0ff;
+            font-weight: bold;
+            font-size: 18px;
+            z-index: 10;
+            pointer-events: none;
+            font-family: monospace;
+        }
+
+        #score {
             background: rgba(0,0,0,0.7);
             padding: 5px 12px;
-            border-radius: 30px;
-            font-family: monospace;
-            font-weight: bold;
-            z-index: 20;
-            pointer-events: none;
-            font-size: 11px;
+            border-radius: 20px;
+            backdrop-filter: blur(4px);
         }
-        .action-buttons {
-            position: fixed;
-            bottom: 100px;
-            left: 20px;
-            display: flex;
-            gap: 8px;
-            z-index: 30;
-            flex-wrap: wrap;
+
+        #best {
+            background: rgba(0,0,0,0.7);
+            padding: 5px 12px;
+            border-radius: 20px;
+            backdrop-filter: blur(4px);
         }
-        .action-btn {
-            background: #2a3a2a;
-            border: none;
-            padding: 6px 14px;
-            border-radius: 30px;
-            color: white;
-            font-weight: bold;
-            cursor: pointer;
-            font-family: monospace;
-            font-size: 11px;
-        }
-        .action-btn.active {
-            background: #3a8a3a;
-            border: 1px solid gold;
-            box-shadow: 0 0 8px gold;
-        }
-        .shop-panel {
+
+        #game-over {
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: #1a1a1aee;
-            backdrop-filter: blur(20px);
-            padding: 20px;
-            border-radius: 30px;
-            display: none;
-            flex-direction: column;
-            gap: 10px;
-            z-index: 100;
-            border: 2px solid gold;
-            min-width: 200px;
-        }
-        .shop-panel button {
-            background: #3a4a3a;
-            border: none;
-            padding: 10px;
-            border-radius: 20px;
-            color: gold;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        .start-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(circle, #1a1a1a, #0a0a0a);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 200;
-            font-family: monospace;
-        }
-        .start-title { font-size: 42px; color: #0f0; text-shadow: 0 0 20px green; margin-bottom: 10px; letter-spacing: 4px; }
-        .start-sub { color: #aaa; margin-bottom: 20px; font-size: 12px; text-align: center; padding: 0 20px; }
-        .start-btns { display: flex; gap: 20px; }
-        .start-btn { background: #2a6a2a; border: none; padding: 12px 24px; border-radius: 40px; color: white; font-size: 16px; font-weight: bold; cursor: pointer; }
-        .load-btn { background: #3a4a6a; border: none; padding: 12px 24px; border-radius: 40px; color: white; font-size: 16px; font-weight: bold; cursor: pointer; }
-        .event-toast {
-            position: fixed;
-            top: 25%;
-            left: 50%;
-            transform: translate(-50%,-50%);
-            background: black;
-            color: cyan;
-            padding: 8px 18px;
-            border-radius: 40px;
-            z-index: 150;
-            font-weight: bold;
-            animation: fadeUp 2s forwards;
+            text-align: center;
+            z-index: 20;
             pointer-events: none;
-            white-space: nowrap;
-            font-size: 12px;
-        }
-        @keyframes fadeUp { 0% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%,-80%); } }
-        .mode-indicator {
-            position: fixed;
-            top: 80px;
-            left: 8px;
-            background: rgba(0,0,0,0.7);
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 10px;
-            color: cyan;
-            z-index: 20;
-        }
-        .hunger-bar {
-            position: fixed;
-            top: 55px;
-            left: 8px;
-            background: rgba(0,0,0,0.7);
-            padding: 3px 10px;
-            border-radius: 12px;
-            font-size: 10px;
-            color: #ffaa66;
-            z-index: 20;
-        }
-        .weapon-slot {
-            position: fixed;
-            bottom: 80px;
-            left: 20px;
-            background: rgba(0,0,0,0.7);
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 11px;
-            color: gold;
-            z-index: 20;
-        }
-        .exit-btn {
-            position: fixed;
-            bottom: 160px;
-            left: 100px;
-            background: #8a2a2a;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 10px;
-            color: white;
-            z-index: 30;
-            cursor: pointer;
             display: none;
+        }
+
+        #game-over h1 {
+            color: #f0f;
+            font-size: 48px;
+            text-shadow: 0 0 20px #f0f;
+            letter-spacing: 5px;
+        }
+
+        #game-over p {
+            color: #fff;
+            margin-top: 20px;
+            font-size: 20px;
+        }
+
+        .tap-instruction {
+            position: fixed;
+            bottom: 30px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            color: rgba(255,255,255,0.5);
+            font-size: 14px;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        @keyframes glitchText {
+            0%, 100% { transform: skew(0deg, 0deg); opacity: 1; }
+            95% { transform: skew(5deg, 2deg); opacity: 0.8; }
+        }
+
+        .glitch-text {
+            animation: glitchText 0.1s infinite;
         }
     </style>
 </head>
 <body>
-<canvas id="gameCanvas"></canvas>
-<div class="hud" id="hudStats">❤️ 500/500 | ⚔️ DMG 1 | 🧪 L1 | ✨ 0/100</div>
-<div class="stats-right" id="statsRight">🪙 25 | 🪵 10 | 🪨 5</div>
-<div class="hunger-bar" id="hungerBar">🍗 HUNGER: 100%</div>
-<div class="weapon-slot" id="weaponSlot">🗡️ WEAPON: Fists</div>
-<div class="inventory-bar" id="inventoryBar"></div>
-<div class="day-cycle" id="dayCycle">🌞 DAY 1</div>
-<div class="action-buttons" style="display: none;" id="actionButtons">
-    <button class="action-btn" id="tillBtn">🌾 TILL</button>
-    <button class="action-btn" id="shopWeaponBtn">🛒 SHOP</button>
-    <button class="action-btn" id="buildTowerBtn">🗼 TOWER(30🪵)</button>
-    <button class="action-btn" id="buyCompanionBtn">👥 COMPANION(50💰)</button>
-    <button class="action-btn" id="saveBtn">💾 SAVE</button>
-</div>
-<div class="shop-panel" id="weaponShop">
-    <button id="buySpear">🗡️ SPEAR (50🪙) +5 DMG</button>
-    <button id="buySword">⚔️ SWORD (100🪙) +12 DMG</button>
-    <button id="buyCrossbow">🏹 CROSSBOW (200🪙) +25 DMG</button>
-    <button id="closeShop">❌ CLOSE</button>
-</div>
-<div class="mode-indicator" id="modeIndicator">📍 MOVE MODE</div>
-<div class="exit-btn" id="exitModeBtn">❌ EXIT TILL</div>
-<div class="start-overlay" id="startOverlay">
-    <div class="start-title">⚙️ SURVIVAL REALMS ⚙️</div>
-    <div class="start-sub">till soil | plant crops | build towers | recruit companions</div>
-    <div class="start-btns">
-        <button class="start-btn" id="startBtn">▶ NEW GAME</button>
-        <button class="load-btn" id="loadBtn">📀 LOAD SAVE</button>
+    <canvas id="gameCanvas"></canvas>
+    <div id="ui">
+        <span id="score">SCORE: 0</span>
+        <span id="best">BEST: 0</span>
     </div>
-</div>
+    <div id="game-over">
+        <h1>⚡ GLITCHED ⚡</h1>
+        <p>TAP TO RISE AGAIN</p>
+    </div>
+    <div class="tap-instination">⚡ TAP ANYWHERE - JUMP ⚡</div>
 
-<script>
-    (function(){
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        let width, height;
-        let gameRunning = false;
-        
-        const WORLD_SIZE = 6000;
-        let camera = { x: 0, y: 0 };
-        let attackAnimation = 0;
-        let damageNumbers = [];
-        let currentWeapon = { name: "Fists", damage: 0, bonus: 0 };
-        
-        let player = {
-            x: WORLD_SIZE/2, y: WORLD_SIZE/2,
-            hp: 500, maxHp: 500,
-            baseDamage: 1,
-            level: 1, xp: 0, xpNeeded: 100,
-            coins: 25,
-            wood: 10, stone: 5,
-            hunger: 100,
-            food: { Fish: 4, Berry: 8 }
-        };
-        
-        let inventory = {
-            seeds: { Pumpkin: 5, Apple: 3, Corn: 6, Wheat: 4, Carrot: 5 },
-            selectedCrop: "Pumpkin"
-        };
-        
-        let trees = [];
-        let rocks = [];
-        let rareItems = [];
-        let tilledSoil = [];
-        let crops = [];
-        let enemies = [];
-        let towers = [];
-        let companions = [];
-        let particles = [];
-        
-        let targetX = null, targetY = null;
-        let actionMode = "move";
-        let dayCount = 1;
-        let timeOfDay = 0;
-        let isNight = false;
-        let campfireX = player.x, campfireY = player.y;
-        let enemyRespawnTimer = 0;
-        let eventTimer = 0;
-        
-        function getTotalDamage() { return player.baseDamage + currentWeapon.bonus; }
-        
-        function resize() { width = window.innerWidth; height = window.innerHeight; canvas.width = width; canvas.height = height; }
-        function updateCamera() { camera.x = player.x - width/2.5; camera.y = player.y - height/2.5; camera.x = Math.min(Math.max(camera.x, 0), WORLD_SIZE - width); camera.y = Math.min(Math.max(camera.y, 0), WORLD_SIZE - height); }
-        function worldToScreen(wx, wy) { return { x: wx - camera.x, y: wy - camera.y }; }
-        
-        function showToast(msg) { let div = document.createElement('div'); div.className = 'event-toast'; div.innerText = msg; document.body.appendChild(div); setTimeout(()=>div.remove(), 2000); }
-        
-        function addDamageNumber(x, y, amount, isEnemy = true) {
-            damageNumbers.push({ x, y, amount: Math.floor(amount), life: 0.8, isEnemy });
-        }
-        
-        function updateUI() {
-            document.getElementById('hudStats').innerHTML = `❤️ ${Math.floor(player.hp)}/${player.maxHp} | ⚔️ DMG ${getTotalDamage()} | 🧪 L${player.level} | ✨ ${player.xp}/${player.xpNeeded}`;
-            document.getElementById('statsRight').innerHTML = `🪙 ${Math.floor(player.coins)} | 🪵 ${player.wood} | 🪨 ${player.stone}`;
-            document.getElementById('hungerBar').innerHTML = `🍗 HUNGER: ${Math.floor(player.hunger)}%`;
-            document.getElementById('weaponSlot').innerHTML = `🗡️ WEAPON: ${currentWeapon.name} (+${currentWeapon.bonus} DMG)`;
-            document.getElementById('dayCycle').innerHTML = isNight ? `🌙 NIGHT ${dayCount} 🔥` : `🌞 DAY ${dayCount}`;
-            let bar = document.getElementById('inventoryBar');
-            if(!bar) return;
-            bar.innerHTML = '';
-            let foodSlot = document.createElement('div'); foodSlot.className = `inv-slot`; foodSlot.innerHTML = `🐟 Fish<br>${player.food.Fish}`; foodSlot.onclick = () => { if(player.food.Fish > 0) { player.food.Fish--; player.hunger = Math.min(100, player.hunger+20); updateUI(); } }; bar.appendChild(foodSlot);
-            let berrySlot = document.createElement('div'); berrySlot.className = `inv-slot`; berrySlot.innerHTML = `🍓 Berry<br>${player.food.Berry}`; berrySlot.onclick = () => { if(player.food.Berry > 0) { player.food.Berry--; player.hunger = Math.min(100, player.hunger+10); updateUI(); } }; bar.appendChild(berrySlot);
-            for(let [crop, amount] of Object.entries(inventory.seeds)) {
-                let slot = document.createElement('div'); slot.className = `inv-slot ${inventory.selectedCrop === crop ? 'selected' : ''}`; slot.innerHTML = `🌱 ${crop}<br>${amount}`;
-                slot.onclick = (e) => { e.stopPropagation(); inventory.selectedCrop = crop; updateUI(); showToast(`Selected ${crop} seeds`); };
-                bar.appendChild(slot);
-            }
-        }
-        
-        function addXP(amount) {
-            player.xp += amount;
-            while(player.xp >= player.xpNeeded) {
-                player.xp -= player.xpNeeded;
-                player.level++;
-                player.baseDamage++;
-                player.maxHp += 25;
-                player.hp = player.maxHp;
-                player.xpNeeded = Math.floor(100 + player.level * 15);
-                showToast(`⚡ LEVEL UP! L${player.level} +DMG +HP`);
-            }
-            updateUI();
-        }
-        
-        function saveGame() {
-            let save = { player: { x: player.x, y: player.y, hp: player.hp, maxHp: player.maxHp, baseDamage: player.baseDamage, level: player.level, xp: player.xp, coins: player.coins, wood: player.wood, stone: player.stone, hunger: player.hunger, food: player.food }, inventory: inventory, dayCount: dayCount, timeOfDay: timeOfDay, towers: towers, companions: companions, tilledSoil: tilledSoil, crops: crops, currentWeapon: currentWeapon };
-            localStorage.setItem('survivalRealmSave', JSON.stringify(save));
-            showToast("💾 GAME SAVED!");
-        }
-        
-        function loadGame() {
-            let saveData = localStorage.getItem('survivalRealmSave');
-            if(!saveData) { showToast("No save found!"); return false; }
-            let save = JSON.parse(saveData);
-            player = { ...player, ...save.player };
-            inventory = save.inventory;
-            dayCount = save.dayCount;
-            timeOfDay = save.timeOfDay;
-            towers = save.towers || [];
-            companions = save.companions || [];
-            tilledSoil = save.tilledSoil || [];
-            crops = save.crops || [];
-            if(save.currentWeapon) currentWeapon = save.currentWeapon;
-            showToast("📀 GAME LOADED!");
-            updateUI();
-            return true;
-        }
-        
-        function spawnWorld() {
-            for(let i=0;i<80;i++) { trees.push({ x: Math.random() * WORLD_SIZE, y: Math.random() * WORLD_SIZE, tapsNeeded: 8, tapsRemaining: 8 }); rocks.push({ x: Math.random() * WORLD_SIZE, y: Math.random() * WORLD_SIZE, tapsNeeded: 8, tapsRemaining: 8 }); }
-            for(let i=0;i<15;i++) rareItems.push({ x: Math.random() * WORLD_SIZE, y: Math.random() * WORLD_SIZE, type: "💎", value: 10 });
-            for(let i=0;i<4;i++) spawnEnemy();
-            updateUI();
-        }
-        
-        function spawnEnemy() {
-            let angle = Math.random() * Math.PI * 2;
-            let dist = 400 + Math.random() * 350;
-            let x = player.x + Math.cos(angle)*dist, y = player.y + Math.sin(angle)*dist;
-            x = Math.min(Math.max(x, 50), WORLD_SIZE-50); y = Math.min(Math.max(y, 50), WORLD_SIZE-50);
-            let isSnail = Math.random() < 0.35;
-            if(isSnail) {
-                enemies.push({ x, y, hp: 500, maxHp: 500, damage: 1, radius: 28, speed: 12, attackCooldown: 0, type: "SNAIL", attackTimer: 0 });
-            } else {
-                let spiderTypes = ["BROWN SPIDER", "BLACK SPIDER", "POISON SPIDER"];
-                let type = spiderTypes[Math.floor(Math.random()*spiderTypes.length)];
-                enemies.push({ x, y, hp: 50, maxHp: 50, damage: 2, radius: 20, speed: 38, attackCooldown: 0, type });
-            }
-        }
-        
-        function tillSoil(tx, ty) {
-            let gridX = Math.floor(tx / 45) * 45;
-            let gridY = Math.floor(ty / 45) * 45;
-            for(let t of tilledSoil) if(Math.abs(t.x - gridX) < 5 && Math.abs(t.y - gridY) < 5) return false;
-            tilledSoil.push({ x: gridX, y: gridY });
-            showToast("🌾 Tilled soil");
-            return true;
-        }
-        
-        function plantCrop(tx, ty) {
-            let foundTill = null;
-            for(let t of tilledSoil) if(Math.hypot(t.x - tx, t.y - ty) < 40) { foundTill = t; break; }
-            if(!foundTill) { showToast("❌ Need tilled soil first!"); return false; }
-            let cropType = inventory.selectedCrop;
-            if(inventory.seeds[cropType] <= 0) { showToast(`❌ No ${cropType} seeds!`); return false; }
-            for(let c of crops) if(Math.hypot(c.x - foundTill.x, c.y - foundTill.y) < 30) { showToast("❌ Crop already here"); return false; }
-            inventory.seeds[cropType]--;
-            crops.push({ x: foundTill.x, y: foundTill.y, type: cropType, growth: 0, maxGrowth: 8 });
-            showToast(`🌱 Planted ${cropType}`);
-            updateUI();
-            return true;
-        }
-        
-        function buildTower(tx, ty) {
-            if(player.wood >= 30) {
-                player.wood -= 30;
-                towers.push({ x: tx, y: ty, range: 180, cooldown: 0, damage: 8 });
-                showToast(`🗼 Tower built!`);
-                updateUI();
-            } else { showToast(`Need 30 wood!`); }
-        }
-        
-        function buyCompanion() {
-            if(player.coins >= 50 && companions.length < 3) {
-                player.coins -= 50;
-                companions.push({ x: player.x, y: player.y, angle: Math.random() * Math.PI * 2, distance: 70, damage: 5 });
-                showToast(`👥 Warrior joins you!`);
-                updateUI();
-            } else if(companions.length >= 3) { showToast("Max 3 companions!"); }
-            else { showToast(`Need 50 coins!`); }
-        }
-        
-        function buyWeapon(name, cost, bonus) {
-            if(player.coins >= cost) {
-                player.coins -= cost;
-                currentWeapon = { name: name, bonus: bonus, damage: bonus };
-                showToast(`🔪 Bought ${name}! +${bonus} DMG`);
-                updateUI();
-                document.getElementById('weaponShop').style.display = 'none';
-            } else { showToast(`Need ${cost} coins!`); }
-        }
-        
-        function updateGame(delta) {
-            if(!gameRunning) return;
-            if(delta > 0.033) delta = 0.033;
+    <script>
+        (function(){
+            // ---------- CANVAS ----------
+            const canvas = document.getElementById('gameCanvas');
+            const ctx = canvas.getContext('2d');
             
-            timeOfDay += delta / 140;
-            if(timeOfDay >= 1) { timeOfDay = 0; dayCount++; isNight = false; showToast("🌅 DAYBREAK"); updateUI(); }
-            isNight = timeOfDay > 0.55;
+            // ---------- GAME STATE ----------
+            let gameRunning = true;
+            let score = 0;
+            let bestScore = localStorage.getItem('glitchBest') || 0;
+            let frame = 0;
+            let glitchIntensity = 0;
+            let bassDrop = false;
+            let beatPulse = 0;
             
-            player.hunger -= 0.4 * delta;
-            if(player.hunger <= 0) { player.hp -= 2 * delta; player.hunger = 0; if(player.hp <= 0) { gameRunning = false; alert("You starved!"); location.reload(); } }
-            if(player.hunger > 100) player.hunger = 100;
+            // Cube properties
+            let cube = {
+                x: 100,
+                y: 0,
+                vy: 0,
+                width: 35,
+                height: 35,
+                grounded: true,
+                shape: 'cube', // cube, triangle, diamond, glitch
+                shapeTimer: 0
+            };
             
-            if(targetX !== null && targetY !== null) {
-                let dx = targetX - player.x, dy = targetY - player.y;
-                if(Math.hypot(dx,dy) < 30) { 
-                    if(actionMode === "till") tillSoil(targetX, targetY);
-                    else if(actionMode === "move") plantCrop(targetX, targetY);
-                    targetX = null; targetY = null;
-                } else {
-                    let angle = Math.atan2(dy,dx);
-                    let speed = 210;
-                    player.x += Math.cos(angle) * speed * delta;
-                    player.y += Math.sin(angle) * speed * delta;
-                    player.x = Math.min(Math.max(player.x, 35), WORLD_SIZE-35);
-                    player.y = Math.min(Math.max(player.y, 35), WORLD_SIZE-35);
+            const GRAVITY = 0.8;
+            const JUMP_POWER = -11;
+            const GROUND_Y = 500;
+            
+            cube.y = GROUND_Y - cube.height;
+            
+            // Obstacles
+            let obstacles = [];
+            let obstacleTimer = 0;
+            let lastObstacleFrame = 0;
+            
+            // Parallax / background
+            let bgOffset = 0;
+            
+            // Audio context (Web Audio for bass drops)
+            let audioCtx = null;
+            let bassGain = null;
+            let isAudioReady = false;
+            
+            // Glitch effects array
+            let glitchFrames = 0;
+            
+            // Best score UI
+            document.getElementById('best').innerText = `BEST: ${bestScore}`;
+            
+            // ---------- RESIZE ----------
+            function resizeCanvas() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+            window.addEventListener('resize', resizeCanvas);
+            resizeCanvas();
+            
+            // ---------- INIT AUDIO (on first tap) ----------
+            function initAudio() {
+                if (audioCtx) return;
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                bassGain = audioCtx.createGain();
+                bassGain.gain.value = 0.7;
+                bassGain.connect(audioCtx.destination);
+                
+                // Create bass oscillator loop (dummy but effective)
+                function playBassDrop() {
+                    if (!audioCtx || !gameRunning) return;
+                    const now = audioCtx.currentTime;
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.value = 60;
+                    gain.gain.value = 0.5;
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start();
+                    gain.gain.exponentialRampToValueAtTime(0.00001, now + 0.3);
+                    osc.stop(now + 0.3);
+                    
+                    // extra bass rumble
+                    const osc2 = audioCtx.createOscillator();
+                    const gain2 = audioCtx.createGain();
+                    osc2.type = 'triangle';
+                    osc2.frequency.value = 80;
+                    gain2.gain.value = 0.3;
+                    osc2.connect(gain2);
+                    gain2.connect(audioCtx.destination);
+                    osc2.start();
+                    gain2.gain.exponentialRampToValueAtTime(0.00001, now + 0.2);
+                    osc2.stop(now + 0.2);
+                }
+                
+                // Piano notes (random melody)
+                function playPianoNote() {
+                    if (!audioCtx || !gameRunning) return;
+                    const notes = [261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 493.88];
+                    const randomNote = notes[Math.floor(Math.random() * notes.length)];
+                    const now = audioCtx.currentTime;
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.value = randomNote;
+                    gain.gain.value = 0.2;
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start();
+                    gain.gain.exponentialRampToValueAtTime(0.00001, now + 0.6);
+                    osc.stop(now + 0.6);
+                }
+                
+                // Schedule rhythmic bass drops + piano
+                let lastBeat = 0;
+                function beatLoop() {
+                    if (!gameRunning && audioCtx) return;
+                    const now = audioCtx.currentTime;
+                    if (now - lastBeat > 0.9) { // every ~0.9 sec
+                        lastBeat = now;
+                        bassDrop = true;
+                        playBassDrop();
+                        // random piano over melody
+                        if (Math.random() > 0.5) playPianoNote();
+                        // trigger visual glitch spike
+                        glitchIntensity = 0.8;
+                        beatPulse = 15;
+                    }
+                    requestAnimationFrame(() => {
+                        if(gameRunning) setTimeout(beatLoop, 400);
+                    });
+                }
+                
+                // start the loop only if game running
+                if(gameRunning) beatLoop();
+                isAudioReady = true;
+            }
+            
+            // ---------- OBSTACLE GEN ----------
+            function generateObstacle() {
+                const types = ['spike', 'saw', 'block', 'glitchBlock'];
+                const type = types[Math.floor(Math.random() * types.length)];
+                obstacles.push({
+                    x: canvas.width,
+                    y: GROUND_Y - 35,
+                    width: 30,
+                    height: 35,
+                    type: type,
+                    passed: false
+                });
+                
+                // double trouble sometimes!
+                if (Math.random() < 0.25 && gameRunning) {
+                    obstacles.push({
+                        x: canvas.width + 90,
+                        y: GROUND_Y - 50,
+                        width: 28,
+                        height: 50,
+                        type: 'saw',
+                        passed: false
+                    });
                 }
             }
             
-            // Crop growth
-            for(let c of crops) { c.growth += delta * 0.2; if(c.growth >= c.maxGrowth && Math.random()<0.02) { let reward = 2+Math.floor(Math.random()*3); inventory.seeds[c.type] += reward; showToast(`🍅 Harvested ${c.type} +${reward}`); crops.splice(crops.indexOf(c),1); updateUI(); } }
-            
-            // Towers auto-fire
-            for(let t of towers) {
-                t.cooldown -= delta;
-                for(let e of enemies) {
-                    if(Math.hypot(t.x - e.x, t.y - e.y) < t.range && t.cooldown <= 0) {
-                        e.hp -= t.damage;
-                        t.cooldown = 1.2;
-                        addDamageNumber(e.x, e.y, t.damage, true);
-                        if(e.hp <= 0) { enemies.splice(enemies.indexOf(e),1); addXP(15); player.coins += 3; updateUI(); }
+            // ---------- UPDATE ----------
+            function updateGame() {
+                if (!gameRunning) return;
+                
+                frame++;
+                
+                // Score increments over time
+                score += 0.2;
+                document.getElementById('score').innerText = `SCORE: ${Math.floor(score)}`;
+                if (Math.floor(score) > bestScore) {
+                    bestScore = Math.floor(score);
+                    localStorage.setItem('glitchBest', bestScore);
+                    document.getElementById('best').innerText = `BEST: ${bestScore}`;
+                }
+                
+                // Rhythm glitch intensity gradually fades
+                glitchIntensity *= 0.95;
+                if (bassDrop) {
+                    bassDrop = false;
+                }
+                if (beatPulse > 0) beatPulse -= 0.5;
+                
+                // Shape morphing every 4 secs
+                cube.shapeTimer++;
+                if (cube.shapeTimer > 120) { // ~2 sec at 60fps? adjusted
+                    cube.shapeTimer = 0;
+                    const shapes = ['cube', 'triangle', 'diamond', 'glitch'];
+                    let newShape = shapes[Math.floor(Math.random() * shapes.length)];
+                    cube.shape = newShape;
+                    glitchIntensity = 0.6;
+                }
+                
+                // Parallax
+                bgOffset = (bgOffset + 4) % 200;
+                
+                // Physics
+                cube.vy += GRAVITY;
+                cube.y += cube.vy;
+                
+                if (cube.y >= GROUND_Y - cube.height) {
+                    cube.y = GROUND_Y - cube.height;
+                    cube.vy = 0;
+                    cube.grounded = true;
+                } else {
+                    cube.grounded = false;
+                }
+                
+                if (cube.y < 0) cube.y = 0;
+                
+                // Obstacles logic
+                if (obstacleTimer <= 0 && gameRunning) {
+                    generateObstacle();
+                    obstacleTimer = 45 + Math.random() * 30; // frames between obstacles
+                } else {
+                    obstacleTimer--;
+                }
+                
+                for (let i = 0; i < obstacles.length; i++) {
+                    const obs = obstacles[i];
+                    obs.x -= 6.5;
+                    
+                    // collision detection (AABB)
+                    if (!obs.passed && obs.x < cube.x + cube.width && obs.x + obs.width > cube.x &&
+                        obs.y < cube.y + cube.height && obs.y + obs.height > cube.y) {
+                        // DIE! with audio and glitch explosion
+                        gameRunning = false;
+                        if (audioCtx) {
+                            // death sound: horrible bass crunch
+                            const deathOsc = audioCtx.createOscillator();
+                            const deathGain = audioCtx.createGain();
+                            deathOsc.type = 'square';
+                            deathOsc.frequency.value = 40;
+                            deathGain.gain.value = 0.5;
+                            deathOsc.connect(deathGain);
+                            deathGain.connect(audioCtx.destination);
+                            deathOsc.start();
+                            deathGain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.4);
+                            deathOsc.stop(audioCtx.currentTime + 0.4);
+                        }
+                        glitchIntensity = 2.0;
+                        document.getElementById('game-over').style.display = 'block';
                         break;
                     }
-                }
-            }
-            
-            // Companions orbit
-            for(let i=0;i<companions.length;i++) {
-                let c = companions[i];
-                c.angle += delta * 2.5;
-                c.x = player.x + Math.cos(c.angle) * c.distance;
-                c.y = player.y + Math.sin(c.angle) * c.distance;
-                for(let e of enemies) {
-                    if(Math.hypot(c.x - e.x, c.y - e.y) < 35) {
-                        e.hp -= c.damage * delta * 4;
-                        addDamageNumber(e.x, e.y, c.damage*delta*4, true);
-                        if(e.hp <= 0) { enemies.splice(enemies.indexOf(e),1); addXP(15); player.coins += 3; updateUI(); }
-                    }
-                }
-            }
-            
-            // Enemies
-            for(let i=0;i<enemies.length;i++) {
-                let e = enemies[i];
-                let dist = Math.hypot(e.x - player.x, e.y - player.y);
-                if(dist < 280) {
-                    let angle = Math.atan2(player.y - e.y, player.x - e.x);
-                    e.x += Math.cos(angle) * e.speed * delta;
-                    e.y += Math.sin(angle) * e.speed * delta;
-                    if(dist < 45) {
-                        if(e.attackCooldown <= 0) { 
-                            player.hp -= e.damage; 
-                            e.attackCooldown = 0.9; 
-                            addDamageNumber(player.x, player.y, e.damage, false);
-                            if(player.hp <= 0) { gameRunning = false; alert("GAME OVER"); location.reload(); } 
-                            updateUI(); 
-                        }
-                        if(e.type === "SNAIL" && e.attackTimer <= 0) {
-                            e.attackTimer = 2.5;
-                            player.hp -= 1;
-                            addDamageNumber(player.x, player.y, 1, false);
-                            showToast("🐌 Snail spits acid!");
-                        }
-                        e.hp -= getTotalDamage() * delta * 4;
-                        addDamageNumber(e.x, e.y, getTotalDamage() * delta * 4, true);
-                        attackAnimation = 0.3;
-                        if(e.hp <= 0) {
-                            enemies.splice(i,1); i--;
-                            let gain = e.type === "SNAIL" ? 40 : 15+player.level*2;
-                            addXP(gain); player.coins += e.type === "SNAIL" ? 15 : 3+Math.floor(Math.random()*5);
-                            updateUI(); showToast(`+${gain} XP`);
-                            for(let p=0;p<15;p++) particles.push({ x: e.x, y: e.y, life: 0.5, vx: (Math.random()-0.5)*50, vy: (Math.random()-0.5)*50 });
+                    
+                    // scoring per obstacle passed
+                    if (!obs.passed && obs.x + obs.width < cube.x) {
+                        obs.passed = true;
+                        score += 15;
+                        // piano happy note
+                        if (audioCtx && isAudioReady) {
+                            const noteOsc = audioCtx.createOscillator();
+                            const noteGain = audioCtx.createGain();
+                            noteOsc.type = 'sine';
+                            noteOsc.frequency.value = 523.25;
+                            noteGain.gain.value = 0.15;
+                            noteOsc.connect(noteGain);
+                            noteGain.connect(audioCtx.destination);
+                            noteOsc.start();
+                            noteGain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.3);
+                            noteOsc.stop(audioCtx.currentTime + 0.3);
                         }
                     }
                 }
-                if(e.attackCooldown > 0) e.attackCooldown -= delta;
-                if(e.attackTimer > 0) e.attackTimer -= delta;
+                
+                obstacles = obstacles.filter(obs => obs.x + obs.width > 0);
             }
             
-            // Rare items collection
-            for(let i=0;i<rareItems.length;i++) {
-                let r = rareItems[i];
-                if(Math.hypot(player.x - r.x, player.y - r.y) < 35) {
-                    player.coins += r.value;
-                    showToast(`✨ Found ${r.type} +${r.value} coins!`);
-                    rareItems.splice(i,1);
-                    updateUI();
+            // ---------- DRAW : GLITCH MASTERPIECE ----------
+            function draw() {
+                // Apply glitch transform if intensity > 0.1
+                ctx.save();
+                if (glitchIntensity > 0.1) {
+                    const shiftX = (Math.random() - 0.5) * 12 * glitchIntensity;
+                    const shiftY = (Math.random() - 0.5) * 6 * glitchIntensity;
+                    ctx.translate(shiftX, shiftY);
+                    // RGB split effect
+                    if (glitchIntensity > 0.4) {
+                        ctx.shadowBlur = 0;
+                        const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                        for (let i = 0; i < imgData.data.length; i += 4) {
+                            if (Math.random() < 0.05 * glitchIntensity) {
+                                imgData.data[i] = 255;     // R
+                                imgData.data[i+1] = 0;     // G
+                                imgData.data[i+2] = 255;   // B
+                            }
+                        }
+                        ctx.putImageData(imgData, 0, 0);
+                    }
                 }
-            }
-            
-            // Resource respawn
-            enemyRespawnTimer += delta;
-            if(enemyRespawnTimer > 45 && gameRunning) {
-                enemyRespawnTimer = 0;
-                let toSpawn = 2 + Math.floor(Math.random()*3);
-                for(let i=0;i<toSpawn;i++) spawnEnemy();
-                if(trees.length < 60) trees.push({ x: Math.random() * WORLD_SIZE, y: Math.random() * WORLD_SIZE, tapsNeeded: 8, tapsRemaining: 8 });
-                if(rocks.length < 60) rocks.push({ x: Math.random() * WORLD_SIZE, y: Math.random() * WORLD_SIZE, tapsNeeded: 8, tapsRemaining: 8 });
-                if(rareItems.length < 10) rareItems.push({ x: Math.random() * WORLD_SIZE, y: Math.random() * WORLD_SIZE, type: "💎", value: 10 });
-            }
-            
-            // Particles & damage numbers
-            for(let i=0;i<particles.length;i++) { particles[i].life -= delta; if(particles[i].life<=0) particles.splice(i,1), i--; else { particles[i].x += particles[i].vx * delta; particles[i].y += particles[i].vy * delta; } }
-            for(let i=0;i<damageNumbers.length;i++) { damageNumbers[i].life -= delta; if(damageNumbers[i].life<=0) damageNumbers.splice(i,1), i--; }
-            
-            eventTimer += delta;
-            if(eventTimer > 55 && gameRunning) {
-                eventTimer = 0;
-                let r = Math.random();
-                if(r<0.25) { player.coins += 15; showToast("💰 WANDERING TRADER +15 coins"); updateUI(); }
-                else if(r<0.5) { addXP(25); showToast("✨ MYSTIC SHRINE +25 XP"); }
-                else { for(let i=0;i<2;i++) spawnEnemy(); showToast("💀 ENEMY AMBUSH!"); }
-            }
-        }
-        
-        function draw() {
-            if(!ctx) return;
-            ctx.clearRect(0,0,width,height);
-            ctx.fillStyle = "#2a2a2a"; ctx.fillRect(0,0,width,height);
-            for(let i=0;i<600;i++) { ctx.fillStyle = `rgba(60,60,70,0.5)`; ctx.fillRect(((i*73)%width), ((i*41)%height), 4,4); }
-            
-            for(let t of tilledSoil) { let s=worldToScreen(t.x,t.y); ctx.fillStyle="#5a3a2a"; ctx.fillRect(s.x-20,s.y-14,40,28); ctx.fillStyle="#7a5a3a"; ctx.fillRect(s.x-17,s.y-10,34,22); }
-            for(let c of crops) { let s=worldToScreen(c.x,c.y); let size = 6+(c.growth/c.maxGrowth)*12; ctx.fillStyle="#aaff77"; ctx.fillRect(s.x-size/2,s.y-size,size,size*1.5); ctx.fillStyle="yellow"; ctx.fillText(c.type[0], s.x-3,s.y-3); }
-            for(let t of trees) { let s=worldToScreen(t.x,t.y); ctx.fillStyle="#4a3a2a"; ctx.fillRect(s.x-8,s.y-15,16,30); ctx.fillStyle="#2a8c2a"; ctx.beginPath(); ctx.arc(s.x,s.y-18,14,0,Math.PI*2); ctx.fill(); ctx.fillStyle="white"; ctx.fillText(`${t.tapsRemaining}`, s.x-4,s.y-26); }
-            for(let r of rocks) { let s=worldToScreen(r.x,r.y); ctx.fillStyle="#111"; ctx.fillRect(s.x-10,s.y-7,20,14); ctx.fillStyle="#333"; ctx.fillRect(s.x-8,s.y-5,16,10); ctx.fillStyle="white"; ctx.fillText(`${r.tapsRemaining}`, s.x-4,s.y-12); }
-            for(let r of rareItems) { let s=worldToScreen(r.x,r.y); ctx.font="20px monospace"; ctx.fillStyle="gold"; ctx.fillText(r.type, s.x-8, s.y-8); }
-            for(let t of towers) { let s=worldToScreen(t.x,t.y); ctx.fillStyle="#888"; ctx.fillRect(s.x-10,s.y-15,20,30); ctx.fillStyle="#aa8866"; ctx.fillRect(s.x-6,s.y-20,12,10); }
-            
-            for(let e of enemies) {
-                let s=worldToScreen(e.x,e.y);
-                if(e.type === "SNAIL") {
-                    ctx.fillStyle = "#8a6a4a";
-                    ctx.beginPath(); ctx.ellipse(s.x,s.y,22,16,0,0,Math.PI*2); ctx.fill();
-                    ctx.fillStyle = "#aa8866"; ctx.beginPath(); ctx.ellipse(s.x+8,s.y-6,8,6,0,0,Math.PI*2); ctx.fill();
-                    ctx.fillStyle = "#5a3a2a"; ctx.fillRect(s.x-20,s.y-5,40,6);
-                    ctx.fillStyle = "#ffaa66"; ctx.fillRect(s.x-15,s.y-12, (e.hp/e.maxHp)*30,4);
-                } else {
-                    ctx.fillStyle = "#2a1a1a"; ctx.beginPath(); ctx.ellipse(s.x,s.y,18,14,0,0,Math.PI*2); ctx.fill();
-                    for(let leg=0;leg<8;leg++) { let angle = Math.PI*2*leg/8; ctx.beginPath(); ctx.moveTo(s.x,s.y); ctx.lineTo(s.x+Math.cos(angle)*22, s.y+Math.sin(angle)*12); ctx.lineWidth=3; ctx.stroke(); }
-                    ctx.fillStyle = "#aa3333"; ctx.beginPath(); ctx.arc(s.x-6,s.y-4,3,0,Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(s.x+6,s.y-4,3,0,Math.PI*2); ctx.fill();
-                    ctx.fillStyle = "white"; ctx.fillRect(s.x-15,s.y-18, (e.hp/e.maxHp)*30,4);
+                
+                // ---- BACKGROUND ----
+                const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+                grad.addColorStop(0, '#0a0020');
+                grad.addColorStop(1, '#1a0035');
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Neon grid
+                ctx.strokeStyle = '#0ff';
+                ctx.lineWidth = 2;
+                ctx.globalAlpha = 0.3 + (beatPulse / 40);
+                for (let i = 0; i < canvas.width + 60; i += 60) {
+                    ctx.beginPath();
+                    ctx.moveTo(i - bgOffset % 60, canvas.height);
+                    ctx.lineTo(i - bgOffset % 60 + 20, GROUND_Y);
+                    ctx.stroke();
                 }
-            }
-            
-            for(let c of companions) { let s=worldToScreen(c.x,c.y); ctx.fillStyle="#3a6ea5"; ctx.fillRect(s.x-8,s.y-12,16,24); ctx.fillStyle="#e8c8a0"; ctx.beginPath(); ctx.arc(s.x,s.y-8,10,0,Math.PI*2); ctx.fill(); ctx.fillStyle="white"; ctx.fillText("⚔️", s.x-5,s.y-5); }
-            
-            let ps = worldToScreen(player.x, player.y);
-            if(attackAnimation > 0) { ctx.beginPath(); ctx.moveTo(ps.x+15, ps.y-5); ctx.lineTo(ps.x+45, ps.y-15); ctx.lineTo(ps.x+40, ps.y+5); ctx.fillStyle = "rgba(255,200,100,0.8)"; ctx.fill(); }
-            ctx.fillStyle="#3a6ea5"; ctx.fillRect(ps.x-12,ps.y-8,24,32);
-            ctx.fillStyle="#e8c8a0"; ctx.beginPath(); ctx.arc(ps.x,ps.y-14,14,0,Math.PI*2); ctx.fill();
-            ctx.fillStyle="#5a3a2a"; ctx.fillRect(ps.x-12,ps.y-26,24,14);
-            ctx.fillStyle="white"; ctx.beginPath(); ctx.arc(ps.x-6,ps.y-17,3,0,Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(ps.x+6,ps.y-17,3,0,Math.PI*2); ctx.fill();
-            if(currentWeapon.name === "Spear") { ctx.fillStyle="#8a6a4a"; ctx.fillRect(ps.x+12,ps.y-12,25,5); ctx.fillStyle="#aaa"; ctx.fillRect(ps.x+32,ps.y-13,8,7); }
-            else if(currentWeapon.name === "Sword") { ctx.fillStyle="#ccaa88"; ctx.fillRect(ps.x+12,ps.y-14,28,6); ctx.fillStyle="#ffcc44"; ctx.fillRect(ps.x+35,ps.y-16,10,10); }
-            else if(currentWeapon.name === "Crossbow") { ctx.fillStyle="#8a6a4a"; ctx.fillRect(ps.x+12,ps.y-15,30,10); ctx.fillStyle="#aaa"; ctx.fillRect(ps.x+38,ps.y-13,12,6); }
-            ctx.fillStyle="white"; ctx.font="bold 9px monospace"; ctx.fillText("SURVIVOR", ps.x-20, ps.y-30);
-            
-            for(let d of damageNumbers) {
-                let s = worldToScreen(d.x, d.y);
-                ctx.fillStyle = d.isEnemy ? "#ff6666" : "#ffaa66";
-                ctx.font = `bold ${14 - d.life*8}px monospace`;
-                ctx.fillText(`-${d.amount}`, s.x-10, s.y-20 - (1-d.life)*20);
-            }
-            for(let p of particles) { let s=worldToScreen(p.x,p.y); ctx.fillStyle=`rgba(200,50,50,${p.life*0.8})`; ctx.fillRect(s.x-2,s.y-2,4,4); }
-        }
-        
-        function handleTap(e) {
-            if(!gameRunning) return;
-            e.preventDefault();
-            let rect = canvas.getBoundingClientRect();
-            let sx = (e.touches ? e.touches[0].clientX : e.clientX);
-            let sy = (e.touches ? e.touches[0].clientY : e.clientY);
-            let wx = camera.x + sx, wy = camera.y + sy;
-            targetX = wx; targetY = wy;
-            for(let i=0;i<trees.length;i++) { if(Math.hypot(wx - trees[i].x, wy - trees[i].y) < 50) { trees[i].tapsRemaining -= getTotalDamage(); if(trees[i].tapsRemaining<=0) { trees.splice(i,1); player.wood+=5+Math.floor(Math.random()*4); showToast(`+${5}🪵`); updateUI(); } return; } }
-            for(let i=0;i<rocks.length;i++) { if(Math.hypot(wx - rocks[i].x, wy - rocks[i].y) < 50) { rocks[i].tapsRemaining -= getTotalDamage(); if(rocks[i].tapsRemaining<=0) { rocks.splice(i,1); player.stone+=3+Math.floor(Math.random()*3); showToast(`+${3}🪨`); updateUI(); } return; } }
-            for(let i=0;i<rareItems.length;i++) { if(Math.hypot(wx - rareItems[i].x, wy - rareItems[i].y) < 35) { player.coins += rareItems[i].value; showToast(`✨ +${rareItems[i].value} coins!`); rareItems.splice(i,1); updateUI(); return; } }
-        }
-        
-        function startNewGame() {
-            gameRunning = true;
-            document.getElementById('startOverlay').style.display = 'none';
-            document.getElementById('actionButtons').style.display = 'flex';
-            // Reset all arrays
-            trees = [];
-            rocks = [];
-            rareItems = [];
-            tilledSoil = [];
-            crops = [];
-            enemies = [];
-            towers = [];
-            companions = [];
-            particles = [];
-            damageNumbers = [];
-            targetX = null;
-            targetY = null;
-            actionMode = "move";
-            dayCount = 1;
-            timeOfDay = 0;
-            isNight = false;
-            player = {
-                x: WORLD_SIZE/2, y: WORLD_SIZE/2,
-                hp: 500, maxHp: 500,
-                baseDamage: 1,
-                level: 1, xp: 0, xpNeeded: 100,
-                coins: 25,
-                wood: 10, stone: 5,
-                hunger: 100,
-                food: { Fish: 4, Berry: 8 }
-            };
-            inventory = {
-                seeds: { Pumpkin: 5, Apple: 3, Corn: 6, Wheat: 4, Carrot: 5 },
-                selectedCrop: "Pumpkin"
-            };
-            currentWeapon = { name: "Fists", damage: 0, bonus: 0 };
-            campfireX = player.x;
-            campfireY = player.y;
-            spawnWorld();
-            updateUI();
-            showToast("🌍 Welcome to Survival Realms!");
-        }
-        
-        // Event listeners
-        document.getElementById('startBtn').onclick = () => { startNewGame(); };
-        document.getElementById('loadBtn').onclick = () => { if(loadGame()) { gameRunning = true; document.getElementById('startOverlay').style.display = 'none'; document.getElementById('actionButtons').style.display = 'flex'; showToast("📀 Game loaded!"); } };
-        document.getElementById('tillBtn').onclick = () => { actionMode = "till"; document.getElementById('modeIndicator').innerHTML = "🌾 TILL MODE"; document.getElementById('exitModeBtn').style.display = 'block'; };
-        document.getElementById('exitModeBtn').onclick = () => { actionMode = "move"; document.getElementById('modeIndicator').innerHTML = "📍 MOVE MODE"; document.getElementById('exitModeBtn').style.display = 'none'; };
-        document.getElementById('shopWeaponBtn').onclick = () => { document.getElementById('weaponShop').style.display = 'flex'; };
-        document.getElementById('buildTowerBtn').onclick = () => { buildTower(player.x, player.y); };
-        document.getElementById('buyCompanionBtn').onclick = () => { buyCompanion(); };
-        document.getElementById('buySpear').onclick = () => buyWeapon("Spear", 50, 5);
-        document.getElementById('buySword').onclick = () => buyWeapon("Sword", 100, 12);
-        document.getElementById('buyCrossbow').onclick = () => buyWeapon("Crossbow", 200, 25);
-        document.getElementById('closeShop').onclick = () => document.getElementById('weaponShop').style.display = 'none';
-        document.getElementById('saveBtn').onclick = () => saveGame();
-        
-        canvas.addEventListener('touchstart', handleTap);
-        canvas.addEventListener('mousedown', handleTap);
-        window.addEventListener('resize', ()=>{ resize(); updateCamera(); });
-        resize();
-        
-        let lastTime = 0;
-        function loop(now) { 
-            let delta = Math.min(0.033, (now - lastTime) / 1000); 
-            if(delta > 0.01 && gameRunning) { 
-                updateGame(delta); 
-                updateCamera(); 
-                draw(); 
-            } 
-            lastTime = now; 
-            requestAnimationFrame(loop); 
-        }
-        loop(performance.now());
-        
-        // Initial draw
-        draw();
-    })();
-</script>
-</body>
-</html>
+                ctx.globalAlpha = 1;
+                
+                // Ground
+                ctx.fillStyle = '#2a0a4a';
+                ctx.fillRect(0, GROUND_Y, canvas.width, 10);
+                ctx.fillStyle = '#f0f';
+                ctx.fillRect(0, GROUND_Y + 5, canvas.width, 5);
+                
+                // Beat flash
+                if (beatPulse > 2) {
+                    ctx.fillStyle = `rgba(255, 0, 255, ${Math.min(0.3, beatPulse / 30)})`;
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                }
+                
+                // ---- OBSTACLES ----
+                for (let obs of obstacles) {
+                    if (obs.type === 'spike') {
+                        ctx.fillStyle = '#ff3366';
+                        ctx.beginPath();
+                        ctx.moveTo(obs.x + obs.width/2, obs.y);
+                        ctx.lineTo(obs.x, obs.y + obs.height);
+                        ctx.lineTo(obs.x + obs.width, obs.y + obs.height);
+                        ctx.fill();
+                    } else if (obs.type === 'saw') {
+                        ctx.fillStyle = '#ffaa33';
+                        ctx.shadowBlur = 10;
+                        ctx.shadowColor = '#ff6600';
+                        ctx.beginPath();
+                        for (let i = 0; i < 8; i++) {
+                            let angle = (i * Math.PI * 2 / 8);
+                            let x1 = obs.x + obs.width/2 + Math.cos(angle) * 15;
+                            let y1 = obs.y + obs.height/2 + Math.sin(angle) * 15;
+                            if(i===0) ctx.moveTo(x1, y1);
+                            else ctx.lineTo(x1, y1);
+                        }
+                        ctx.fill();
+                        ctx.shadowBlur = 0;
+                    } else if (obs.type === 'block') {
+                        ctx.fillStyle = '#33ccff';
+                        ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
+                    } else {
+                        // glitchBlock
+                        ctx.fillStyle = '#00ffcc';
+                        ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
+                        ctx.fillStyle = '#ff00ff';
+                        ctx.fillRect(obs.x + 4, obs.y + 4, obs.width-8, obs.height-8);
+                    }
+                }
+                
+                // ---- PLAYER CUBE / SHAPE SHIFTING ----
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = '#0ff';
+                ctx.fillStyle = '#ff44ee';
+                if (cube.shape === 'cube') {
+                    ctx.fillRect(cube.x, cube.y, cube.width, cube.height);
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(cube.x+8, cube.y+8, 6, 6);
+                    ctx.fillRect(cube.x+22, cube.y+8, 6, 6);
+                } else if (cube.shape === 'triangle') {
+                    ctx.beginPath();
+                    ctx.moveTo(cube.x + cube.width/2, cube.y);
+                    ctx.lineTo(cube.x, cube.y + cube.height);
+                    ctx.lineTo(cube.x + cube.width, cube.y + cube.height);
+                    ctx.fill();
+                } else if (cube.shape === 'diamond') {
+                    ctx.beginPath();
+                    ctx.moveTo(cube.x + cube.width/2, cube.y);
+                    ctx.lineTo(cube.x + cube.width, cube.y + cube.height/2);
+                    ctx.lineTo(cube.x + 
