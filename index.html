@@ -1,806 +1,422 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Nova Realms: White Cube Survival (ACID SNAILS)</title>
-    <style>
-        * {
-            user-select: none;
-            touch-action: manipulation;
-            box-sizing: border-box;
-        }
-        body {
-            margin: 0;
-            min-height: 100vh;
-            background: #1e1e1e;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-family: 'Courier New', monospace;
-            touch-action: none;
-            padding: 8px;
-        }
-        .game-container {
-            position: relative;
-            background: #2e2e2e;
-            border-radius: 28px;
-            box-shadow: 0 12px 28px black;
-            display: inline-block;
-        }
-        canvas {
-            display: block;
-            margin: 0 auto;
-            border-radius: 24px;
-            cursor: crosshair;
-            touch-action: none;
-            width: 100%;
-            height: auto;
-        }
-        .ui-overlay {
-            position: absolute;
-            bottom: 8px;
-            left: 8px;
-            right: 8px;
-            pointer-events: none;
-            z-index: 20;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-        .stats-panel {
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(6px);
-            border-radius: 40px;
-            padding: 6px 12px;
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            font-size: 12px;
-            font-weight: bold;
-            color: #ffe6b3;
-            border: 1px solid #d99e3e;
-            font-family: monospace;
-            pointer-events: none;
-            gap: 8px;
-        }
-        .inventory-bar {
-            background: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(12px);
-            border-radius: 48px;
-            padding: 8px 12px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            justify-content: center;
-            pointer-events: auto;
-            border: 1px solid #aaa;
-        }
-        .inv-slot {
-            background: #2c2418;
-            border-radius: 36px;
-            padding: 4px 12px;
-            font-size: 15px;
-            font-weight: bold;
-            color: #ffeaac;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            border: 1px solid #b87c2e;
-            box-shadow: inset 0 1px 1px rgba(0,0,0,0.6), 0 1px 2px rgba(255,215,140,0.3);
-            pointer-events: auto;
-            touch-action: manipulation;
-            cursor: pointer;
-            transition: 0.05s linear;
-            white-space: nowrap;
-        }
-        .inv-slot:active {
-            transform: scale(0.96);
-            background: #1f1a10;
-        }
-        .craft-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            justify-content: center;
-            margin-top: 4px;
-            pointer-events: auto;
-        }
-        .craft-btn {
-            background: #4e3219;
-            border: none;
-            color: #ffdfa5;
-            font-weight: bold;
-            border-radius: 60px;
-            padding: 6px 14px;
-            font-size: 11px;
-            font-family: monospace;
-            font-weight: bold;
-            box-shadow: 0 2px 4px black;
-            touch-action: manipulation;
-            cursor: pointer;
-            transition: 0.05s linear;
-            white-space: nowrap;
-        }
-        .craft-btn:active {
-            transform: scale(0.96);
-            background: #2f1f0e;
-        }
-        .dps-pop {
-            position: absolute;
-            font-size: 22px;
-            font-weight: bold;
-            color: #ff7777;
-            text-shadow: 1px 1px 0 black;
-            pointer-events: none;
-            z-index: 200;
-            font-family: monospace;
-            animation: floatUp 0.55s ease-out forwards;
-        }
-        @keyframes floatUp {
-            0% { opacity: 1; transform: translateY(0px) scale(1); }
-            100% { opacity: 0; transform: translateY(-40px) scale(1.1); }
-        }
-        .message-tip {
-            position: absolute;
-            top: 12px;
-            left: 12px;
-            background: #000000bb;
-            color: #f2c94c;
-            padding: 5px 12px;
-            border-radius: 28px;
-            font-size: 10px;
-            font-weight: bold;
-            font-family: monospace;
-            pointer-events: none;
-            backdrop-filter: blur(4px);
-            z-index: 30;
-            max-width: 70%;
-        }
-        @media (max-width: 700px) {
-            .stats-panel { font-size: 9px; padding: 4px 8px; gap: 4px; }
-            .inv-slot { font-size: 11px; padding: 3px 8px; }
-            .craft-btn { font-size: 9px; padding: 4px 10px; }
-            .message-tip { font-size: 8px; top: 6px; left: 6px; }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+  <title>Copper Realms - Command Center</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background: linear-gradient(145deg, #1a0f05 0%, #2c1a0a 100%);
+      font-family: 'Segoe UI', 'Roboto', 'Impact', 'Arial Black', sans-serif;
+      padding: 20px;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* Main container - big tap targets */
+    .container {
+      max-width: 600px;
+      width: 100%;
+      margin: 0 auto;
+      background: rgba(0, 0, 0, 0.5);
+      border-radius: 64px;
+      padding: 24px 20px 40px;
+      backdrop-filter: blur(2px);
+      box-shadow: 0 20px 35px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,215,130,0.2);
+      border: 1px solid rgba(205, 127, 50, 0.4);
+    }
+
+    /* Header */
+    h1 {
+      font-family: 'Impact', 'Arial Black', sans-serif;
+      font-size: 3.2rem;
+      text-align: center;
+      letter-spacing: 3px;
+      background: linear-gradient(135deg, #FDB72A 0%, #CD7F32 40%, #B87333 80%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-shadow: 0 2px 5px rgba(0,0,0,0.3);
+      margin-bottom: 8px;
+      word-break: keep-all;
+    }
+
+    /* Date/Time panel */
+    .datetime {
+      text-align: center;
+      font-family: monospace;
+      font-weight: bold;
+      font-size: 1.2rem;
+      background: #2e241d;
+      display: inline-block;
+      width: 100%;
+      padding: 12px;
+      border-radius: 60px;
+      margin: 15px 0 25px;
+      color: #e7b874;
+      border: 1px solid #c27e3a;
+      box-shadow: inset 0 0 8px rgba(0,0,0,0.5), 0 4px 8px rgba(0,0,0,0.2);
+    }
+
+    /* Card style for stats */
+    .stat-card {
+      background: #1f160e;
+      border-radius: 48px;
+      padding: 18px 20px;
+      margin-bottom: 25px;
+      border-left: 8px solid #cd7f32;
+      box-shadow: 0 8px 12px rgba(0,0,0,0.3);
+    }
+
+    .stat-label {
+      font-size: 1rem;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #c98f4b;
+      margin-bottom: 8px;
+    }
+
+    .stat-value {
+      font-size: 2.2rem;
+      font-weight: 800;
+      font-family: monospace;
+      color: #ffcd94;
+      text-shadow: 0 2px 3px black;
+      letter-spacing: 1px;
+    }
+
+    /* Button row */
+    .button-row {
+      display: flex;
+      gap: 18px;
+      margin-top: 15px;
+      flex-wrap: wrap;
+    }
+
+    .copper-btn {
+      flex: 1;
+      background: radial-gradient(circle at 30% 10%, #e09d42, #a0522d);
+      border: none;
+      padding: 16px 10px;
+      border-radius: 60px;
+      font-size: 1.4rem;
+      font-weight: bold;
+      font-family: 'Segoe UI', 'Roboto', 'Impact', sans-serif;
+      color: #2a1808;
+      text-shadow: 0 1px 0 #ffce8e;
+      box-shadow: 0 5px 0 #5e2e14;
+      transition: 0.07s linear;
+      cursor: pointer;
+      text-align: center;
+      letter-spacing: 1px;
+      min-width: 100px;
+    }
+
+    .copper-btn:active {
+      transform: translateY(3px);
+      box-shadow: 0 2px 0 #5e2e14;
+    }
+
+    /* Reset/nuke small button */
+    .reset-area {
+      margin-top: 15px;
+      text-align: center;
+    }
+    .small-btn {
+      background: #3a2a1c;
+      border: 1px solid #b87333;
+      padding: 10px 20px;
+      border-radius: 50px;
+      color: #cf9f5e;
+      font-weight: bold;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+    .small-btn:active {
+      background: #201608;
+    }
+
+    .total-banked {
+      background: linear-gradient(115deg, #2c1d10, #1e130b);
+      border: 2px solid #f0b45a;
+    }
+
+    .total-banked .stat-value {
+      font-size: 2.6rem;
+      color: #f7bc5a;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 0.7rem;
+      color: #9b7a48;
+    }
+  </style>
 </head>
 <body>
-<div class="game-container">
-    <canvas id="gameCanvas" width="1000" height="700"></canvas>
-    <div class="ui-overlay">
-        <div class="stats-panel" id="statsPanel">
-            <span>❤️ <span id="hpVal">500</span>/<span id="maxHpVal">500</span></span>
-            <span>⚔️ Lv.<span id="lvlVal">1</span></span>
-            <span>🌀 RING:<span id="ringDmg">1</span></span>
-            <span>🌞 DAY <span id="dayVal">1</span>/99</span>
-            <span>⏱️ <span id="timeLeft">120</span>s</span>
-            <span>🕷️ KILLS:<span id="killsVal">0</span></span>
-        </div>
-        <div class="inventory-bar" id="inventoryBar"></div>
-        <div class="craft-row" id="craftRow">
-            <button class="craft-btn" id="craftCrossbowBtn">🔨 CROSSBOW (10🌲/8🪨)</button>
-            <button class="craft-btn" id="craftBoltsBtn">🏹 BOLTS +5 (3🌲/2🪨)</button>
-            <button class="craft-btn" id="craftCampfireBtn">🔥 CAMPFIRE (15🌲/10🪨)</button>
-            <button class="craft-btn" id="craftWallBtn">🧱 WALL (12🌲/8🪨)</button>
-            <button class="craft-btn" id="craftTowerBtn">🗼 TOWER (20🌲/15🪨)</button>
-        </div>
+
+<div class="container">
+  <h1>⚡ COPPER REALMS ⚡</h1>
+  <div class="datetime">
+    <span id="dateDisplay">--</span> &nbsp;|&nbsp; 
+    <span id="timeDisplay">--:--:--</span>
+  </div>
+
+  <!-- Lbs Received -->
+  <div class="stat-card">
+    <div class="stat-label">📦 LBS RECEIVED (TODAY)</div>
+    <div class="stat-value" id="receivedValue">0</div>
+    <div class="button-row">
+      <button class="copper-btn" id="addReceived50">+50 lbs</button>
+      <button class="copper-btn" id="addReceived100">+100 lbs</button>
+      <button class="copper-btn" id="resetReceivedBtn">↺ RESET</button>
     </div>
-    <div class="message-tip" id="tipMsg">📱 TAP GROUND → MOVE | 🟩 RING DMG | 🔫 EQUIP CROSSBOW & TAP TO FIRE</div>
+  </div>
+
+  <!-- Lbs Refined -->
+  <div class="stat-card">
+    <div class="stat-label">⚙️ LBS REFINED (TODAY)</div>
+    <div class="stat-value" id="refinedValue">0</div>
+    <div class="button-row">
+      <button class="copper-btn" id="addRefined50">+50 lbs</button>
+      <button class="copper-btn" id="addRefined100">+100 lbs</button>
+      <button class="copper-btn" id="resetRefinedBtn">↺ RESET</button>
+    </div>
+  </div>
+
+  <!-- Total Copper Banked (persistent across days) -->
+  <div class="stat-card total-banked">
+    <div class="stat-label">🏦 TOTAL COPPER BANKED (ALL TIME)</div>
+    <div class="stat-value" id="bankedValue">0</div>
+    <div class="button-row">
+      <button class="copper-btn" id="addToBankBtn" style="background: radial-gradient(#b87333, #7a3e1a);">➕ ADD TODAY'S REFINED TO BANK</button>
+    </div>
+    <div style="margin-top: 12px; font-size:0.8rem; color:#c27e4a;">*Tap to move today's refined lbs into permanent bank</div>
+  </div>
+
+  <!-- Quick actions -->
+  <div class="reset-area">
+    <button class="small-btn" id="resetDailyBtn">🔄 RESET TODAY'S RECEIVED & REFINED</button>
+    <button class="small-btn" id="fullResetBtn" style="margin-left:10px;">⚠️ NUKE ALL DATA ⚠️</button>
+  </div>
+  <footer>copper realms • command center • auto-save</footer>
 </div>
 
 <script>
-    (function(){
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        let camera = { x: 0, y: 0 };
-        const MAP_SIZE = 3800;
-        
-        // ----- PLAYER -----
-        let player = {
-            x: MAP_SIZE/2, y: MAP_SIZE/2,
-            hp: 500, maxHp: 500,
-            level: 1, xp: 0,
-            ringDamage: 1,
-            hasCrossbow: false,
-            selectedWeapon: null,
-            boltCount: 0,
-            moveTarget: null
-        };
-        
-        // ----- GAME STATE -----
-        let game = {
-            day: 1,
-            dayTimer: 120,
-            kills: 0,
-            gameOver: false,
-            victory: false
-        };
-        
-        // dynamic entities
-        let resources = [];     // trees & stone
-        let structures = [];    // walls, towers, campfires
-        let enemies = [];       // spiders + snails
-        let projectiles = [];   // acid spit
-        
-        let wood = 5;
-        let stone = 5;
-        
-        // helper functions
-        function updateUI() {
-            document.getElementById('hpVal').innerText = Math.floor(player.hp);
-            document.getElementById('maxHpVal').innerText = player.maxHp;
-            document.getElementById('lvlVal').innerText = player.level;
-            document.getElementById('ringDmg').innerText = player.ringDamage;
-            document.getElementById('dayVal').innerText = `${game.day}`;
-            document.getElementById('timeLeft').innerText = Math.floor(game.dayTimer);
-            document.getElementById('killsVal').innerText = game.kills;
-            renderInventoryBar();
-        }
-        
-        function renderInventoryBar() {
-            const bar = document.getElementById('inventoryBar');
-            bar.innerHTML = '';
-            let resDiv = document.createElement('div');
-            resDiv.className = 'inv-slot';
-            resDiv.innerHTML = `<span>🪵</span> ${wood}  <span>🪨</span> ${stone}`;
-            bar.appendChild(resDiv);
-            
-            let boltsDiv = document.createElement('div');
-            boltsDiv.className = 'inv-slot';
-            boltsDiv.innerHTML = `<span>🏹</span> ${player.boltCount}`;
-            bar.appendChild(boltsDiv);
-            
-            if(player.hasCrossbow){
-                let bowSlot = document.createElement('div');
-                bowSlot.className = 'inv-slot';
-                bowSlot.innerHTML = `<span>🏹🔫</span> CROSSBOW`;
-                bowSlot.addEventListener('touchstart', (e) => { e.preventDefault(); equipCrossbow(); });
-                bowSlot.addEventListener('mousedown', (e) => { e.preventDefault(); equipCrossbow(); });
-                bar.appendChild(bowSlot);
-            }
-        }
-        
-        function equipCrossbow(){
-            if(!player.hasCrossbow) return;
-            player.selectedWeapon = 'crossbow';
-            showTip("⚡ Crossbow READY — tap on enemies to fire! (cost 1 bolt)", 1200);
-        }
-        
-        function addDPSPopup(x,y, dmg, isAcid=false){
-            const div = document.createElement('div');
-            div.className = 'dps-pop';
-            div.innerText = isAcid ? `💧-${dmg}` : `-${dmg}`;
-            let canvasRect = canvas.getBoundingClientRect();
-            let screenX = (x - camera.x) * (canvas.width/ canvas.clientWidth) + canvasRect.left;
-            let screenY = (y - camera.y) * (canvas.height/ canvas.clientHeight) + canvasRect.top;
-            div.style.position = 'fixed';
-            div.style.left = screenX + 'px';
-            div.style.top = screenY + 'px';
-            document.body.appendChild(div);
-            setTimeout(()=> div.remove(), 500);
-        }
-        
-        function showTip(msg, duration=1800){
-            let tipDiv = document.getElementById('tipMsg');
-            tipDiv.style.opacity = '1';
-            tipDiv.innerText = msg;
-            setTimeout(()=> {
-                if(tipDiv.innerText === msg) tipDiv.style.opacity = '0.7';
-            }, duration);
-        }
-        
-        // Ring damage (passive)
-        function applyRingDamage(){
-            const ringRadius = 75 + player.level * 5;
-            for(let i=0;i<enemies.length;i++){
-                const e = enemies[i];
-                const dx = e.x - player.x, dy = e.y - player.y;
-                if(Math.hypot(dx,dy) < ringRadius){
-                    e.hp -= player.ringDamage;
-                    addDPSPopup(e.x, e.y, player.ringDamage);
-                    if(e.hp <= 0){
-                        let dropStone = (e.type === 'snail') ? 3 : 1;
-                        stone += dropStone;
-                        showTip(`+${dropStone}🪨`, 400);
-                        enemies.splice(i,1);
-                        game.kills++;
-                        player.xp += 10;
-                        checkLevelUp();
-                        i--;
-                    }
-                }
-            }
-        }
-        
-        function checkLevelUp(){
-            let needed = player.level * 20;
-            while(player.xp >= needed){
-                player.level++;
-                player.xp -= needed;
-                player.maxHp += 20;
-                player.hp = player.maxHp;
-                player.ringDamage += 1;
-                showTip(`✨ LEVEL UP! +20 HP | RING DMG +1`, 1100);
-                needed = player.level * 20;
-                updateUI();
-            }
-        }
-        
-        // Enemy spawning: spiders + snails (snail every 5-6 enemies)
-        function spawnEnemies(){
-            let maxEnemies = 12 + Math.floor(game.day/8);
-            if(enemies.length < maxEnemies){
-                let isSnail = (Math.random() < 0.18); // ~1 snail per 5-6 spawns
-                let side = Math.floor(Math.random()*4);
-                let x,y;
-                let margin = 420;
-                if(side===0){ x = player.x + 450 + Math.random()*280; y = player.y - 220 + Math.random()*440;}
-                else if(side===1){ x = player.x - 730 + Math.random()*280; y = player.y - 220 + Math.random()*440;}
-                else if(side===2){ x = player.x - 220 + Math.random()*440; y = player.y + 460 + Math.random()*280;}
-                else { x = player.x - 220 + Math.random()*440; y = player.y - 750 + Math.random()*280;}
-                x = Math.min(MAP_SIZE-50, Math.max(50,x));
-                y = Math.min(MAP_SIZE-50, Math.max(50,y));
-                
-                if(isSnail){
-                    enemies.push({
-                        x, y, hp: 50, maxHp: 50, type: 'snail',
-                        size: 28, speed: 38, dmg: 1, attackTimer: 0,
-                        rangedCooldown: 0
-                    });
-                } else {
-                    enemies.push({
-                        x, y, hp: 50, maxHp: 50, type: 'spider',
-                        size: 24, speed: 108, dmg: 1, attackTimer: 0
-                    });
-                }
-            }
-        }
-        
-        // update enemies: movement, melee, snail ranged attack
-        function updateEnemies(deltaSec){
-            for(let i=0;i<enemies.length;i++){
-                let e = enemies[i];
-                let distToPlayer = Math.hypot(e.x - player.x, e.y - player.y);
-                let activeRange = (e.type === 'snail') ? 400 : 290;
-                if(distToPlayer < activeRange){
-                    let angle = Math.atan2(player.y - e.y, player.x - e.x);
-                    let move = e.speed * deltaSec;
-                    e.x += Math.cos(angle) * move;
-                    e.y += Math.sin(angle) * move;
-                    
-                    // SNAIL ranged attack (acid spit)
-                    if(e.type === 'snail'){
-                        if(e.rangedCooldown <= 0 && distToPlayer < 290){
-                            // shoot acid projectile
-                            let projAngle = angle;
-                            projectiles.push({
-                                x: e.x, y: e.y, targetX: player.x, targetY: player.y,
-                                angle: projAngle, speed: 280, damage: 1, life: true,
-                                range: 400, traveled: 0
-                            });
-                            e.rangedCooldown = 2.2;
-                            showTip(`🐌 ACID SPIT!`, 500);
-                        }
-                        if(e.rangedCooldown > 0) e.rangedCooldown -= deltaSec;
-                    }
-                    
-                    // melee attack (both spider and snail if close)
-                    if(distToPlayer < 40 && player.hp>0){
-                        if(e.attackTimer <=0){
-                            player.hp -= e.dmg;
-                            addDPSPopup(player.x, player.y, e.dmg, false);
-                            e.attackTimer = 1.0;
-                            if(player.hp <= 0) gameOver();
-                        }
-                    }
-                }
-                if(e.attackTimer>0) e.attackTimer -= deltaSec;
-                
-                // wall collision (walls block path)
-                for(let s of structures){
-                    if(s.type === 'wall'){
-                        let wallRadius = 32;
-                        let dx = e.x - s.x, dy = e.y - s.y;
-                        let dist = Math.hypot(dx,dy);
-                        if(dist < wallRadius+20){
-                            let angle = Math.atan2(dy,dx);
-                            let overlap = (wallRadius+20) - dist;
-                            e.x += Math.cos(angle)*overlap;
-                            e.y += Math.sin(angle)*overlap;
-                        }
-                    }
-                }
-                e.x = Math.min(MAP_SIZE-25, Math.max(25, e.x));
-                e.y = Math.min(MAP_SIZE-25, Math.max(25, e.y));
-                if(e.hp <= 0){
-                    let dropStone = (e.type === 'snail') ? 3 : 1;
-                    stone += dropStone;
-                    enemies.splice(i,1);
-                    game.kills++;
-                    player.xp += 10;
-                    checkLevelUp();
-                    i--;
-                }
-            }
-        }
-        
-        // update acid projectiles
-        function updateProjectiles(deltaSec){
-            for(let i=0;i<projectiles.length;i++){
-                let p = projectiles[i];
-                let step = p.speed * deltaSec;
-                p.x += Math.cos(p.angle) * step;
-                p.y += Math.sin(p.angle) * step;
-                p.traveled += step;
-                if(Math.hypot(p.x - player.x, p.y - player.y) < 28 && !p.hit){
-                    player.hp -= p.damage;
-                    addDPSPopup(player.x, player.y, p.damage, true);
-                    p.hit = true;
-                    if(player.hp <=0) gameOver();
-                    projectiles.splice(i,1);
-                    i--;
-                } else if(p.traveled > 550 || p.x<0 || p.x>MAP_SIZE || p.y<0 || p.y>MAP_SIZE){
-                    projectiles.splice(i,1);
-                    i--;
-                }
-            }
-        }
-        
-        // towers attack
-        function updateTowers(deltaSec){
-            for(let s of structures){
-                if(s.type === 'tower'){
-                    if(!s.cooldown) s.cooldown = 0;
-                    s.cooldown -= deltaSec;
-                    if(s.cooldown <= 0){
-                        let closest = null;
-                        let minDist = 360;
-                        for(let e of enemies){
-                            let d = Math.hypot(e.x - s.x, e.y - s.y);
-                            if(d < minDist){
-                                minDist = d;
-                                closest = e;
-                            }
-                        }
-                        if(closest){
-                            closest.hp -= 10;
-                            addDPSPopup(closest.x, closest.y, 10);
-                            s.cooldown = 1.1;
-                            if(closest.hp<=0){
-                                let idx = enemies.indexOf(closest);
-                                if(idx!==-1) enemies.splice(idx,1);
-                                game.kills++;
-                                player.xp+=10;
-                                checkLevelUp();
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        
-        function updatePlayerMovement(deltaSec){
-            if(player.moveTarget){
-                let dx = player.moveTarget.x - player.x;
-                let dy = player.moveTarget.y - player.y;
-                let dist = Math.hypot(dx,dy);
-                if(dist < 12){
-                    player.moveTarget = null;
-                } else {
-                    let speed = 230;
-                    let step = Math.min(speed * deltaSec, dist);
-                    let angle = Math.atan2(dy,dx);
-                    player.x += Math.cos(angle) * step;
-                    player.y += Math.sin(angle) * step;
-                }
-            }
-            player.x = Math.min(MAP_SIZE-28, Math.max(28, player.x));
-            player.y = Math.min(MAP_SIZE-28, Math.max(28, player.y));
-        }
-        
-        function gameOver(){
-            if(game.gameOver) return;
-            game.gameOver = true;
-            showTip("💀 YOU DIED. REFRESH TO TRY AGAIN", 3000);
-            setTimeout(()=> location.reload(), 2800);
-        }
-        
-        // Resources
-        function initResources(){
-            for(let i=0;i<150;i++){
-                let type = Math.random()<0.6 ? 'tree' : 'stone';
-                resources.push({
-                    x: 150 + Math.random() * (MAP_SIZE-300),
-                    y: 150 + Math.random() * (MAP_SIZE-300),
-                    type: type,
-                    tapsLeft: 10,
-                    woodGain: type === 'tree' ? 3 : 0,
-                    stoneGain: type === 'stone' ? 2 : 0
-                });
-            }
-        }
-        
-        function handleResourceTap(x,y){
-            for(let i=0;i<resources.length;i++){
-                let r = resources[i];
-                if(Math.hypot(x - r.x, y - r.y) < 38 && r.tapsLeft >0){
-                    r.tapsLeft--;
-                    if(r.tapsLeft <= 0){
-                        wood += r.woodGain;
-                        stone += r.stoneGain;
-                        showTip(`+${r.woodGain||0}🪵 +${r.stoneGain||0}🪨`, 600);
-                        resources.splice(i,1);
-                    } else {
-                        showTip(`🔨 ${r.tapsLeft} taps left`, 300);
-                    }
-                    updateUI();
-                    break;
-                }
-            }
-        }
-        
-        // crafting
-        function craftCrossbow(){
-            if(!player.hasCrossbow && wood>=10 && stone>=8){
-                wood-=10; stone-=8;
-                player.hasCrossbow=true;
-                showTip("🏹 CROSSBOW crafted! Equip from inventory.", 1200);
-                updateUI();
-            } else if(player.hasCrossbow) showTip("Already have crossbow", 800);
-            else showTip("Need 10 wood, 8 stone", 800);
-        }
-        function craftBolts(){
-            if(wood>=3 && stone>=2){
-                wood-=3; stone-=2;
-                player.boltCount += 5;
-                showTip("+5 Bolts", 500);
-                updateUI();
-            } else showTip("Need 3 wood + 2 stone", 600);
-        }
-        function craftCampfire(){
-            if(wood>=15 && stone>=10){
-                wood-=15; stone-=10;
-                structures.push({x:player.x, y:player.y, type:'campfire', radius:120});
-                showTip("🔥 Campfire placed (safe zone)", 1000);
-                updateUI();
-            } else showTip("Need 15 wood, 10 stone", 800);
-        }
-        function craftWall(){
-            if(wood>=12 && stone>=8){
-                wood-=12; stone-=8;
-                structures.push({x:player.x, y:player.y, type:'wall', hp:50, maxHp:50});
-                showTip("🧱 Wall placed (blocks enemies)", 800);
-                updateUI();
-            } else showTip("Need 12 wood, 8 stone", 800);
-        }
-        function craftTower(){
-            if(wood>=20 && stone>=15){
-                wood-=20; stone-=15;
-                structures.push({x:player.x, y:player.y, type:'tower', cooldown:0});
-                showTip("🗼 Auto-tower built!", 1000);
-                updateUI();
-            } else showTip("Need 20 wood, 15 stone", 800);
-        }
-        
-        // crossbow fire (tap on enemy)
-        function fireCrossbow(targetX, targetY){
-            if(!player.hasCrossbow || player.selectedWeapon !== 'crossbow') {
-                showTip("Equip crossbow from inventory first!", 700);
-                return false;
-            }
-            if(player.boltCount <= 0){
-                showTip("No bolts! Craft some.", 700);
-                return false;
-            }
-            let closestDist = 200;
-            let hitIndex = -1;
-            for(let i=0;i<enemies.length;i++){
-                let e = enemies[i];
-                let d = Math.hypot(e.x - targetX, e.y - targetY);
-                if(d < 45 && Math.hypot(e.x - player.x, e.y - player.y) < 350){
-                    hitIndex = i;
-                    break;
-                }
-            }
-            if(hitIndex !== -1){
-                let e = enemies[hitIndex];
-                e.hp -= 28;
-                addDPSPopup(e.x, e.y, 28);
-                player.boltCount--;
-                if(e.hp <= 0){
-                    let dropStone = (e.type === 'snail') ? 3 : 1;
-                    stone += dropStone;
-                    enemies.splice(hitIndex,1);
-                    game.kills++;
-                    player.xp+=10;
-                    checkLevelUp();
-                }
-                updateUI();
-                return true;
-            } else {
-                player.boltCount--;
-                showTip("❌ Miss!", 500);
-                updateUI();
-                return false;
-            }
-        }
-        
-        // day/night & victory
-        function updateDayNight(deltaSec){
-            if(game.gameOver) return;
-            game.dayTimer -= deltaSec;
-            if(game.dayTimer <= 0){
-                game.day++;
-                game.dayTimer = 120;
-                if(game.day > 99){
-                    game.victory=true;
-                    showTip("🎉 VICTORY! 99 DAYS SURVIVED! 🎉", 4000);
-                    game.gameOver=true;
-                    setTimeout(()=> location.reload(), 5000);
-                } else {
-                    showTip(`🌙 DAY ${game.day} begins. Stay sharp.`, 1100);
-                }
-                updateUI();
-            }
-        }
-        
-        // Safe zones (campfire) push enemies and heal
-        function applySafeZones(){
-            for(let s of structures){
-                if(s.type === 'campfire'){
-                    let distToPlayer = Math.hypot(player.x - s.x, player.y - s.y);
-                    if(distToPlayer < 100){
-                        if(player.hp < player.maxHp && Math.random()<0.03) player.hp = Math.min(player.maxHp, player.hp+1);
-                        // repel enemies
-                        for(let e of enemies){
-                            let d = Math.hypot(e.x - s.x, e.y - s.y);
-                            if(d < 120){
-                                let angle = Math.atan2(e.y - s.y, e.x - s.x);
-                                let push = 90 * 0.016;
-                                e.x += Math.cos(angle)*push;
-                                e.y += Math.sin(angle)*push;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        
-        // DRAW EVERYTHING
-        function draw(){
-            camera.x = player.x - canvas.width/2;
-            camera.y = player.y - canvas.height/2;
-            camera.x = Math.min(MAP_SIZE - canvas.width, Math.max(0, camera.x));
-            camera.y = Math.min(MAP_SIZE - canvas.height, Math.max(0, camera.y));
-            ctx.clearRect(0,0,canvas.width,canvas.height);
-            ctx.fillStyle = "#5e5e5e";
-            ctx.fillRect(0,0,canvas.width,canvas.height);
-            for(let i=0;i<300;i++){ ctx.fillStyle="#7a7a7a"; ctx.fillRect((i*53)%canvas.width, (i*31)%canvas.height, 3,3); }
-            
-            // resources
-            for(let r of resources){
-                let sx = r.x - camera.x, sy = r.y - camera.y;
-                ctx.fillStyle = r.type === 'tree' ? "#3eaa3e" : "#9e8e6e";
-                ctx.beginPath(); ctx.rect(sx-14, sy-14, 28,28); ctx.fill();
-                ctx.fillStyle = "#fff3cf"; ctx.font = "bold 16px monospace";
-                ctx.fillText(`${r.tapsLeft}`, sx-7, sy-12);
-            }
-            // structures
-            for(let s of structures){
-                let sx = s.x - camera.x, sy = s.y - camera.y;
-                if(s.type === 'campfire'){ ctx.fillStyle="#ff8844"; ctx.beginPath(); ctx.arc(sx,sy,24,0,Math.PI*2); ctx.fill(); ctx.fillStyle="orange"; ctx.fillRect(sx-10,sy-8,20,16);}
-                else if(s.type === 'wall'){ ctx.fillStyle="#b87c4a"; ctx.fillRect(sx-20,sy-14,40,28); ctx.fillStyle="#714623"; ctx.fillRect(sx-20,sy-14,40,6);}
-                else if(s.type === 'tower'){ ctx.fillStyle="#b97f52"; ctx.fillRect(sx-14,sy-26,28,52); ctx.fillStyle="#9c5e32"; ctx.fillRect(sx-6,sy-36,12,14);}
-            }
-            // enemies
-            for(let e of enemies){
-                let sx = e.x - camera.x, sy = e.y - camera.y;
-                if(e.type === 'spider'){
-                    ctx.fillStyle = "#4a2a1a"; ctx.beginPath(); ctx.ellipse(sx,sy,16,12,0,0,Math.PI*2); ctx.fill();
-                    ctx.fillStyle="#000"; ctx.fillRect(sx-6,sy-4,4,4); ctx.fillRect(sx+2,sy-4,4,4);
-                    for(let i=0;i<4;i++){ ctx.beginPath(); ctx.moveTo(sx+Math.sin(i)*14, sy+Math.cos(i)*12); ctx.lineTo(sx+Math.sin(i+0.5)*22, sy+Math.cos(i+0.5)*16); ctx.stroke();}
-                } else {
-                    ctx.fillStyle = "#6c8c4a"; ctx.beginPath(); ctx.ellipse(sx,sy,20,14,0,0,Math.PI*2); ctx.fill();
-                    ctx.fillStyle="#4a5c2a"; ctx.beginPath(); ctx.moveTo(sx+12,sy-6); ctx.lineTo(sx+20,sy-12); ctx.lineTo(sx+14,sy-2); ctx.fill();
-                    ctx.fillStyle="white"; ctx.fillRect(sx-6,sy-2,4,4); ctx.fillRect(sx+2,sy-2,4,4);
-                }
-            }
-            // projectiles
-            for(let p of projectiles){
-                let sx = p.x - camera.x, sy = p.y - camera.y;
-                ctx.fillStyle = "#b5ff6a"; ctx.beginPath(); ctx.arc(sx,sy,6,0,Math.PI*2); ctx.fill();
-                ctx.fillStyle = "#7eff2e"; ctx.beginPath(); ctx.arc(sx-1,sy-1,3,0,Math.PI*2); ctx.fill();
-            }
-            
-            // player white cube
-            let px = player.x - camera.x, py = player.y - camera.y;
-            ctx.fillStyle = "#fcfcfc"; ctx.shadowBlur=6; ctx.fillRect(px-16, py-16, 32,32);
-            ctx.fillStyle = "#ffcc77"; ctx.beginPath(); ctx.arc(px, py, 35+player.level*2, 0, Math.PI*2); ctx.strokeStyle = "#ffaa55"; ctx.lineWidth=2.5; ctx.stroke();
-            if(player.selectedWeapon === 'crossbow'){
-                ctx.beginPath(); ctx.arc(px, py, 28, 0, Math.PI*2); ctx.strokeStyle = "#ff5555"; ctx.lineWidth=3; ctx.stroke();
-            }
-            ctx.shadowBlur=0;
-            updateUI();
-        }
-        
-        // handle canvas tap (move + resource + crossbow fire)
-        function handleCanvasTap(e){
-            if(game.gameOver) return;
-            e.preventDefault();
-            const rect = canvas.getBoundingClientRect();
-            const scaleX = canvas.width / rect.width;
-            const scaleY = canvas.height / rect.height;
-            let clientX, clientY;
-            if(e.touches){
-                clientX = e.touches[0].clientX;
-                clientY = e.touches[0].clientY;
-            } else {
-                clientX = e.clientX;
-                clientY = e.clientY;
-            }
-            let tapX = (clientX - rect.left) * scaleX;
-            let tapY = (clientY - rect.top) * scaleY;
-            let worldX = tapX + camera.x;
-            let worldY = tapY + camera.y;
-            
-            if(player.selectedWeapon === 'crossbow'){
-                fireCrossbow(worldX, worldY);
-                player.selectedWeapon = null;
-                updateUI();
-                return;
-            }
-            let hitResource = false;
-            for(let r of resources){
-                if(Math.hypot(worldX - r.x, worldY - r.y) < 40){
-                    handleResourceTap(worldX, worldY);
-                    hitResource = true;
-                    break;
-                }
-            }
-            if(!hitResource){
-                player.moveTarget = {x: worldX, y: worldY};
-            }
-        }
-        
-        // main loop
-        let lastTime = performance.now();
-        function gameLoop(now){
-            let delta = Math.min(0.033, (now - lastTime)/1000);
-            if(delta>0){
-                lastTime=now;
-                if(!game.gameOver){
-                    updatePlayerMovement(delta);
-                    updateEnemies(delta);
-                    updateProjectiles(delta);
-                    applyRingDamage();
-                    updateTowers(delta);
-                    applySafeZones();
-                    spawnEnemies();
-                    updateDayNight(delta);
-                }
-                draw();
-            }
-            requestAnimationFrame(gameLoop);
-        }
-        
-        function bindEvents(){
-            canvas.addEventListener('touchstart', handleCanvasTap, {passive:false});
-            canvas.addEventListener('mousedown', handleCanvasTap);
-            document.getElementById('craftCrossbowBtn').addEventListener('click', (e)=>{ e.preventDefault(); craftCrossbow(); updateUI();});
-            document.getElementById('craftBoltsBtn').addEventListener('click', (e)=>{ e.preventDefault(); craftBolts(); updateUI();});
-            document.getElementById('craftCampfireBtn').addEventListener('click', (e)=>{ e.preventDefault(); craftCampfire(); updateUI();});
-            document.getElementById('craftWallBtn').addEventListener('click', (e)=>{ e.preventDefault(); craftWall(); updateUI();});
-            document.getElementById('craftTowerBtn').addEventListener('click', (e)=>{ e.preventDefault(); craftTower(); updateUI();});
-        }
-        
-        initResources();
-        bindEvents();
-        updateUI();
-        requestAnimationFrame(gameLoop);
-        lastTime = performance.now();
-        showTip("🐌 NEW: Acid Snail spits from distance! CRAFT crossbow & bolts", 3500);
-    })();
+  // ---------- STORAGE KEYS ----------
+  // For daily reset detection: we store last active date + per-day values + bank
+  const STORAGE = {
+    lastDate: "copper_lastDate",
+    dailyReceived: "copper_dailyReceived",
+    dailyRefined: "copper_dailyRefined",
+    totalBanked: "copper_totalBanked",
+  };
+
+  // Helper: get today's date string YYYY-MM-DD
+  function getTodayStr() {
+    const d = new Date();
+    return d.toISOString().split('T')[0];
+  }
+
+  // Load or initialize data, resetting daily values if a new day
+  function loadData() {
+    let lastDate = localStorage.getItem(STORAGE.lastDate);
+    let today = getTodayStr();
+    let dailyReceived = 0;
+    let dailyRefined = 0;
+    let totalBanked = parseFloat(localStorage.getItem(STORAGE.totalBanked)) || 0;
+
+    if (lastDate === today) {
+      // same day, load daily values as they were
+      dailyReceived = parseFloat(localStorage.getItem(STORAGE.dailyReceived)) || 0;
+      dailyRefined = parseFloat(localStorage.getItem(STORAGE.dailyRefined)) || 0;
+    } else {
+      // new day! we reset daily values but keep totalBanked
+      // also we could decide to automatically add nothing — user manually adds refined to bank.
+      dailyReceived = 0;
+      dailyRefined = 0;
+      // Save new date and clear daily counters
+      localStorage.setItem(STORAGE.lastDate, today);
+      localStorage.setItem(STORAGE.dailyReceived, 0);
+      localStorage.setItem(STORAGE.dailyRefined, 0);
+    }
+
+    // ensure Lbs Refined cannot exceed Received? not necessary but can show integrity later
+    return { dailyReceived, dailyRefined, totalBanked };
+  }
+
+  // Update UI, save to localStorage
+  let state = loadData();
+
+  function saveDaily() {
+    localStorage.setItem(STORAGE.dailyReceived, state.dailyReceived);
+    localStorage.setItem(STORAGE.dailyRefined, state.dailyRefined);
+    localStorage.setItem(STORAGE.totalBanked, state.totalBanked);
+    // Keep lastDate fresh (but we already set date once. still, ensure it matches today)
+    localStorage.setItem(STORAGE.lastDate, getTodayStr());
+  }
+
+  function updateUI() {
+    document.getElementById('receivedValue').innerText = Math.floor(state.dailyReceived);
+    document.getElementById('refinedValue').innerText = Math.floor(state.dailyRefined);
+    document.getElementById('bankedValue').innerText = Math.floor(state.totalBanked);
+    // optional: if refined > received, visual warn? but not needed.
+  }
+
+  function addReceived(amount) {
+    state.dailyReceived += amount;
+    if (state.dailyReceived < 0) state.dailyReceived = 0;
+    saveDaily();
+    updateUI();
+  }
+
+  function addRefined(amount) {
+    // can't refine more than received today? Keep realistic: but for flexibility, let's cap refined <= received
+    let newRefined = state.dailyRefined + amount;
+    if (newRefined <= state.dailyReceived) {
+      state.dailyRefined = newRefined;
+    } else {
+      // if trying to refine beyond received, just set refined = received
+      state.dailyRefined = state.dailyReceived;
+      // subtle alert feel
+      let toast = document.createElement('div');
+      toast.innerText = "⚠️ Can't refine more than received today!";
+      toast.style.position = 'fixed'; toast.style.bottom='20px'; toast.style.left='20px'; toast.style.right='20px';
+      toast.style.backgroundColor='#a1301a'; toast.style.color='#ffbf87'; toast.style.padding='12px'; toast.style.borderRadius='40px';
+      toast.style.textAlign='center'; toast.style.fontWeight='bold'; toast.style.zIndex='999';
+      document.body.appendChild(toast);
+      setTimeout(()=> toast.remove(), 1500);
+    }
+    if (state.dailyRefined < 0) state.dailyRefined = 0;
+    saveDaily();
+    updateUI();
+  }
+
+  function resetReceived() {
+    state.dailyReceived = 0;
+    // if refined > received now, refined should also reset to keep logic clean
+    if (state.dailyRefined > state.dailyReceived) {
+      state.dailyRefined = 0;
+    }
+    saveDaily();
+    updateUI();
+  }
+
+  function resetRefined() {
+    state.dailyRefined = 0;
+    saveDaily();
+    updateUI();
+  }
+
+  // Add today's refined amount to total banked
+  function addRefinedToBank() {
+    if (state.dailyRefined > 0) {
+      state.totalBanked += state.dailyRefined;
+      // After adding to bank, we set dailyRefined = 0 (since it's banked)
+      state.dailyRefined = 0;
+      // Received remains the same (already processed incoming material)
+      saveDaily();
+      updateUI();
+      // subtle feedback
+      let msg = document.createElement('div');
+      msg.innerText = `✅ ${Math.floor(state.dailyRefined)} lbs banked! Well done.`;
+      msg.style.position='fixed'; msg.style.bottom='70px'; msg.style.left='20px'; msg.style.right='20px';
+      msg.style.backgroundColor='#2c6e2c'; msg.style.color='#f9e2a1'; msg.style.padding='12px'; msg.style.borderRadius='40px';
+      msg.style.textAlign='center'; msg.style.fontWeight='bold';
+      document.body.appendChild(msg);
+      setTimeout(()=> msg.remove(), 1500);
+      // actual value now refined = 0 after banking, but we have to re-show
+    } else {
+      let warn = document.createElement('div');
+      warn.innerText = "No refined lbs to bank today!";
+      warn.style.position='fixed'; warn.style.bottom='70px'; warn.style.left='20px'; warn.style.right='20px';
+      warn.style.backgroundColor='#ad4c2c'; warn.style.color='#ffe2b5'; warn.style.padding='12px'; warn.style.borderRadius='40px';
+      warn.style.textAlign='center';
+      document.body.appendChild(warn);
+      setTimeout(()=> warn.remove(), 1500);
+    }
+  }
+
+  // Reset only daily (received & refined) but keep bank
+  function resetDaily() {
+    state.dailyReceived = 0;
+    state.dailyRefined = 0;
+    saveDaily();
+    updateUI();
+  }
+
+  // Full nuclear reset
+  function fullReset() {
+    if (confirm("⚠️ NUKE ALL DATA? Total Banked will be erased. Proceed?")) {
+      state.dailyReceived = 0;
+      state.dailyRefined = 0;
+      state.totalBanked = 0;
+      localStorage.setItem(STORAGE.lastDate, getTodayStr());
+      saveDaily();
+      updateUI();
+    }
+  }
+
+  // check for date change while app is open every minute
+  function checkDateChange() {
+    let storedDate = localStorage.getItem(STORAGE.lastDate);
+    let today = getTodayStr();
+    if (storedDate !== today) {
+      // day changed while app is open -> reset daily values
+      state.dailyReceived = 0;
+      state.dailyRefined = 0;
+      localStorage.setItem(STORAGE.lastDate, today);
+      localStorage.setItem(STORAGE.dailyReceived, 0);
+      localStorage.setItem(STORAGE.dailyRefined, 0);
+      updateUI();
+    }
+  }
+
+  // update date/time display
+  function updateDateTime() {
+    const now = new Date();
+    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+    document.getElementById('dateDisplay').innerText = now.toLocaleDateString(undefined, options);
+    document.getElementById('timeDisplay').innerText = now.toLocaleTimeString([], { hour: '2-digit', minute:'2-digit', second:'2-digit' });
+  }
+
+  // attach all listeners
+  function bindEvents() {
+    document.getElementById('addReceived50').addEventListener('click', () => addReceived(50));
+    document.getElementById('addReceived100').addEventListener('click', () => addReceived(100));
+    document.getElementById('resetReceivedBtn').addEventListener('click', resetReceived);
+    document.getElementById('addRefined50').addEventListener('click', () => addRefined(50));
+    document.getElementById('addRefined100').addEventListener('click', () => addRefined(100));
+    document.getElementById('resetRefinedBtn').addEventListener('click', resetRefined);
+    document.getElementById('addToBankBtn').addEventListener('click', addRefinedToBank);
+    document.getElementById('resetDailyBtn').addEventListener('click', resetDaily);
+    document.getElementById('fullResetBtn').addEventListener('click', fullReset);
+  }
+
+  // initial sync, updateUI and timer
+  function init() {
+    bindEvents();
+    updateUI();
+    updateDateTime();
+    setInterval(() => {
+      updateDateTime();
+      checkDateChange();
+    }, 1000);
+    // add touch/click robustness
+  }
+
+  init();
 </script>
 </body>
 </html>
