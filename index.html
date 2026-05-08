@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Nova Realms: White Cube Survival</title>
+    <title>Nova Realms: White Cube Survival (ACID SNAILS)</title>
     <style>
         * {
             user-select: none;
@@ -13,139 +13,155 @@
         body {
             margin: 0;
             min-height: 100vh;
-            background: #2b2b2b;
+            background: #1e1e1e;
             display: flex;
             justify-content: center;
             align-items: center;
             font-family: 'Courier New', monospace;
-            touch-action: none; /* prevent pull-to-refresh */
+            touch-action: none;
+            padding: 8px;
         }
         .game-container {
             position: relative;
-            background: #3a3a3a;
-            border-radius: 20px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            background: #2e2e2e;
+            border-radius: 28px;
+            box-shadow: 0 12px 28px black;
+            display: inline-block;
         }
         canvas {
             display: block;
             margin: 0 auto;
-            border-radius: 16px;
+            border-radius: 24px;
             cursor: crosshair;
             touch-action: none;
+            width: 100%;
+            height: auto;
         }
         .ui-overlay {
             position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
+            bottom: 8px;
+            left: 8px;
+            right: 8px;
             pointer-events: none;
-            z-index: 10;
-            padding: 12px;
+            z-index: 20;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
         }
         .stats-panel {
-            background: rgba(0,0,0,0.75);
-            backdrop-filter: blur(4px);
-            border-radius: 20px;
-            padding: 8px 16px;
-            margin-bottom: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(6px);
+            border-radius: 40px;
+            padding: 6px 12px;
             display: flex;
             flex-wrap: wrap;
             justify-content: space-between;
-            font-size: 14px;
+            font-size: 12px;
             font-weight: bold;
-            color: #ffdd99;
-            text-shadow: 1px 1px 0 #000;
-            border: 1px solid #ffaa44;
+            color: #ffe6b3;
+            border: 1px solid #d99e3e;
+            font-family: monospace;
             pointer-events: none;
+            gap: 8px;
         }
         .inventory-bar {
-            background: rgba(0,0,0,0.8);
-            backdrop-filter: blur(8px);
-            border-radius: 40px;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(12px);
+            border-radius: 48px;
             padding: 8px 12px;
-            margin-bottom: 12px;
             display: flex;
-            gap: 12px;
-            overflow-x: auto;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
             pointer-events: auto;
             border: 1px solid #aaa;
-            justify-content: center;
-            scrollbar-width: thin;
         }
         .inv-slot {
-            background: #2c2c2c;
-            border-radius: 32px;
-            padding: 6px 14px;
-            font-size: 18px;
+            background: #2c2418;
+            border-radius: 36px;
+            padding: 4px 12px;
+            font-size: 15px;
             font-weight: bold;
-            color: #f5e2b0;
-            display: flex;
+            color: #ffeaac;
+            display: inline-flex;
             align-items: center;
             gap: 6px;
-            border: 1px solid #777;
-            box-shadow: inset 0 1px 2px rgba(0,0,0,0.5), 0 2px 3px rgba(255,255,200,0.2);
+            border: 1px solid #b87c2e;
+            box-shadow: inset 0 1px 1px rgba(0,0,0,0.6), 0 1px 2px rgba(255,215,140,0.3);
             pointer-events: auto;
             touch-action: manipulation;
             cursor: pointer;
             transition: 0.05s linear;
+            white-space: nowrap;
         }
         .inv-slot:active {
             transform: scale(0.96);
-            background: #1f1f1f;
-        }
-        .inv-slot span {
-            font-size: 22px;
+            background: #1f1a10;
         }
         .craft-row {
             display: flex;
-            gap: 12px;
-            justify-content: space-between;
-            margin-top: 6px;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+            margin-top: 4px;
+            pointer-events: auto;
         }
         .craft-btn {
-            background: #5a3e1a;
+            background: #4e3219;
             border: none;
-            color: #ffe1a0;
+            color: #ffdfa5;
             font-weight: bold;
-            border-radius: 40px;
-            padding: 5px 12px;
-            font-size: 12px;
-            pointer-events: auto;
-            touch-action: manipulation;
+            border-radius: 60px;
+            padding: 6px 14px;
+            font-size: 11px;
             font-family: monospace;
             font-weight: bold;
+            box-shadow: 0 2px 4px black;
+            touch-action: manipulation;
+            cursor: pointer;
+            transition: 0.05s linear;
+            white-space: nowrap;
+        }
+        .craft-btn:active {
+            transform: scale(0.96);
+            background: #2f1f0e;
         }
         .dps-pop {
             position: absolute;
-            font-size: 20px;
+            font-size: 22px;
             font-weight: bold;
-            color: #ff5555;
-            text-shadow: 0 0 3px black;
+            color: #ff7777;
+            text-shadow: 1px 1px 0 black;
             pointer-events: none;
             z-index: 200;
             font-family: monospace;
-            white-space: nowrap;
-            animation: floatUp 0.5s ease-out forwards;
+            animation: floatUp 0.55s ease-out forwards;
         }
         @keyframes floatUp {
-            0% { opacity: 1; transform: translateY(0px); }
-            100% { opacity: 0; transform: translateY(-35px); }
+            0% { opacity: 1; transform: translateY(0px) scale(1); }
+            100% { opacity: 0; transform: translateY(-40px) scale(1.1); }
         }
         .message-tip {
             position: absolute;
-            top: 10px;
-            left: 10px;
-            background: #000000aa;
-            color: #ccc;
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 11px;
+            top: 12px;
+            left: 12px;
+            background: #000000bb;
+            color: #f2c94c;
+            padding: 5px 12px;
+            border-radius: 28px;
+            font-size: 10px;
+            font-weight: bold;
             font-family: monospace;
             pointer-events: none;
+            backdrop-filter: blur(4px);
+            z-index: 30;
+            max-width: 70%;
         }
         @media (max-width: 700px) {
-            .stats-panel { font-size: 11px; padding: 6px 12px; }
-            .inv-slot { padding: 4px 10px; font-size: 14px; }
+            .stats-panel { font-size: 9px; padding: 4px 8px; gap: 4px; }
+            .inv-slot { font-size: 11px; padding: 3px 8px; }
+            .craft-btn { font-size: 9px; padding: 4px 10px; }
+            .message-tip { font-size: 8px; top: 6px; left: 6px; }
         }
     </style>
 </head>
@@ -154,102 +170,87 @@
     <canvas id="gameCanvas" width="1000" height="700"></canvas>
     <div class="ui-overlay">
         <div class="stats-panel" id="statsPanel">
-            <span>❤️ HP: <span id="hpVal">500</span>/500</span>
-            <span>⚔️ LVL: <span id="lvlVal">1</span></span>
-            <span>🌀 RING: <span id="ringDmg">1</span></span>
-            <span>🌞 DAY: <span id="dayVal">1</span>/99</span>
-            <span>⏱️ TIME: <span id="timeLeft">120</span>s</span>
-            <span>🕷️ KILLS: <span id="killsVal">0</span></span>
+            <span>❤️ <span id="hpVal">500</span>/<span id="maxHpVal">500</span></span>
+            <span>⚔️ Lv.<span id="lvlVal">1</span></span>
+            <span>🌀 RING:<span id="ringDmg">1</span></span>
+            <span>🌞 DAY <span id="dayVal">1</span>/99</span>
+            <span>⏱️ <span id="timeLeft">120</span>s</span>
+            <span>🕷️ KILLS:<span id="killsVal">0</span></span>
         </div>
-        <div class="inventory-bar" id="inventoryBar">
-            <!-- dynamic slots -->
-        </div>
+        <div class="inventory-bar" id="inventoryBar"></div>
         <div class="craft-row" id="craftRow">
-            <button class="craft-btn" id="craftCrossbowBtn">🔨 CRAFT CROSSBOW (10w/8s)</button>
-            <button class="craft-btn" id="craftBoltsBtn">🏹 CRAFT BOLTS (3w/2s) +5</button>
-            <button class="craft-btn" id="craftCampfireBtn">🔥 CAMPFIRE (15w/10s)</button>
-            <button class="craft-btn" id="craftWallBtn">🧱 WALL (12w/8s)</button>
-            <button class="craft-btn" id="craftTowerBtn">🗼 TOWER (20w/15s)</button>
+            <button class="craft-btn" id="craftCrossbowBtn">🔨 CROSSBOW (10🌲/8🪨)</button>
+            <button class="craft-btn" id="craftBoltsBtn">🏹 BOLTS +5 (3🌲/2🪨)</button>
+            <button class="craft-btn" id="craftCampfireBtn">🔥 CAMPFIRE (15🌲/10🪨)</button>
+            <button class="craft-btn" id="craftWallBtn">🧱 WALL (12🌲/8🪨)</button>
+            <button class="craft-btn" id="craftTowerBtn">🗼 TOWER (20🌲/15🪨)</button>
         </div>
     </div>
-    <div class="message-tip" id="tipMsg">📱 TAP GROUND → MOVE | 🟩 CUBE RING DAMAGE | 🔫 CROSSBOW: TAP SLOT → HOLD & RELEASE</div>
+    <div class="message-tip" id="tipMsg">📱 TAP GROUND → MOVE | 🟩 RING DMG | 🔫 EQUIP CROSSBOW & TAP TO FIRE</div>
 </div>
 
 <script>
     (function(){
-        // ---------- CANVAS ----------
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
-
-        // center camera follows cube
         let camera = { x: 0, y: 0 };
-        const MAP_SIZE = 3600;   // large movable map
-        let worldOffsetX = 0, worldOffsetY = 0;
-
-        // ---------- GAME STATE ----------
+        const MAP_SIZE = 3800;
+        
+        // ----- PLAYER -----
         let player = {
-            x: MAP_SIZE/2,
-            y: MAP_SIZE/2,
-            hp: 500,
-            maxHp: 500,
-            level: 1,
-            xp: 0,
+            x: MAP_SIZE/2, y: MAP_SIZE/2,
+            hp: 500, maxHp: 500,
+            level: 1, xp: 0,
             ringDamage: 1,
-            dmgPerSecond: 1,    // melee? we use ring + crossbow, but enemies also 1 dps. we'll apply ring damage per frame approx
             hasCrossbow: false,
-            selectedWeapon: null, // 'crossbow' or null
-            holdingCrossbow: false,
+            selectedWeapon: null,
             boltCount: 0,
-            moveTarget: null // {x, y}
+            moveTarget: null
         };
-
+        
+        // ----- GAME STATE -----
         let game = {
             day: 1,
-            dayTimer: 120,      // seconds
-            lastTimestamp: 0,
+            dayTimer: 120,
             kills: 0,
             gameOver: false,
             victory: false
         };
-
-        // resources on map
-        let resources = [];
-        // structures
-        let structures = []; // {x,y, type, hp, attackCooldown?}
-        // enemies
-        let enemies = [];
-
-        // crafting materials
-        let wood = 5;   // start with a few to test
+        
+        // dynamic entities
+        let resources = [];     // trees & stone
+        let structures = [];    // walls, towers, campfires
+        let enemies = [];       // spiders + snails
+        let projectiles = [];   // acid spit
+        
+        let wood = 5;
         let stone = 5;
-
-        // ---- helpers ----
+        
+        // helper functions
         function updateUI() {
-            document.getElementById('hpVal').innerText = `${player.hp}/${player.maxHp}`;
+            document.getElementById('hpVal').innerText = Math.floor(player.hp);
+            document.getElementById('maxHpVal').innerText = player.maxHp;
             document.getElementById('lvlVal').innerText = player.level;
             document.getElementById('ringDmg').innerText = player.ringDamage;
-            document.getElementById('dayVal').innerText = `${game.day}/99`;
-            let secs = Math.floor(game.dayTimer);
-            document.getElementById('timeLeft').innerText = secs;
+            document.getElementById('dayVal').innerText = `${game.day}`;
+            document.getElementById('timeLeft').innerText = Math.floor(game.dayTimer);
             document.getElementById('killsVal').innerText = game.kills;
-            // inventory bar rendering
             renderInventoryBar();
         }
-
+        
         function renderInventoryBar() {
             const bar = document.getElementById('inventoryBar');
             bar.innerHTML = '';
-            // wood / stone display
             let resDiv = document.createElement('div');
             resDiv.className = 'inv-slot';
             resDiv.innerHTML = `<span>🪵</span> ${wood}  <span>🪨</span> ${stone}`;
             bar.appendChild(resDiv);
-            // bolts
+            
             let boltsDiv = document.createElement('div');
             boltsDiv.className = 'inv-slot';
             boltsDiv.innerHTML = `<span>🏹</span> ${player.boltCount}`;
             bar.appendChild(boltsDiv);
-            // crossbow if owned
+            
             if(player.hasCrossbow){
                 let bowSlot = document.createElement('div');
                 bowSlot.className = 'inv-slot';
@@ -258,50 +259,50 @@
                 bowSlot.addEventListener('mousedown', (e) => { e.preventDefault(); equipCrossbow(); });
                 bar.appendChild(bowSlot);
             }
-            // campfire quick craft?
         }
-
+        
         function equipCrossbow(){
             if(!player.hasCrossbow) return;
             player.selectedWeapon = 'crossbow';
-            showTip("Crossbow equipped — tap ground to fire! Tap slot again to unequip.", 1500);
+            showTip("⚡ Crossbow READY — tap on enemies to fire! (cost 1 bolt)", 1200);
         }
-
-        function addDPSPopup(x,y, dmg){
+        
+        function addDPSPopup(x,y, dmg, isAcid=false){
             const div = document.createElement('div');
             div.className = 'dps-pop';
-            div.innerText = `-${dmg}`;
+            div.innerText = isAcid ? `💧-${dmg}` : `-${dmg}`;
             let canvasRect = canvas.getBoundingClientRect();
-            let screenX = (x - camera.x) * (canvas.width/ (canvas.width)) + canvasRect.left;
-            let screenY = (y - camera.y) * (canvas.height/ (canvas.height)) + canvasRect.top;
+            let screenX = (x - camera.x) * (canvas.width/ canvas.clientWidth) + canvasRect.left;
+            let screenY = (y - camera.y) * (canvas.height/ canvas.clientHeight) + canvasRect.top;
             div.style.position = 'fixed';
             div.style.left = screenX + 'px';
             div.style.top = screenY + 'px';
             document.body.appendChild(div);
             setTimeout(()=> div.remove(), 500);
         }
-
-        function showTip(msg, duration=2000){
+        
+        function showTip(msg, duration=1800){
             let tipDiv = document.getElementById('tipMsg');
             tipDiv.style.opacity = '1';
             tipDiv.innerText = msg;
             setTimeout(()=> {
-                if(tipDiv.innerText === msg) tipDiv.style.opacity = '0.5';
+                if(tipDiv.innerText === msg) tipDiv.style.opacity = '0.7';
             }, duration);
         }
-
-        // damage ring (passive aoe)
+        
+        // Ring damage (passive)
         function applyRingDamage(){
-            const ringRadius = 70 + player.level * 5;
+            const ringRadius = 75 + player.level * 5;
             for(let i=0;i<enemies.length;i++){
                 const e = enemies[i];
-                const dx = e.x - player.x;
-                const dy = e.y - player.y;
-                const dist = Math.hypot(dx,dy);
-                if(dist < ringRadius){
+                const dx = e.x - player.x, dy = e.y - player.y;
+                if(Math.hypot(dx,dy) < ringRadius){
                     e.hp -= player.ringDamage;
                     addDPSPopup(e.x, e.y, player.ringDamage);
                     if(e.hp <= 0){
+                        let dropStone = (e.type === 'snail') ? 3 : 1;
+                        stone += dropStone;
+                        showTip(`+${dropStone}🪨`, 400);
                         enemies.splice(i,1);
                         game.kills++;
                         player.xp += 10;
@@ -311,98 +312,150 @@
                 }
             }
         }
-
+        
         function checkLevelUp(){
             let needed = player.level * 20;
-            if(player.xp >= needed){
+            while(player.xp >= needed){
                 player.level++;
                 player.xp -= needed;
                 player.maxHp += 20;
                 player.hp = player.maxHp;
                 player.ringDamage += 1;
-                showTip(`LEVEL UP! +20 HP, Ring DMG ${player.ringDamage}`, 1000);
+                showTip(`✨ LEVEL UP! +20 HP | RING DMG +1`, 1100);
+                needed = player.level * 20;
                 updateUI();
-                checkLevelUp();
             }
         }
-
-        // enemy spawn logic: no autoswarm to center, only activate near player
+        
+        // Enemy spawning: spiders + snails (snail every 5-6 enemies)
         function spawnEnemies(){
-            if(enemies.length < 8 + Math.floor(game.day/10)){
+            let maxEnemies = 12 + Math.floor(game.day/8);
+            if(enemies.length < maxEnemies){
+                let isSnail = (Math.random() < 0.18); // ~1 snail per 5-6 spawns
                 let side = Math.floor(Math.random()*4);
                 let x,y;
-                let margin = 400;
-                if(side===0){ x = player.x + 400 + Math.random()*300; y = player.y -200 + Math.random()*400;}
-                else if(side===1){ x = player.x - 700 + Math.random()*300; y = player.y -200 + Math.random()*400;}
-                else if(side===2){ x = player.x -200 + Math.random()*400; y = player.y + 400 + Math.random()*300;}
-                else { x = player.x -200 + Math.random()*400; y = player.y - 700 + Math.random()*300;}
+                let margin = 420;
+                if(side===0){ x = player.x + 450 + Math.random()*280; y = player.y - 220 + Math.random()*440;}
+                else if(side===1){ x = player.x - 730 + Math.random()*280; y = player.y - 220 + Math.random()*440;}
+                else if(side===2){ x = player.x - 220 + Math.random()*440; y = player.y + 460 + Math.random()*280;}
+                else { x = player.x - 220 + Math.random()*440; y = player.y - 750 + Math.random()*280;}
                 x = Math.min(MAP_SIZE-50, Math.max(50,x));
                 y = Math.min(MAP_SIZE-50, Math.max(50,y));
-                enemies.push({
-                    x: x, y: y, hp: 50, maxHp:50, type:'spider',
-                    size: 24, speed: 45, dmg:1, attackTimer:0
-                });
+                
+                if(isSnail){
+                    enemies.push({
+                        x, y, hp: 50, maxHp: 50, type: 'snail',
+                        size: 28, speed: 38, dmg: 1, attackTimer: 0,
+                        rangedCooldown: 0
+                    });
+                } else {
+                    enemies.push({
+                        x, y, hp: 50, maxHp: 50, type: 'spider',
+                        size: 24, speed: 108, dmg: 1, attackTimer: 0
+                    });
+                }
             }
         }
-
+        
+        // update enemies: movement, melee, snail ranged attack
         function updateEnemies(deltaSec){
             for(let i=0;i<enemies.length;i++){
                 let e = enemies[i];
-                // distance based aggro (only if near player)
                 let distToPlayer = Math.hypot(e.x - player.x, e.y - player.y);
-                let activeRange = 280;
+                let activeRange = (e.type === 'snail') ? 400 : 290;
                 if(distToPlayer < activeRange){
                     let angle = Math.atan2(player.y - e.y, player.x - e.x);
                     let move = e.speed * deltaSec;
                     e.x += Math.cos(angle) * move;
                     e.y += Math.sin(angle) * move;
-                    // attack
-                    if(distToPlayer < 38 && player.hp>0){
+                    
+                    // SNAIL ranged attack (acid spit)
+                    if(e.type === 'snail'){
+                        if(e.rangedCooldown <= 0 && distToPlayer < 290){
+                            // shoot acid projectile
+                            let projAngle = angle;
+                            projectiles.push({
+                                x: e.x, y: e.y, targetX: player.x, targetY: player.y,
+                                angle: projAngle, speed: 280, damage: 1, life: true,
+                                range: 400, traveled: 0
+                            });
+                            e.rangedCooldown = 2.2;
+                            showTip(`🐌 ACID SPIT!`, 500);
+                        }
+                        if(e.rangedCooldown > 0) e.rangedCooldown -= deltaSec;
+                    }
+                    
+                    // melee attack (both spider and snail if close)
+                    if(distToPlayer < 40 && player.hp>0){
                         if(e.attackTimer <=0){
                             player.hp -= e.dmg;
-                            addDPSPopup(player.x, player.y, e.dmg);
+                            addDPSPopup(player.x, player.y, e.dmg, false);
                             e.attackTimer = 1.0;
-                            if(player.hp <=0) gameOver();
+                            if(player.hp <= 0) gameOver();
                         }
                     }
                 }
                 if(e.attackTimer>0) e.attackTimer -= deltaSec;
-                // wall collision 
+                
+                // wall collision (walls block path)
                 for(let s of structures){
                     if(s.type === 'wall'){
                         let wallRadius = 32;
                         let dx = e.x - s.x, dy = e.y - s.y;
                         let dist = Math.hypot(dx,dy);
-                        if(dist < wallRadius+18){
+                        if(dist < wallRadius+20){
                             let angle = Math.atan2(dy,dx);
-                            let overlap = (wallRadius+18) - dist;
+                            let overlap = (wallRadius+20) - dist;
                             e.x += Math.cos(angle)*overlap;
                             e.y += Math.sin(angle)*overlap;
                         }
                     }
                 }
-                // clamp map
-                e.x = Math.min(MAP_SIZE-20, Math.max(20, e.x));
-                e.y = Math.min(MAP_SIZE-20, Math.max(20, e.y));
-                if(e.hp<=0){
+                e.x = Math.min(MAP_SIZE-25, Math.max(25, e.x));
+                e.y = Math.min(MAP_SIZE-25, Math.max(25, e.y));
+                if(e.hp <= 0){
+                    let dropStone = (e.type === 'snail') ? 3 : 1;
+                    stone += dropStone;
                     enemies.splice(i,1);
                     game.kills++;
-                    player.xp+=10;
+                    player.xp += 10;
                     checkLevelUp();
                     i--;
                 }
             }
         }
-
-        // structures: towers attack
+        
+        // update acid projectiles
+        function updateProjectiles(deltaSec){
+            for(let i=0;i<projectiles.length;i++){
+                let p = projectiles[i];
+                let step = p.speed * deltaSec;
+                p.x += Math.cos(p.angle) * step;
+                p.y += Math.sin(p.angle) * step;
+                p.traveled += step;
+                if(Math.hypot(p.x - player.x, p.y - player.y) < 28 && !p.hit){
+                    player.hp -= p.damage;
+                    addDPSPopup(player.x, player.y, p.damage, true);
+                    p.hit = true;
+                    if(player.hp <=0) gameOver();
+                    projectiles.splice(i,1);
+                    i--;
+                } else if(p.traveled > 550 || p.x<0 || p.x>MAP_SIZE || p.y<0 || p.y>MAP_SIZE){
+                    projectiles.splice(i,1);
+                    i--;
+                }
+            }
+        }
+        
+        // towers attack
         function updateTowers(deltaSec){
             for(let s of structures){
                 if(s.type === 'tower'){
-                    if(!s.cooldown) s.cooldown=0;
+                    if(!s.cooldown) s.cooldown = 0;
                     s.cooldown -= deltaSec;
-                    if(s.cooldown <=0){
+                    if(s.cooldown <= 0){
                         let closest = null;
-                        let minDist = 300;
+                        let minDist = 360;
                         for(let e of enemies){
                             let d = Math.hypot(e.x - s.x, e.y - s.y);
                             if(d < minDist){
@@ -411,9 +464,9 @@
                             }
                         }
                         if(closest){
-                            closest.hp -= 8;
-                            addDPSPopup(closest.x, closest.y, 8);
-                            s.cooldown = 1.2;
+                            closest.hp -= 10;
+                            addDPSPopup(closest.x, closest.y, 10);
+                            s.cooldown = 1.1;
                             if(closest.hp<=0){
                                 let idx = enemies.indexOf(closest);
                                 if(idx!==-1) enemies.splice(idx,1);
@@ -424,97 +477,92 @@
                         }
                     }
                 }
-                if(s.type === 'campfire'){
-                    // safe zone: enemies get pushed? but we just rely on no damage inside later
-                }
             }
         }
-
+        
         function updatePlayerMovement(deltaSec){
             if(player.moveTarget){
                 let dx = player.moveTarget.x - player.x;
                 let dy = player.moveTarget.y - player.y;
                 let dist = Math.hypot(dx,dy);
-                if(dist < 8){
+                if(dist < 12){
                     player.moveTarget = null;
                 } else {
-                    let speed = 210; // units per sec
+                    let speed = 230;
                     let step = Math.min(speed * deltaSec, dist);
                     let angle = Math.atan2(dy,dx);
                     player.x += Math.cos(angle) * step;
                     player.y += Math.sin(angle) * step;
                 }
             }
-            // boundaries
             player.x = Math.min(MAP_SIZE-28, Math.max(28, player.x));
             player.y = Math.min(MAP_SIZE-28, Math.max(28, player.y));
         }
-
+        
         function gameOver(){
+            if(game.gameOver) return;
             game.gameOver = true;
-            showTip("💀 YOU DIED. RESTARTING... refresh or click restart", 3000);
+            showTip("💀 YOU DIED. REFRESH TO TRY AGAIN", 3000);
             setTimeout(()=> location.reload(), 2800);
         }
-
-        // resource nodes (tree/stone)
+        
+        // Resources
         function initResources(){
-            for(let i=0;i<120;i++){
+            for(let i=0;i<150;i++){
                 let type = Math.random()<0.6 ? 'tree' : 'stone';
                 resources.push({
-                    x: 200 + Math.random() * (MAP_SIZE-400),
-                    y: 200 + Math.random() * (MAP_SIZE-400),
+                    x: 150 + Math.random() * (MAP_SIZE-300),
+                    y: 150 + Math.random() * (MAP_SIZE-300),
                     type: type,
-                    tapsNeeded: 10,
                     tapsLeft: 10,
-                    resourceWood: type==='tree'? 3:0,
-                    resourceStone: type==='stone'? 2:0,
+                    woodGain: type === 'tree' ? 3 : 0,
+                    stoneGain: type === 'stone' ? 2 : 0
                 });
             }
         }
-
+        
         function handleResourceTap(x,y){
             for(let i=0;i<resources.length;i++){
                 let r = resources[i];
-                let dist = Math.hypot(x - r.x, y - r.y);
-                if(dist < 35 && r.tapsLeft >0){
+                if(Math.hypot(x - r.x, y - r.y) < 38 && r.tapsLeft >0){
                     r.tapsLeft--;
-                    if(r.tapsLeft <=0){
-                        if(r.type === 'tree') wood += r.resourceWood;
-                        else stone += r.resourceStone;
+                    if(r.tapsLeft <= 0){
+                        wood += r.woodGain;
+                        stone += r.stoneGain;
+                        showTip(`+${r.woodGain||0}🪵 +${r.stoneGain||0}🪨`, 600);
                         resources.splice(i,1);
-                        showTip(`+${r.type==='tree'? r.resourceWood : r.resourceStone} ${r.type==='tree'?'🪵':'🪨'}`, 400);
                     } else {
-                        showTip(`💪 TAP! ${r.tapsLeft} left`, 250);
+                        showTip(`🔨 ${r.tapsLeft} taps left`, 300);
                     }
                     updateUI();
                     break;
                 }
             }
         }
-
+        
         // crafting
         function craftCrossbow(){
             if(!player.hasCrossbow && wood>=10 && stone>=8){
                 wood-=10; stone-=8;
                 player.hasCrossbow=true;
-                showTip("Crafted CROSSBOW! Equip from inventory.", 1500);
+                showTip("🏹 CROSSBOW crafted! Equip from inventory.", 1200);
                 updateUI();
-            } else if(player.hasCrossbow) showTip("Already have crossbow!", 800);
+            } else if(player.hasCrossbow) showTip("Already have crossbow", 800);
             else showTip("Need 10 wood, 8 stone", 800);
         }
         function craftBolts(){
             if(wood>=3 && stone>=2){
                 wood-=3; stone-=2;
                 player.boltCount += 5;
-                showTip("+5 Bolts", 600);
+                showTip("+5 Bolts", 500);
                 updateUI();
-            } else showTip("Need 3 wood, 2 stone", 600);
+            } else showTip("Need 3 wood + 2 stone", 600);
         }
         function craftCampfire(){
             if(wood>=15 && stone>=10){
                 wood-=15; stone-=10;
                 structures.push({x:player.x, y:player.y, type:'campfire', radius:120});
-                showTip("Campfire placed! Safe zone.", 1000);
+                showTip("🔥 Campfire placed (safe zone)", 1000);
                 updateUI();
             } else showTip("Need 15 wood, 10 stone", 800);
         }
@@ -522,59 +570,63 @@
             if(wood>=12 && stone>=8){
                 wood-=12; stone-=8;
                 structures.push({x:player.x, y:player.y, type:'wall', hp:50, maxHp:50});
-                showTip("Wall placed (50 HP)", 800);
+                showTip("🧱 Wall placed (blocks enemies)", 800);
                 updateUI();
             } else showTip("Need 12 wood, 8 stone", 800);
         }
         function craftTower(){
             if(wood>=20 && stone>=15){
                 wood-=20; stone-=15;
-                structures.push({x:player.x, y:player.y, type:'tower', cooldown:0, range:280});
-                showTip("Auto-tower built!", 1000);
+                structures.push({x:player.x, y:player.y, type:'tower', cooldown:0});
+                showTip("🗼 Auto-tower built!", 1000);
                 updateUI();
             } else showTip("Need 20 wood, 15 stone", 800);
         }
-
+        
+        // crossbow fire (tap on enemy)
         function fireCrossbow(targetX, targetY){
-            if(!player.hasCrossbow || player.selectedWeapon !== 'crossbow') return false;
-            if(player.boltCount <=0){
-                showTip("No bolts! Craft some.", 800);
+            if(!player.hasCrossbow || player.selectedWeapon !== 'crossbow') {
+                showTip("Equip crossbow from inventory first!", 700);
                 return false;
             }
-            let dx = targetX - player.x;
-            let dy = targetY - player.y;
-            let angle = Math.atan2(dy,dx);
-            let hit = false;
+            if(player.boltCount <= 0){
+                showTip("No bolts! Craft some.", 700);
+                return false;
+            }
+            let closestDist = 200;
+            let hitIndex = -1;
             for(let i=0;i<enemies.length;i++){
                 let e = enemies[i];
-                let toEnemyX = e.x - player.x;
-                let toEnemyY = e.y - player.y;
-                let distToEnemy = Math.hypot(toEnemyX, toEnemyY);
-                let angleDiff = Math.abs(Math.atan2(toEnemyY, toEnemyX) - angle);
-                if(distToEnemy < 180 && Math.abs(angleDiff) < 0.4){
-                    e.hp -= 25;
-                    addDPSPopup(e.x, e.y, 25);
-                    player.boltCount--;
-                    if(e.hp <=0){
-                        enemies.splice(i,1);
-                        game.kills++;
-                        player.xp+=10;
-                        checkLevelUp();
-                    }
-                    hit=true;
+                let d = Math.hypot(e.x - targetX, e.y - targetY);
+                if(d < 45 && Math.hypot(e.x - player.x, e.y - player.y) < 350){
+                    hitIndex = i;
                     break;
                 }
             }
-            if(!hit){
-                // miss
+            if(hitIndex !== -1){
+                let e = enemies[hitIndex];
+                e.hp -= 28;
+                addDPSPopup(e.x, e.y, 28);
                 player.boltCount--;
-                showTip("Miss!", 400);
+                if(e.hp <= 0){
+                    let dropStone = (e.type === 'snail') ? 3 : 1;
+                    stone += dropStone;
+                    enemies.splice(hitIndex,1);
+                    game.kills++;
+                    player.xp+=10;
+                    checkLevelUp();
+                }
+                updateUI();
+                return true;
+            } else {
+                player.boltCount--;
+                showTip("❌ Miss!", 500);
+                updateUI();
+                return false;
             }
-            updateUI();
-            return hit;
         }
-
-        // day & night & game over
+        
+        // day/night & victory
         function updateDayNight(deltaSec){
             if(game.gameOver) return;
             game.dayTimer -= deltaSec;
@@ -583,150 +635,155 @@
                 game.dayTimer = 120;
                 if(game.day > 99){
                     game.victory=true;
-                    showTip("🌟 VICTORY! SURVIVED 99 DAYS! 🌟", 4000);
+                    showTip("🎉 VICTORY! 99 DAYS SURVIVED! 🎉", 4000);
                     game.gameOver=true;
                     setTimeout(()=> location.reload(), 5000);
                 } else {
-                    showTip(`Day ${game.day} begins.`, 1000);
+                    showTip(`🌙 DAY ${game.day} begins. Stay sharp.`, 1100);
                 }
                 updateUI();
             }
         }
-
-        // safezone logic: campfire prevents enemy damage? also make enemies flee or not?
+        
+        // Safe zones (campfire) push enemies and heal
         function applySafeZones(){
-            let inSafe = false;
             for(let s of structures){
                 if(s.type === 'campfire'){
-                    let dist = Math.hypot(player.x - s.x, player.y - s.y);
-                    if(dist < 90){
-                        inSafe = true;
-                        break;
-                    }
-                }
-            }
-            // if safe, cancel incoming attack? we also can heal small regen
-            if(inSafe){
-                // gentle regen
-                if(player.hp < player.maxHp && Math.random()<0.02) player.hp = Math.min(player.maxHp, player.hp+1);
-            }
-            // enemies avoid entering campfire? for simplicity they can't attack within radius
-            for(let s of structures){
-                if(s.type === 'campfire'){
-                    for(let e of enemies){
-                        let distToCamp = Math.hypot(e.x - s.x, e.y - s.y);
-                        if(distToCamp < 100){
-                            let angle = Math.atan2(e.y - s.y, e.x - s.x);
-                            e.x += Math.cos(angle)*65*0.016;
-                            e.y += Math.sin(angle)*65*0.016;
+                    let distToPlayer = Math.hypot(player.x - s.x, player.y - s.y);
+                    if(distToPlayer < 100){
+                        if(player.hp < player.maxHp && Math.random()<0.03) player.hp = Math.min(player.maxHp, player.hp+1);
+                        // repel enemies
+                        for(let e of enemies){
+                            let d = Math.hypot(e.x - s.x, e.y - s.y);
+                            if(d < 120){
+                                let angle = Math.atan2(e.y - s.y, e.x - s.x);
+                                let push = 90 * 0.016;
+                                e.x += Math.cos(angle)*push;
+                                e.y += Math.sin(angle)*push;
+                            }
                         }
                     }
                 }
             }
         }
-
-        // Draw everything + movable camera
+        
+        // DRAW EVERYTHING
         function draw(){
             camera.x = player.x - canvas.width/2;
             camera.y = player.y - canvas.height/2;
             camera.x = Math.min(MAP_SIZE - canvas.width, Math.max(0, camera.x));
             camera.y = Math.min(MAP_SIZE - canvas.height, Math.max(0, camera.y));
             ctx.clearRect(0,0,canvas.width,canvas.height);
-            // gray pattern
-            ctx.fillStyle = "#5a5a5a";
+            ctx.fillStyle = "#5e5e5e";
             ctx.fillRect(0,0,canvas.width,canvas.height);
-            for(let i=0;i<200;i++){ ctx.fillStyle="#6e6e6e"; ctx.fillRect((i*37)%canvas.width, (i*19)%canvas.height, 4,4); }
-            // draw resources
+            for(let i=0;i<300;i++){ ctx.fillStyle="#7a7a7a"; ctx.fillRect((i*53)%canvas.width, (i*31)%canvas.height, 3,3); }
+            
+            // resources
             for(let r of resources){
-                let screenX = r.x - camera.x;
-                let screenY = r.y - camera.y;
-                if(r.type === 'tree') ctx.fillStyle = "#3c9e3c";
-                else ctx.fillStyle = "#8c8c8c";
-                ctx.beginPath(); ctx.rect(screenX-12, screenY-12, 24,24); ctx.fill();
-                ctx.fillStyle = "white"; ctx.font = "bold 14px monospace";
-                ctx.fillText(`${r.tapsLeft}`, screenX-6, screenY-10);
+                let sx = r.x - camera.x, sy = r.y - camera.y;
+                ctx.fillStyle = r.type === 'tree' ? "#3eaa3e" : "#9e8e6e";
+                ctx.beginPath(); ctx.rect(sx-14, sy-14, 28,28); ctx.fill();
+                ctx.fillStyle = "#fff3cf"; ctx.font = "bold 16px monospace";
+                ctx.fillText(`${r.tapsLeft}`, sx-7, sy-12);
             }
             // structures
             for(let s of structures){
                 let sx = s.x - camera.x, sy = s.y - camera.y;
-                if(s.type === 'campfire'){ ctx.fillStyle="#ff9933"; ctx.beginPath(); ctx.arc(sx,sy,22,0,Math.PI*2); ctx.fill(); ctx.fillStyle="orange"; ctx.fillRect(sx-8,sy-8,16,16);}
-                else if(s.type === 'wall'){ ctx.fillStyle="#9c7c5c"; ctx.fillRect(sx-18,sy-12,36,24); ctx.fillStyle="#6a4e2e"; ctx.fillRect(sx-18,sy-12,36,6);}
-                else if(s.type === 'tower'){ ctx.fillStyle="#aa8866"; ctx.fillRect(sx-12,sy-22,24,44); ctx.fillStyle="brown"; ctx.fillRect(sx-6,sy-32,12,12);}
+                if(s.type === 'campfire'){ ctx.fillStyle="#ff8844"; ctx.beginPath(); ctx.arc(sx,sy,24,0,Math.PI*2); ctx.fill(); ctx.fillStyle="orange"; ctx.fillRect(sx-10,sy-8,20,16);}
+                else if(s.type === 'wall'){ ctx.fillStyle="#b87c4a"; ctx.fillRect(sx-20,sy-14,40,28); ctx.fillStyle="#714623"; ctx.fillRect(sx-20,sy-14,40,6);}
+                else if(s.type === 'tower'){ ctx.fillStyle="#b97f52"; ctx.fillRect(sx-14,sy-26,28,52); ctx.fillStyle="#9c5e32"; ctx.fillRect(sx-6,sy-36,12,14);}
             }
             // enemies
             for(let e of enemies){
                 let sx = e.x - camera.x, sy = e.y - camera.y;
-                ctx.fillStyle = "#4a2a1a";
-                ctx.beginPath(); ctx.ellipse(sx,sy,16,12,0,0,Math.PI*2); ctx.fill();
-                ctx.fillStyle = "#000000"; ctx.fillRect(sx-6,sy-4,4,4); ctx.fillRect(sx+2,sy-4,4,4);
-                for(let i=0;i<4;i++){ ctx.beginPath(); ctx.moveTo(sx+Math.sin(i)*14, sy+Math.cos(i)*12); ctx.lineTo(sx+Math.sin(i+0.5)*22, sy+Math.cos(i+0.5)*16); ctx.lineWidth=3; ctx.strokeStyle="#3a2a1a"; ctx.stroke();}
+                if(e.type === 'spider'){
+                    ctx.fillStyle = "#4a2a1a"; ctx.beginPath(); ctx.ellipse(sx,sy,16,12,0,0,Math.PI*2); ctx.fill();
+                    ctx.fillStyle="#000"; ctx.fillRect(sx-6,sy-4,4,4); ctx.fillRect(sx+2,sy-4,4,4);
+                    for(let i=0;i<4;i++){ ctx.beginPath(); ctx.moveTo(sx+Math.sin(i)*14, sy+Math.cos(i)*12); ctx.lineTo(sx+Math.sin(i+0.5)*22, sy+Math.cos(i+0.5)*16); ctx.stroke();}
+                } else {
+                    ctx.fillStyle = "#6c8c4a"; ctx.beginPath(); ctx.ellipse(sx,sy,20,14,0,0,Math.PI*2); ctx.fill();
+                    ctx.fillStyle="#4a5c2a"; ctx.beginPath(); ctx.moveTo(sx+12,sy-6); ctx.lineTo(sx+20,sy-12); ctx.lineTo(sx+14,sy-2); ctx.fill();
+                    ctx.fillStyle="white"; ctx.fillRect(sx-6,sy-2,4,4); ctx.fillRect(sx+2,sy-2,4,4);
+                }
             }
-
+            // projectiles
+            for(let p of projectiles){
+                let sx = p.x - camera.x, sy = p.y - camera.y;
+                ctx.fillStyle = "#b5ff6a"; ctx.beginPath(); ctx.arc(sx,sy,6,0,Math.PI*2); ctx.fill();
+                ctx.fillStyle = "#7eff2e"; ctx.beginPath(); ctx.arc(sx-1,sy-1,3,0,Math.PI*2); ctx.fill();
+            }
+            
             // player white cube
             let px = player.x - camera.x, py = player.y - camera.y;
-            ctx.fillStyle = "#f0f0f0"; ctx.shadowBlur=8; ctx.fillRect(px-15, py-15, 30,30);
-            ctx.fillStyle = "#aaaaaa"; ctx.beginPath(); ctx.arc(px, py, 30+player.level*2, 0, Math.PI*2); ctx.strokeStyle = "#ffcc88"; ctx.lineWidth=2; ctx.stroke();
-            ctx.fillStyle = "#000"; ctx.fillRect(px-3, py-18, 6,8); 
-            // crosshair if aiming
+            ctx.fillStyle = "#fcfcfc"; ctx.shadowBlur=6; ctx.fillRect(px-16, py-16, 32,32);
+            ctx.fillStyle = "#ffcc77"; ctx.beginPath(); ctx.arc(px, py, 35+player.level*2, 0, Math.PI*2); ctx.strokeStyle = "#ffaa55"; ctx.lineWidth=2.5; ctx.stroke();
             if(player.selectedWeapon === 'crossbow'){
-                ctx.beginPath(); ctx.arc(px, py, 22, 0, Math.PI*2); ctx.strokeStyle="red"; ctx.lineWidth=2; ctx.stroke();
+                ctx.beginPath(); ctx.arc(px, py, 28, 0, Math.PI*2); ctx.strokeStyle = "#ff5555"; ctx.lineWidth=3; ctx.stroke();
             }
             ctx.shadowBlur=0;
             updateUI();
         }
-
-        // input handling
+        
+        // handle canvas tap (move + resource + crossbow fire)
         function handleCanvasTap(e){
             if(game.gameOver) return;
             e.preventDefault();
-            let rect = canvas.getBoundingClientRect();
-            let scaleX = canvas.width/rect.width;
-            let scaleY = canvas.height/rect.height;
-            let tapX, tapY;
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            let clientX, clientY;
             if(e.touches){
-                tapX = (e.touches[0].clientX - rect.left) * scaleX;
-                tapY = (e.touches[0].clientY - rect.top) * scaleY;
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
             } else {
-                tapX = (e.clientX - rect.left) * scaleX;
-                tapY = (e.clientY - rect.top) * scaleY;
+                clientX = e.clientX;
+                clientY = e.clientY;
             }
+            let tapX = (clientX - rect.left) * scaleX;
+            let tapY = (clientY - rect.top) * scaleY;
             let worldX = tapX + camera.x;
             let worldY = tapY + camera.y;
+            
             if(player.selectedWeapon === 'crossbow'){
                 fireCrossbow(worldX, worldY);
                 player.selectedWeapon = null;
-            } else {
-                let tappedResource = false;
-                for(let r of resources){
-                    if(Math.hypot(worldX - r.x, worldY - r.y) < 35){
-                        handleResourceTap(worldX, worldY);
-                        tappedResource = true;
-                        break;
-                    }
+                updateUI();
+                return;
+            }
+            let hitResource = false;
+            for(let r of resources){
+                if(Math.hypot(worldX - r.x, worldY - r.y) < 40){
+                    handleResourceTap(worldX, worldY);
+                    hitResource = true;
+                    break;
                 }
-                if(!tappedResource) player.moveTarget = {x: worldX, y: worldY };
+            }
+            if(!hitResource){
+                player.moveTarget = {x: worldX, y: worldY};
             }
         }
         
-        // animation loop
+        // main loop
         let lastTime = performance.now();
         function gameLoop(now){
             let delta = Math.min(0.033, (now - lastTime)/1000);
-            if(delta<=0){ lastTime=now; requestAnimationFrame(gameLoop); return; }
-            lastTime=now;
-            if(!game.gameOver){
-                updatePlayerMovement(delta);
-                updateEnemies(delta);
-                applyRingDamage();
-                updateTowers(delta);
-                applySafeZones();
-                spawnEnemies();
-                updateDayNight(delta);
+            if(delta>0){
+                lastTime=now;
+                if(!game.gameOver){
+                    updatePlayerMovement(delta);
+                    updateEnemies(delta);
+                    updateProjectiles(delta);
+                    applyRingDamage();
+                    updateTowers(delta);
+                    applySafeZones();
+                    spawnEnemies();
+                    updateDayNight(delta);
+                }
+                draw();
             }
-            draw();
             requestAnimationFrame(gameLoop);
         }
-
+        
         function bindEvents(){
             canvas.addEventListener('touchstart', handleCanvasTap, {passive:false});
             canvas.addEventListener('mousedown', handleCanvasTap);
@@ -736,13 +793,13 @@
             document.getElementById('craftWallBtn').addEventListener('click', (e)=>{ e.preventDefault(); craftWall(); updateUI();});
             document.getElementById('craftTowerBtn').addEventListener('click', (e)=>{ e.preventDefault(); craftTower(); updateUI();});
         }
-
+        
         initResources();
         bindEvents();
         updateUI();
         requestAnimationFrame(gameLoop);
         lastTime = performance.now();
-        showTip("🌲 Tap trees/stones 10x to gather. Craft crossbow first!", 3000);
+        showTip("🐌 NEW: Acid Snail spits from distance! CRAFT crossbow & bolts", 3500);
     })();
 </script>
 </body>
