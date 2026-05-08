@@ -3,302 +3,365 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-  <title>Copper Realms - Pillared Command Center</title>
+  <title>Copper Realms • 2026 Command Center</title>
   <style>
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
       -webkit-tap-highlight-color: transparent;
+      user-select: none; /* sleeker feel */
     }
 
     body {
-      background: linear-gradient(145deg, #0f0a05 0%, #1f1409 100%);
-      font-family: 'Segoe UI', 'Roboto', 'Impact', 'Arial Black', sans-serif;
-      padding: 16px;
       min-height: 100vh;
+      background: radial-gradient(circle at 20% 30%, #0a0602, #020100);
+      font-family: 'Inter', 'Segoe UI', 'Poppins', system-ui, -apple-system, sans-serif;
+      padding: 20px;
       display: flex;
-      justify-content: center;
       align-items: center;
+      justify-content: center;
       position: relative;
+      overflow-x: hidden;
     }
 
-    /* ===== SPIRAL PILLERS ===== */
-    .pillar-left, .pillar-right {
+    /* ===== ANIMATED COPPER PARTICLES CANVAS ===== */
+    #particle-canvas {
       position: fixed;
       top: 0;
-      bottom: 0;
-      width: 28px;
-      background: repeating-linear-gradient(
-        180deg,
-        #b87333 0px,
-        #d4943f 8px,
-        #7a3e1a 16px,
-        #cd7f32 24px,
-        #e0a44c 32px,
-        #b87333 40px
-      );
-      box-shadow: 0 0 20px rgba(205, 127, 50, 0.6), inset 0 0 12px rgba(255,215,0,0.3);
-      z-index: 10;
-      animation: copperShimmer 3s ease-in-out infinite;
-    }
-
-    .pillar-left {
       left: 0;
-      border-right: 2px solid #f0bc6e;
-    }
-
-    .pillar-right {
-      right: 0;
-      border-left: 2px solid #f0bc6e;
-    }
-
-    /* Spiral grooves on pillars */
-    .pillar-left::before, .pillar-right::before {
-      content: "";
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: repeating-linear-gradient(
-        45deg,
-        rgba(0,0,0,0.3) 0px,
-        rgba(0,0,0,0.3) 2px,
-        transparent 2px,
-        transparent 12px
-      );
-      pointer-events: none;
-    }
-
-    /* Animated metallic shimmer */
-    @keyframes copperShimmer {
-      0% { filter: brightness(1) drop-shadow(0 0 2px #ffb347); }
-      50% { filter: brightness(1.15) drop-shadow(0 0 8px #ff8c00); }
-      100% { filter: brightness(1) drop-shadow(0 0 2px #ffb347); }
-    }
-
-    /* Spiral coil accents on pillars */
-    .pillar-left::after, .pillar-right::after {
-      content: "⤸⤸⤸⤸⤸⤸⤸⤸⤸⤸⤸⤸⤸⤸";
-      position: absolute;
-      bottom: 20%;
-      left: 4px;
-      font-size: 14px;
-      white-space: nowrap;
-      transform: rotate(90deg) scaleX(-1);
-      color: #ffd699;
-      opacity: 0.5;
-      letter-spacing: 4px;
-      pointer-events: none;
-    }
-
-    .pillar-right::after {
-      content: "⤸⤸⤸⤸⤸⤸⤸⤸⤸⤸⤸⤸⤸⤸";
-      transform: rotate(-90deg);
-      right: 4px;
-      left: auto;
-    }
-
-    /* Main container */
-    .container {
-      max-width: 600px;
       width: 100%;
-      margin: 0 auto;
-      background: rgba(10, 6, 3, 0.75);
-      border-radius: 64px;
-      padding: 24px 20px 40px;
-      backdrop-filter: blur(8px);
-      box-shadow: 0 25px 45px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,200,100,0.3);
-      border: 1px solid rgba(205, 127, 50, 0.7);
-      position: relative;
-      z-index: 2;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
     }
 
-    /* Header with bold copper */
+    /* ===== 2026 GLASS CONTAINER ===== */
+    .glass-panel {
+      position: relative;
+      z-index: 10;
+      max-width: 650px;
+      width: 100%;
+      background: rgba(12, 8, 5, 0.35);
+      backdrop-filter: blur(16px);
+      border-radius: 72px;
+      border: 1px solid rgba(205, 127, 50, 0.5);
+      padding: 28px 24px 40px;
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,210,110,0.2);
+      transition: all 0.2s ease;
+    }
+
+    /* futuristic header */
     h1 {
-      font-family: 'Impact', 'Arial Black', sans-serif;
-      font-size: 3rem;
+      font-family: 'Poppins', 'Impact', sans-serif;
+      font-weight: 800;
+      font-size: 2.8rem;
       text-align: center;
-      letter-spacing: 4px;
-      background: linear-gradient(135deg, #FDB72A 0%, #CD7F32 35%, #E6A155 65%, #B87333 100%);
+      background: linear-gradient(125deg, #FFD966, #E69A3C, #BD6B25, #F5B042);
+      background-size: 300% auto;
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
-      text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+      animation: copperWave 6s ease infinite;
+      letter-spacing: -0.5px;
+      text-shadow: 0 0 18px rgba(205,127,50,0.4);
       margin-bottom: 8px;
-      word-break: keep-all;
     }
 
-    /* Date/Time panel - glowing */
-    .datetime {
+    @keyframes copperWave {
+      0% { background-position: 0% center; }
+      50% { background-position: 100% center; }
+      100% { background-position: 0% center; }
+    }
+
+    /* datetime - neon edge */
+    .datetime-neon {
       text-align: center;
-      font-family: monospace;
-      font-weight: bold;
-      font-size: 1.15rem;
-      background: #1f160ed9;
-      display: inline-block;
-      width: 100%;
-      padding: 12px;
-      border-radius: 60px;
-      margin: 15px 0 25px;
-      color: #f5bc70;
-      border: 1px solid #cd7f32;
-      box-shadow: 0 0 12px rgba(205,127,50,0.4), inset 0 0 6px rgba(0,0,0,0.5);
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 500;
+      font-size: 1.1rem;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(4px);
+      width: fit-content;
+      margin: 12px auto 28px;
+      padding: 10px 22px;
+      border-radius: 80px;
+      color: #fbc87a;
+      border: 1px solid rgba(255,170,60,0.6);
+      box-shadow: 0 0 12px rgba(205,127,50,0.3);
+      letter-spacing: 0.5px;
     }
 
-    /* Stat cards */
+    /* stat cards - 2026 glassmorph */
     .stat-card {
-      background: linear-gradient(125deg, #1c130b, #110b06);
+      background: rgba(20, 14, 8, 0.55);
+      backdrop-filter: blur(12px);
       border-radius: 48px;
-      padding: 18px 22px;
-      margin-bottom: 28px;
-      border-left: 6px solid #e09d42;
-      box-shadow: 0 8px 18px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,215,0,0.2);
+      padding: 20px 24px;
+      margin-bottom: 24px;
+      border: 1px solid rgba(205,127,50,0.3);
+      transition: transform 0.15s ease, border-color 0.2s;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+    }
+
+    .stat-card:active {
+      transform: scale(0.99);
     }
 
     .stat-label {
-      font-size: 1rem;
-      font-weight: bold;
+      font-size: 0.85rem;
+      font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 2px;
-      color: #e0a44c;
-      margin-bottom: 10px;
+      color: #ebae6e;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
     .stat-value {
-      font-size: 2.4rem;
+      font-size: 3rem;
       font-weight: 800;
-      font-family: monospace;
-      color: #ffe0a3;
-      text-shadow: 0 0 5px #ff9f2e;
+      font-family: 'JetBrains Mono', monospace;
+      background: linear-gradient(135deg, #FDE1A8, #D68B3C);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-shadow: 0 2px 5px rgba(0,0,0,0.2);
       letter-spacing: 2px;
-      margin-bottom: 14px;
+      margin-bottom: 16px;
     }
 
-    /* Button rows - now includes +10 +5 +1 */
-    .button-row {
+    /* button grid - futuristic */
+    .button-grid {
       display: flex;
-      gap: 14px;
-      margin-top: 12px;
       flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 8px;
     }
 
-    .copper-btn {
-      flex: 1;
-      background: radial-gradient(circle at 30% 25%, #e8a850, #a5511f);
-      border: none;
-      padding: 14px 6px;
+    .copper-btn-2026 {
+      background: linear-gradient(115deg, #2b1c0e, #1a1008);
+      border: 1px solid #cb7b35;
+      padding: 12px 16px;
       border-radius: 60px;
-      font-size: 1.2rem;
-      font-weight: bold;
-      font-family: monospace;
-      color: #221000;
-      text-shadow: 0 1px 0 #ffcf8a;
-      box-shadow: 0 4px 0 #5c2b0e;
-      transition: 0.06s linear;
-      cursor: pointer;
-      text-align: center;
-      min-width: 70px;
-    }
-
-    .copper-btn:active {
-      transform: translateY(3px);
-      box-shadow: 0 1px 0 #5c2b0e;
-    }
-
-    /* Special small increment buttons */
-    .copper-btn.small-add {
-      background: radial-gradient(circle at 30% 25%, #c9823a, #8a3f16);
+      font-weight: 700;
       font-size: 1rem;
-    }
-
-    .reset-btn {
-      background: radial-gradient(#7a4e2a, #4f2c12);
-      color: #ffcb8a;
-      text-shadow: none;
-      box-shadow: 0 4px 0 #2d180a;
-    }
-
-    /* Total banked card */
-    .total-banked {
-      background: linear-gradient(115deg, #2b1a0c, #170f07);
-      border: 2px solid #e7b15a;
-    }
-    .total-banked .stat-value {
-      font-size: 2.8rem;
-      color: #ffcd82;
-    }
-
-    /* Footer */
-    footer {
+      color: #ffcf8e;
+      cursor: pointer;
+      transition: all 0.08s linear;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+      font-family: monospace;
+      flex: 1 0 auto;
+      min-width: 70px;
       text-align: center;
-      margin-top: 20px;
+      backdrop-filter: blur(4px);
+    }
+
+    .copper-btn-2026:active {
+      transform: translateY(2px);
+      background: linear-gradient(115deg, #3e2a18, #2c1c0c);
+      border-color: #f5a442;
+      color: #ffe1ae;
+    }
+
+    .special-bank {
+      background: linear-gradient(125deg, #8b561e, #4f2a10);
+      border-color: #ffbc6e;
+      color: #FFF1CC;
+      text-shadow: 0 1px 2px black;
+    }
+
+    .reset-btn-small {
+      background: #22180e;
+      border-color: #7e552e;
+      color: #e4aa6b;
+    }
+
+    /* total bank card special */
+    .bank-glow {
+      background: rgba(30, 20, 10, 0.7);
+      border: 1px solid #f0ad5e;
+      box-shadow: 0 0 12px rgba(240, 160, 70, 0.3);
+    }
+
+    /* footer */
+    .footer-tag {
+      text-align: center;
       font-size: 0.7rem;
-      color: #b87a3c;
+      color: #b1753a;
+      margin-top: 20px;
       letter-spacing: 1px;
+      font-weight: 400;
+    }
+
+    /* spiral pillers but ultra modern */
+    .modern-pillar-left, .modern-pillar-right {
+      position: fixed;
+      top: 10%;
+      bottom: 10%;
+      width: 10px;
+      background: repeating-linear-gradient(180deg, 
+        #e5a445 0px, #b45f2b 12px, #ffc87c 24px, #8b431d 36px);
+      border-radius: 20px;
+      filter: blur(1px) drop-shadow(0 0 6px gold);
+      opacity: 0.5;
+      z-index: 2;
+      animation: pillarBreathing 3s infinite alternate;
+    }
+
+    .modern-pillar-left {
+      left: 12px;
+    }
+    .modern-pillar-right {
+      right: 12px;
+    }
+
+    @keyframes pillarBreathing {
+      0% { opacity: 0.3; width: 10px; filter: blur(0px);}
+      100% { opacity: 0.8; width: 14px; filter: blur(1px);}
+    }
+
+    /* responsive */
+    @media (max-width: 500px) {
+      .glass-panel { padding: 20px 16px 32px; }
+      .stat-value { font-size: 2.3rem; }
+      .copper-btn-2026 { padding: 10px 10px; font-size: 0.9rem; min-width: 55px; }
+      h1 { font-size: 2.2rem; }
     }
   </style>
 </head>
 <body>
 
-<!-- SPIRAL PILLERS holding up the website -->
-<div class="pillar-left"></div>
-<div class="pillar-right"></div>
+<canvas id="particle-canvas"></canvas>
+<div class="modern-pillar-left"></div>
+<div class="modern-pillar-right"></div>
 
-<div class="container">
+<div class="glass-panel">
   <h1>⚡ COPPER REALMS ⚡</h1>
-  <div class="datetime">
-    <span id="dateDisplay"></span> &nbsp;⛁&nbsp; 
-    <span id="timeDisplay"></span>
+  <div class="datetime-neon">
+    <span id="dateDisplay"></span> &nbsp;⛁&nbsp; <span id="timeDisplay"></span>
   </div>
 
-  <!-- Lbs Received -->
+  <!-- LBS RECEIVED -->
   <div class="stat-card">
-    <div class="stat-label">📦 LBS RECEIVED (TODAY)</div>
+    <div class="stat-label">📦 LBS RECEIVED · TODAY</div>
     <div class="stat-value" id="receivedValue">0</div>
-    <div class="button-row">
-      <button class="copper-btn small-add" id="addReceived1">+1 lb</button>
-      <button class="copper-btn small-add" id="addReceived5">+5 lbs</button>
-      <button class="copper-btn small-add" id="addReceived10">+10 lbs</button>
-      <button class="copper-btn small-add" id="addReceived50">+50 lbs</button>
-      <button class="copper-btn reset-btn" id="resetReceivedBtn">↺ RESET</button>
+    <div class="button-grid">
+      <button class="copper-btn-2026" id="addReceived1">+1</button>
+      <button class="copper-btn-2026" id="addReceived5">+5</button>
+      <button class="copper-btn-2026" id="addReceived10">+10</button>
+      <button class="copper-btn-2026" id="addReceived50">+50</button>
+      <button class="copper-btn-2026 reset-btn-small" id="resetReceivedBtn">↺</button>
     </div>
   </div>
 
-  <!-- Lbs Refined -->
+  <!-- LBS REFINED -->
   <div class="stat-card">
-    <div class="stat-label">⚙️ LBS REFINED (TODAY)</div>
+    <div class="stat-label">⚙️ LBS REFINED · TODAY</div>
     <div class="stat-value" id="refinedValue">0</div>
-    <div class="button-row">
-      <button class="copper-btn small-add" id="addRefined1">+1 lb</button>
-      <button class="copper-btn small-add" id="addRefined5">+5 lbs</button>
-      <button class="copper-btn small-add" id="addRefined10">+10 lbs</button>
-      <button class="copper-btn small-add" id="addRefined50">+50 lbs</button>
-      <button class="copper-btn reset-btn" id="resetRefinedBtn">↺ RESET</button>
+    <div class="button-grid">
+      <button class="copper-btn-2026" id="addRefined1">+1</button>
+      <button class="copper-btn-2026" id="addRefined5">+5</button>
+      <button class="copper-btn-2026" id="addRefined10">+10</button>
+      <button class="copper-btn-2026" id="addRefined50">+50</button>
+      <button class="copper-btn-2026 reset-btn-small" id="resetRefinedBtn">↺</button>
     </div>
   </div>
 
-  <!-- Total Copper Banked -->
-  <div class="stat-card total-banked">
-    <div class="stat-label">🏦 TOTAL COPPER BANKED (ALL TIME)</div>
+  <!-- TOTAL BANKED -->
+  <div class="stat-card bank-glow">
+    <div class="stat-label">🏦 TOTAL COPPER BANKED · PERMANENT</div>
     <div class="stat-value" id="bankedValue">0</div>
-    <div class="button-row">
-      <button class="copper-btn" id="addToBankBtn" style="background: radial-gradient(#d68f3a, #8a451d);">✨ ADD TODAY'S REFINED TO BANK ✨</button>
+    <div class="button-grid">
+      <button class="copper-btn-2026 special-bank" id="addToBankBtn">✨ ADD REFINED TO BANK ✨</button>
     </div>
-    <div style="margin-top: 12px; font-size:0.75rem; color:#e7a352;">Tap to move refined lbs → permanent vault</div>
+    <div style="font-size: 11px; margin-top: 12px; color:#cc9b57;">Deposit today's refined into permanent vault</div>
   </div>
 
-  <!-- Utilities -->
-  <div class="reset-area" style="display: flex; gap: 12px; justify-content: center; margin-top: 12px;">
-    <button class="small-btn" id="resetDailyBtn" style="background:#2f2216; border:1px solid #c27e3a; padding:10px 18px; border-radius:40px; color:#f0bc6e;">🔄 RESET TODAY</button>
-    <button class="small-btn" id="fullResetBtn" style="background:#2f2216; border:1px solid #a03e1a; padding:10px 18px; border-radius:40px; color:#e6955c;">⚠️ NUKE ALL</button>
+  <div style="display: flex; gap: 14px; justify-content: center; margin-top: 12px;">
+    <button class="copper-btn-2026 reset-btn-small" id="resetDailyBtn" style="padding: 10px 20px;">🔄 RESET TODAY</button>
+    <button class="copper-btn-2026 reset-btn-small" id="fullResetBtn" style="padding: 10px 20px;">⚠️ NUKE ALL</button>
   </div>
-  <footer>spiral pillars of copper • command center • auto‑save</footer>
+  <div class="footer-tag">copper command · 2026 quantum flow · animated particles</div>
 </div>
 
 <script>
-  // Storage keys
+  // --- particle system (copper glitter) ---
+  const canvas = document.getElementById('particle-canvas');
+  let ctx = canvas.getContext('2d');
+  let particles = [];
+  let animationId = null;
+
+  function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+
+  class CopperParticle {
+    constructor() {
+      this.x = Math.random() * canvas.width;
+      this.y = Math.random() * canvas.height;
+      this.size = Math.random() * 3 + 1.2;
+      this.speedX = (Math.random() - 0.5) * 0.4;
+      this.speedY = (Math.random() - 0.5) * 0.3 + 0.2;
+      this.opacity = Math.random() * 0.6 + 0.2;
+      this.color = `rgba(230, 140, 50, ${this.opacity})`;
+      this.glow = Math.random() > 0.7;
+    }
+    update() {
+      this.x += this.speedX;
+      this.y += this.speedY;
+      if (this.x < -10) this.x = canvas.width + 10;
+      if (this.x > canvas.width + 10) this.x = -10;
+      if (this.y < -10) this.y = canvas.height + 10;
+      if (this.y > canvas.height + 10) this.y = -10;
+    }
+    draw() {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+      if (this.glow) {
+        ctx.shadowBlur = 8;
+        ctx.shadowColor = '#ffa447';
+      } else {
+        ctx.shadowBlur = 2;
+      }
+      ctx.fillStyle = this.color;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+  }
+
+  function initParticles(count = 85) {
+    particles = [];
+    for (let i = 0; i < count; i++) {
+      particles.push(new CopperParticle());
+    }
+  }
+
+  function animateParticles() {
+    if (!ctx) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for (let p of particles) {
+      p.update();
+      p.draw();
+    }
+    animationId = requestAnimationFrame(animateParticles);
+  }
+
+  function startParticles() {
+    resizeCanvas();
+    initParticles(95);
+    animateParticles();
+  }
+
+  window.addEventListener('resize', () => {
+    resizeCanvas();
+    initParticles(95);
+  });
+
+  // --- DATA LOGIC (same robust, with modern feels)---
   const STORAGE = {
     lastDate: "copper_lastDate",
     dailyReceived: "copper_dailyReceived",
@@ -310,17 +373,12 @@
     return new Date().toISOString().split('T')[0];
   }
 
-  let state = {
-    dailyReceived: 0,
-    dailyRefined: 0,
-    totalBanked: 0
-  };
+  let state = { dailyReceived: 0, dailyRefined: 0, totalBanked: 0 };
 
   function loadData() {
     let lastDate = localStorage.getItem(STORAGE.lastDate);
     let today = getTodayStr();
     let totalBanked = parseFloat(localStorage.getItem(STORAGE.totalBanked)) || 0;
-
     if (lastDate === today) {
       state.dailyReceived = parseFloat(localStorage.getItem(STORAGE.dailyReceived)) || 0;
       state.dailyRefined = parseFloat(localStorage.getItem(STORAGE.dailyRefined)) || 0;
@@ -352,6 +410,7 @@
     if (state.dailyReceived < 0) state.dailyReceived = 0;
     saveDaily();
     updateUI();
+    triggerParticleBurst();
   }
 
   function addRefined(amount) {
@@ -360,11 +419,12 @@
       state.dailyRefined = newRefined;
     } else {
       state.dailyRefined = state.dailyReceived;
-      showFloatingMsg("⚠️ Can't refine more than received today!", "#b0451a");
+      showToast("⚠️ Can't refine more than received", "#aa4a1c");
     }
     if (state.dailyRefined < 0) state.dailyRefined = 0;
     saveDaily();
     updateUI();
+    triggerParticleBurst();
   }
 
   function resetReceived() {
@@ -373,107 +433,110 @@
     saveDaily();
     updateUI();
   }
-
   function resetRefined() {
     state.dailyRefined = 0;
     saveDaily();
     updateUI();
   }
-
   function addRefinedToBank() {
     if (state.dailyRefined > 0) {
       state.totalBanked += state.dailyRefined;
       state.dailyRefined = 0;
       saveDaily();
       updateUI();
-      showFloatingMsg(`✅ ${Math.floor(state.totalBanked)} total banked!`, "#2a6b2a");
+      showToast(`✅ +${state.dailyRefined} banked! Total: ${Math.floor(state.totalBanked)}`, "#2a7a2a");
+      triggerParticleBurst(20);
     } else {
-      showFloatingMsg("No refined lbs to bank today!", "#8b3a1a");
+      showToast("No refined lbs to bank", "#b64a1e");
     }
   }
-
   function resetDaily() {
     state.dailyReceived = 0;
     state.dailyRefined = 0;
     saveDaily();
     updateUI();
-    showFloatingMsg("Today's stats reset", "#a35e2a");
+    showToast("Today's data cleared", "#b67a32");
   }
-
   function fullReset() {
-    if (confirm("⚠️ PERMANENT: erase ALL Copper Realms data?")) {
+    if (confirm("⚠️ PERMANENT reset? Total Banked will vanish.")) {
       state.dailyReceived = 0;
       state.dailyRefined = 0;
       state.totalBanked = 0;
       localStorage.setItem(STORAGE.lastDate, getTodayStr());
       saveDaily();
       updateUI();
-      showFloatingMsg("System nuked. Start fresh.", "#6a2e0e");
+      showToast("Copper Realms factory reset", "#773d1a");
     }
   }
 
-  function showFloatingMsg(text, bgColor) {
-    let msg = document.createElement('div');
-    msg.innerText = text;
-    msg.style.position = 'fixed';
-    msg.style.bottom = '30px';
-    msg.style.left = '20px';
-    msg.style.right = '20px';
-    msg.style.backgroundColor = bgColor;
-    msg.style.color = '#ffe6c7';
-    msg.style.padding = '14px';
-    msg.style.borderRadius = '60px';
-    msg.style.textAlign = 'center';
-    msg.style.fontWeight = 'bold';
-    msg.style.zIndex = '999';
-    msg.style.fontFamily = 'monospace';
-    msg.style.boxShadow = '0 4px 20px black';
-    msg.style.border = '1px solid #ffc285';
-    document.body.appendChild(msg);
-    setTimeout(() => msg.remove(), 1700);
+  function showToast(msg, bg) {
+    let t = document.createElement('div');
+    t.innerText = msg;
+    t.style.position = 'fixed';
+    t.style.bottom = '25px';
+    t.style.left = '20px';
+    t.style.right = '20px';
+    t.style.backgroundColor = bg;
+    t.style.color = '#FFF0cf';
+    t.style.padding = '14px';
+    t.style.borderRadius = '60px';
+    t.style.textAlign = 'center';
+    t.style.fontWeight = 'bold';
+    t.style.zIndex = '999';
+    t.style.backdropFilter = 'blur(8px)';
+    t.style.fontFamily = 'monospace';
+    t.style.border = '1px solid #ffb368';
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 1700);
   }
 
   function checkDateChange() {
-    let storedDate = localStorage.getItem(STORAGE.lastDate);
+    let stored = localStorage.getItem(STORAGE.lastDate);
     let today = getTodayStr();
-    if (storedDate !== today) {
+    if (stored !== today) {
       state.dailyReceived = 0;
       state.dailyRefined = 0;
       localStorage.setItem(STORAGE.lastDate, today);
       localStorage.setItem(STORAGE.dailyReceived, 0);
       localStorage.setItem(STORAGE.dailyRefined, 0);
       updateUI();
-      showFloatingMsg("🪙 New day! Received & Refined reset", "#876b42");
+      showToast("🪙 NEW DAY · Received & Refined reset", "#c28232");
     }
+  }
+
+  function triggerParticleBurst(extra = 12) {
+    for (let i = 0; i < extra; i++) {
+      particles.push(new CopperParticle());
+    }
+    if (particles.length > 220) particles = particles.slice(-180);
   }
 
   function updateDateTime() {
     const now = new Date();
-    document.getElementById('dateDisplay').innerText = now.toLocaleDateString(undefined, { year:'numeric', month:'short', day:'numeric' });
-    document.getElementById('timeDisplay').innerText = now.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+    document.getElementById('dateDisplay').innerText = now.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+    document.getElementById('timeDisplay').innerText = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
   }
 
   function bindEvents() {
-    document.getElementById('addReceived1').addEventListener('click', () => addReceived(1));
-    document.getElementById('addReceived5').addEventListener('click', () => addReceived(5));
-    document.getElementById('addReceived10').addEventListener('click', () => addReceived(10));
-    document.getElementById('addReceived50').addEventListener('click', () => addReceived(50));
-    document.getElementById('resetReceivedBtn').addEventListener('click', resetReceived);
-    
-    document.getElementById('addRefined1').addEventListener('click', () => addRefined(1));
-    document.getElementById('addRefined5').addEventListener('click', () => addRefined(5));
-    document.getElementById('addRefined10').addEventListener('click', () => addRefined(10));
-    document.getElementById('addRefined50').addEventListener('click', () => addRefined(50));
-    document.getElementById('resetRefinedBtn').addEventListener('click', resetRefined);
-    
-    document.getElementById('addToBankBtn').addEventListener('click', addRefinedToBank);
-    document.getElementById('resetDailyBtn').addEventListener('click', resetDaily);
-    document.getElementById('fullResetBtn').addEventListener('click', fullReset);
+    document.getElementById('addReceived1').onclick = () => addReceived(1);
+    document.getElementById('addReceived5').onclick = () => addReceived(5);
+    document.getElementById('addReceived10').onclick = () => addReceived(10);
+    document.getElementById('addReceived50').onclick = () => addReceived(50);
+    document.getElementById('resetReceivedBtn').onclick = resetReceived;
+    document.getElementById('addRefined1').onclick = () => addRefined(1);
+    document.getElementById('addRefined5').onclick = () => addRefined(5);
+    document.getElementById('addRefined10').onclick = () => addRefined(10);
+    document.getElementById('addRefined50').onclick = () => addRefined(50);
+    document.getElementById('resetRefinedBtn').onclick = resetRefined;
+    document.getElementById('addToBankBtn').onclick = addRefinedToBank;
+    document.getElementById('resetDailyBtn').onclick = resetDaily;
+    document.getElementById('fullResetBtn').onclick = fullReset;
   }
 
   function init() {
-    loadData();
+    startParticles();
     bindEvents();
+    loadData();
     updateUI();
     updateDateTime();
     setInterval(() => {
