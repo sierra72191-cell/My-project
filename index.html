@@ -1,641 +1,561 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>DEEP ABYSS: EVOLUTION | Neon Predator Sim</title>
-    <style>
-        * {
-            user-select: none;
-            touch-action: none;
-            box-sizing: border-box;
-        }
-        body {
-            margin: 0;
-            background: #000;
-            height: 100vh;
-            overflow: hidden;
-            font-family: 'Segoe UI', 'Poppins', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        }
-        canvas {
-            display: block;
-            width: 100vw;
-            height: 100vh;
-            background: radial-gradient(circle at 20% 30%, #012b44, #00101c);
-            cursor: crosshair;
-        }
-        /* UI Panels - futuristic */
-        .ui-panel {
-            position: absolute;
-            backdrop-filter: blur(8px);
-            background: rgba(0, 10, 20, 0.55);
-            border-radius: 24px;
-            border-left: 3px solid #0ff;
-            border-bottom: 1px solid rgba(0, 255, 255, 0.3);
-            padding: 8px 16px;
-            pointer-events: none;
-            z-index: 20;
-            font-weight: bold;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-        }
-        .top-left {
-            top: 18px;
-            left: 18px;
-            font-family: monospace;
-            letter-spacing: 1px;
-        }
-        .top-right {
-            top: 18px;
-            right: 18px;
-            text-align: right;
-            font-size: 14px;
-        }
-        .bottom-stats {
-            bottom: 18px;
-            left: 18px;
-            right: 18px;
-            background: rgba(0, 5, 12, 0.7);
-            border-radius: 38px;
-            backdrop-filter: blur(12px);
-            display: flex;
-            justify-content: space-between;
-            padding: 10px 22px;
-            font-size: 14px;
-            font-weight: bold;
-            border: 1px solid rgba(0, 255, 200, 0.4);
-            font-family: monospace;
-        }
-        .stat-block {
-            display: flex;
-            gap: 18px;
-            color: #b0f0ff;
-            text-shadow: 0 0 5px #0af;
-        }
-        .stat-block span {
-            color: #ffd966;
-            margin-left: 6px;
-            font-size: 1.2em;
-        }
-        .hp-bar-container {
-            width: 180px;
-            height: 10px;
-            background: rgba(30, 30, 60, 0.8);
-            border-radius: 12px;
-            overflow: hidden;
-            margin: 6px 0;
-            border: 1px solid #0ff;
-        }
-        .hp-fill {
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, #0affa0, #00e0ff);
-            transition: width 0.1s linear;
-        }
-        .xp-bar {
-            width: 140px;
-            height: 6px;
-            background: #1a2a3a;
-            border-radius: 6px;
-            margin-top: 5px;
-        }
-        .xp-fill {
-            height: 100%;
-            width: 0%;
-            background: #ffb347;
-            border-radius: 6px;
-            transition: width 0.2s;
-        }
-        .badge {
-            font-size: 11px;
-            color: #7df9ff;
-            margin-top: 3px;
-        }
-        .manual-hint {
-            position: absolute;
-            bottom: 25px;
-            right: 20px;
-            background: rgba(0,0,0,0.5);
-            border-radius: 40px;
-            padding: 5px 12px;
-            font-size: 10px;
-            color: #0ff;
-            pointer-events: none;
-            font-family: monospace;
-            backdrop-filter: blur(4px);
-        }
-        @keyframes pulseWarning {
-            0% { text-shadow: 0 0 0px red; opacity: 0.6; }
-            100% { text-shadow: 0 0 12px #ff3366; opacity: 1; }
-        }
-        .warning {
-            animation: pulseWarning 0.6s infinite alternate;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+  <title>Nova Realms • Copper Division</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    body {
+      min-height: 100vh;
+      background: radial-gradient(circle at 30% 20%, #0a0804 0%, #030201 100%);
+      font-family: 'Inter', 'Segoe UI', 'Poppins', system-ui, sans-serif;
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* ===== ANIMATED COPPER PARTICLES CANVAS ===== */
+    #particle-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* ===== ENERGY ZAP CANVAS (lightning between pillars) ===== */
+    #energy-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 3;
+    }
+
+    /* ===== ANIMATED PILLARS - MASSIVE, GLOWING, ZAPPING ===== */
+    .pillar-left, .pillar-right {
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      width: 32px;
+      z-index: 5;
+      background: linear-gradient(180deg, 
+        #ffb347 0%, 
+        #e08e2e 15%,
+        #b85c1a 30%,
+        #f5a442 45%,
+        #c9701e 60%,
+        #ffbf6e 75%,
+        #a65317 90%,
+        #ffc285 100%);
+      background-size: 100% 300%;
+      animation: pillarFlow 2s ease infinite, pillarGlow 1.2s alternate infinite;
+      box-shadow: 0 0 25px rgba(255,140,0,0.8), inset 0 0 15px rgba(255,215,0,0.6);
+      border-right: 2px solid #ffda99;
+    }
+
+    .pillar-left {
+      left: 8px;
+      border-radius: 0 30px 30px 0;
+    }
+
+    .pillar-right {
+      right: 8px;
+      border-radius: 30px 0 0 30px;
+      border-left: 2px solid #ffda99;
+      border-right: none;
+    }
+
+    @keyframes pillarFlow {
+      0% { background-position: 0% 0%; }
+      100% { background-position: 0% 100%; }
+    }
+
+    @keyframes pillarGlow {
+      0% { box-shadow: 0 0 15px rgba(255,120,0,0.6), inset 0 0 8px gold; filter: brightness(1);}
+      100% { box-shadow: 0 0 45px rgba(255,100,0,1), inset 0 0 25px #ffdd88; filter: brightness(1.2);}
+    }
+
+    /* spiral copper coils on pillars */
+    .pillar-left::before, .pillar-right::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: repeating-linear-gradient(45deg, 
+        rgba(0,0,0,0.4) 0px, 
+        rgba(0,0,0,0.4) 3px,
+        transparent 3px,
+        transparent 18px);
+      pointer-events: none;
+    }
+
+    /* energy orbs on pillars */
+    .pillar-left::after, .pillar-right::after {
+      content: "⚡";
+      position: absolute;
+      bottom: 15%;
+      font-size: 22px;
+      left: 50%;
+      transform: translateX(-50%);
+      animation: orbPulse 0.8s infinite alternate;
+      filter: drop-shadow(0 0 8px #ffaa33);
+      opacity: 0.9;
+    }
+
+    @keyframes orbPulse {
+      0% { opacity: 0.5; text-shadow: 0 0 5px orange; font-size: 20px;}
+      100% { opacity: 1; text-shadow: 0 0 18px #ff9933; font-size: 26px;}
+    }
+
+    /* ===== MAIN GLASS PANEL - BRIGHTER ===== */
+    .glass-panel {
+      position: relative;
+      z-index: 20;
+      max-width: 680px;
+      width: 100%;
+      background: rgba(10, 7, 3, 0.5);
+      backdrop-filter: blur(20px);
+      border-radius: 80px;
+      border: 1px solid rgba(255, 160, 60, 0.7);
+      padding: 32px 28px 42px;
+      box-shadow: 0 30px 55px -10px rgba(0,0,0,0.9), inset 0 1px 0 rgba(255,200,80,0.3), 0 0 30px rgba(255,120,0,0.2);
+    }
+
+    /* header with nova energy */
+    h1 {
+      font-family: 'Poppins', 'Impact', sans-serif;
+      font-weight: 800;
+      font-size: 2.2rem;
+      text-align: center;
+      letter-spacing: -0.5px;
+      margin-bottom: 4px;
+    }
+
+    .nova-title {
+      background: linear-gradient(135deg, #FFE6B0, #FFA447, #FF6A1A, #FFC875);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      animation: novaWave 3s ease infinite;
+      text-shadow: 0 0 20px rgba(255,100,0,0.5);
+      font-size: 2.5rem;
+    }
+
+    .copper-sub {
+      font-size: 1rem;
+      letter-spacing: 4px;
+      color: #f0ac6e;
+      text-shadow: 0 0 6px #ff8c33;
+      margin-top: -8px;
+    }
+
+    @keyframes novaWave {
+      0% { background-position: 0% 50%; filter: brightness(1);}
+      50% { background-position: 100% 50%; filter: brightness(1.2);}
+      100% { background-position: 0% 50%; filter: brightness(1);}
+    }
+
+    /* datetime */
+    .datetime-neon {
+      text-align: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 500;
+      background: rgba(0,0,0,0.7);
+      width: fit-content;
+      margin: 16px auto 28px;
+      padding: 10px 24px;
+      border-radius: 60px;
+      color: #ffe0aa;
+      border: 1px solid #ffa042;
+      box-shadow: 0 0 16px rgba(255,100,0,0.5);
+      backdrop-filter: blur(4px);
+    }
+
+    /* stat cards - brighter edges */
+    .stat-card {
+      background: rgba(16, 10, 5, 0.65);
+      backdrop-filter: blur(12px);
+      border-radius: 56px;
+      padding: 20px 26px;
+      margin-bottom: 28px;
+      border: 1px solid rgba(255, 140, 30, 0.6);
+      transition: all 0.2s;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5), inset 0 0 10px rgba(255,100,0,0.1);
+    }
+
+    .stat-label {
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 2.5px;
+      color: #ffbc6e;
+      margin-bottom: 12px;
+    }
+
+    .stat-value {
+      font-size: 3.2rem;
+      font-weight: 800;
+      font-family: 'JetBrains Mono', monospace;
+      background: linear-gradient(145deg, #FFE4A8, #E69A3C);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-shadow: 0 0 12px rgba(255,100,0,0.4);
+      margin-bottom: 16px;
+    }
+
+    /* buttons */
+    .button-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .copper-btn {
+      background: linear-gradient(115deg, #2c1d0e, #1a1108);
+      border: 1px solid #dd8f40;
+      padding: 12px 18px;
+      border-radius: 60px;
+      font-weight: bold;
+      font-size: 1rem;
+      color: #ffda9e;
+      cursor: pointer;
+      transition: 0.07s linear;
+      font-family: monospace;
+      flex: 1 0 auto;
+      min-width: 65px;
+      text-align: center;
+      backdrop-filter: blur(5px);
+    }
+
+    .copper-btn:active {
+      transform: translateY(2px);
+      background: #4a311c;
+      border-color: #ffbc6e;
+    }
+
+    .bank-btn {
+      background: linear-gradient(125deg, #aa6e2e, #6b3c16);
+      border-color: #ffcd84;
+      color: #fff2cf;
+      text-shadow: 0 0 6px orange;
+    }
+
+    .reset-small {
+      background: #1f160c;
+      border-color: #b87a3e;
+    }
+
+    .bank-glow {
+      background: rgba(30, 18, 6, 0.8);
+      border: 2px solid #ffb451;
+      box-shadow: 0 0 22px rgba(255, 100, 0, 0.4);
+    }
+
+    .footer {
+      text-align: center;
+      font-size: 0.7rem;
+      color: #ea9f4b;
+      margin-top: 22px;
+    }
+  </style>
 </head>
 <body>
 
-<div class="ui-panel top-left">
-    <div>🌀 ABYSS PREDATOR <span style="color:#0ff;">LVL <span id="lvlVal">1</span></span></div>
-    <div class="hp-bar-container"><div class="hp-fill" id="hpFill"></div></div>
-    <div style="display: flex; gap: 12px; margin-top: 5px;">
-        <div>❤️ <span id="hpText">100</span>/<span id="maxHpText">100</span></div>
-        <div>📏 <span id="sizeStat">22</span>cm</div>
+<canvas id="particle-canvas"></canvas>
+<canvas id="energy-canvas"></canvas>
+
+<div class="pillar-left"></div>
+<div class="pillar-right"></div>
+
+<div class="glass-panel">
+  <h1><span class="nova-title">NOVA REALMS</span></h1>
+  <div class="copper-sub">⚡ COPPER DIVISION ⚡</div>
+  <div class="datetime-neon">
+    <span id="dateDisplay"></span> &nbsp;⟁&nbsp; <span id="timeDisplay"></span>
+  </div>
+
+  <!-- Received -->
+  <div class="stat-card">
+    <div class="stat-label">📦 LBS RECEIVED · TODAY</div>
+    <div class="stat-value" id="receivedValue">0</div>
+    <div class="button-grid">
+      <button class="copper-btn" id="addReceived1">+1</button>
+      <button class="copper-btn" id="addReceived5">+5</button>
+      <button class="copper-btn" id="addReceived10">+10</button>
+      <button class="copper-btn" id="addReceived50">+50</button>
+      <button class="copper-btn reset-small" id="resetReceivedBtn">↺</button>
     </div>
-    <div class="xp-bar"><div class="xp-fill" id="xpFill"></div></div>
-    <div class="badge">⚡ XP: <span id="xpCurr">0</span> / <span id="nextXpReq">250</span></div>
-</div>
+  </div>
 
-<div class="ui-panel top-right">
-    <div>💀 KILLS: <span id="killCount">0</span></div>
-    <div>⏱️ SURVIVAL: <span id="surviveSeconds">0</span>s</div>
-    <div>🐟 GROWTH RATE: <span id="growthBonus">1.0x</span></div>
-    <div>🌊 DEPTH ZONE: <span id="depthZone">Shallows</span></div>
-</div>
+  <!-- Refined -->
+  <div class="stat-card">
+    <div class="stat-label">⚙️ LBS REFINED · TODAY</div>
+    <div class="stat-value" id="refinedValue">0</div>
+    <div class="button-grid">
+      <button class="copper-btn" id="addRefined1">+1</button>
+      <button class="copper-btn" id="addRefined5">+5</button>
+      <button class="copper-btn" id="addRefined10">+10</button>
+      <button class="copper-btn" id="addRefined50">+50</button>
+      <button class="copper-btn reset-small" id="resetRefinedBtn">↺</button>
+    </div>
+  </div>
 
-<div class="bottom-stats">
-    <div class="stat-block">🎯 SPEED <span id="speedStat">2.2</span></div>
-    <div class="stat-block">💀 DMG AURA <span id="auraDmg">1.5</span>/s</div>
-    <div class="stat-block">🛡️ REGEN <span id="regenStat">1</span>/s</div>
-    <div class="stat-block">⚔️ THREATS NEAR <span id="threatCount">0</span></div>
-</div>
-<div class="manual-hint">👆 TAP & DRAG → SWIM | RELEASE → AUTO EXPLORE</div>
+  <!-- Banked -->
+  <div class="stat-card bank-glow">
+    <div class="stat-label">🏦 TOTAL COPPER BANKED · PERMANENT</div>
+    <div class="stat-value" id="bankedValue">0</div>
+    <div class="button-grid">
+      <button class="copper-btn bank-btn" id="addToBankBtn">⚡ ADD REFINED TO VAULT ⚡</button>
+    </div>
+    <div style="font-size:11px; margin-top:12px; color:#f5b362;">Deposit today's refined → permanent copper reserve</div>
+  </div>
 
-<div id="globalFX" style="position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:999; mix-blend-mode: screen; opacity:0; transition: opacity 0.1s;"></div>
+  <div style="display: flex; gap: 14px; justify-content: center; margin: 10px 0 5px;">
+    <button class="copper-btn reset-small" id="resetDailyBtn">🔄 RESET TODAY</button>
+    <button class="copper-btn reset-small" id="fullResetBtn">⚠️ NUKE ALL</button>
+  </div>
+  <div class="footer">⚡ copper energy pillars · arc lightning ⚡</div>
+</div>
 
 <script>
-    (function(){
-        // ---------- WORLD CONFIG ----------
-        const WORLD_SIZE = 14000;          // huge open ocean
-        let canvas = document.createElement('canvas');
-        let ctx = canvas.getContext('2d');
-        document.body.appendChild(canvas);
-        
-        // camera
-        let cam = { x: 0, y: 0 };
-        
-        // PLAYER - starts small, grows with kills and time alive
-        let player = {
-            x: WORLD_SIZE/2, y: WORLD_SIZE/2,
-            hp: 100, maxHp: 100,
-            baseMaxHp: 100,
-            lvl: 1,
-            kills: 0,
-            xp: 0,
-            size: 22,           // cm small fish start
-            baseSize: 22,
-            speed: 2.2,
-            baseSpeed: 2.2,
-            angle: 0,
-            targetAngle: 0,
-            manualControl: false,
-            color: "#ffcc44",
-            lastRegen: performance.now(),
-            totalAliveSeconds: 0,
-            damageAura: 1.5,
-            regenRate: 1.0
-        };
-        
-        // all entities: marine life + threats + neutral beauties
-        let entities = [];
-        let particles = [];       // impact sparkles / blood / bubbles
-        let decorations = [];     // ambient schools, light rays
-        
-        // FX overlay
-        const fxDiv = document.getElementById('globalFX');
-        
-        // helper: apply visual impact effects + screen shake
-        function applyVisualImpact(typeIntensity = "medium", positionX = null, positionY = null) {
-            // screen shake
-            if(typeIntensity === "heavy") {
-                canvas.style.transform = "translate(4px, -3px)";
-                setTimeout(() => canvas.style.transform = "translate(-2px, 2px)", 40);
-                setTimeout(() => canvas.style.transform = "translate(1px, -1px)", 80);
-                setTimeout(() => canvas.style.transform = "translate(0,0)", 120);
-                fxDiv.style.backgroundColor = "rgba(255, 60, 30, 0.4)";
-                fxDiv.style.opacity = "0.7";
-                setTimeout(() => fxDiv.style.opacity = "0", 180);
-            } else if(typeIntensity === "kill") {
-                canvas.style.transform = "translate(2px, 0px)";
-                setTimeout(() => canvas.style.transform = "translate(-1px, 1px)", 30);
-                setTimeout(() => canvas.style.transform = "translate(0,0)", 70);
-                fxDiv.style.backgroundColor = "rgba(255, 200, 50, 0.6)";
-                fxDiv.style.opacity = "0.9";
-                setTimeout(() => fxDiv.style.opacity = "0", 150);
-                // spawn explosion particles
-                for(let i=0;i<12;i++) {
-                    particles.push({
-                        x: (positionX || player.x) + (Math.random() - 0.5)*40,
-                        y: (positionY || player.y) + (Math.random() - 0.5)*40,
-                        vx: (Math.random() - 0.5)*6,
-                        vy: (Math.random() - 0.5)*6,
-                        life: 0.8,
-                        size: Math.random()*4+2,
-                        color: `hsl(${Math.random()*40 + 30}, 100%, 60%)`
-                    });
-                }
-            } else {
-                // minor: bite effect
-                fxDiv.style.backgroundColor = "rgba(255, 100, 100, 0.3)";
-                fxDiv.style.opacity = "0.5";
-                setTimeout(() => fxDiv.style.opacity = "0", 100);
-            }
-        }
-        
-        // Spawn creature types (richer ocean life)
-        const CREATURE_TYPES = {
-            // peaceful / prey
-            baitfish: { size: 8, hp: 12, speed: 1.9, color: "#88ddff", dmg: 0.1, threat: false, exp: 8, baseAggro: false },
-            crab: { size: 12, hp: 28, speed: 0.9, color: "#e67e22", dmg: 0.5, threat: false, exp: 12, baseAggro: false },
-            seahorse: { size: 7, hp: 8, speed: 1.2, color: "#f1c40f", dmg: 0, threat: false, exp: 5, baseAggro: false },
-            // neutral / interesting
-            turtle: { size: 32, hp: 140, speed: 0.6, color: "#2ecc71", dmg: 0.5, threat: false, exp: 28, baseAggro: false },
-            jellyfish: { size: 18, hp: 58, speed: 0.9, color: "#d583ff", dmg: 1.8, threat: true, exp: 20, baseAggro: false, effect:"sting" },
-            puffer: { size: 20, hp: 92, speed: 1.0, color: "#f39c12", dmg: 2.5, threat: true, exp: 32, baseAggro: true, effect:"spike" },
-            // threats
-            barracuda: { size: 42, hp: 210, speed: 2.8, color: "#bdc3c7", dmg: 4.5, threat: true, exp: 55, baseAggro: true },
-            electric_eel: { size: 35, hp: 170, speed: 1.7, color: "#f4d03f", dmg: 5, threat: true, exp: 50, baseAggro: true, effect:"shock" },
-            shark: { size: 70, hp: 430, speed: 2.3, color: "#7f8c8d", dmg: 7, threat: true, exp: 85, baseAggro: true },
-            giant_squid: { size: 90, hp: 680, speed: 1.5, color: "#9b59b6", dmg: 9, threat: true, exp: 110, baseAggro: true },
-            // apex boss-like
-            leviathan: { size: 190, hp: 2500, speed: 0.65, color: "#2c3e50", dmg: 18, threat: true, exp: 280, baseAggro: true, boss: true },
-            // extra life: glowing fish
-            angelfish: { size: 13, hp: 22, speed: 1.7, color: "#ffa07a", dmg: 0.2, threat: false, exp: 10, baseAggro: false }
-        };
-        
-        function spawnCreature(typeKey, customX=null, customY=null) {
-            const t = CREATURE_TYPES[typeKey];
-            if(!t) return;
-            entities.push({
-                x: customX !== null ? customX : Math.random() * WORLD_SIZE,
-                y: customY !== null ? customY : Math.random() * WORLD_SIZE,
-                type: typeKey,
-                hp: t.hp,
-                maxHp: t.hp,
-                size: t.size,
-                speed: t.speed,
-                angle: Math.random() * Math.PI * 2,
-                color: t.color,
-                dmg: t.dmg,
-                threat: t.threat,
-                exp: t.exp,
-                effect: t.effect || null,
-                stateTimer: 0,
-                lastAttack: 0
-            });
-        }
-        
-        // initial population: more life, more threats
-        function populateOcean() {
-            // abundant life ~500 total entities
-            const counts = {
-                baitfish: 90, crab: 35, seahorse: 25, angelfish: 40,
-                turtle: 12, jellyfish: 35, puffer: 28,
-                barracuda: 24, electric_eel: 18, shark: 16, giant_squid: 10, leviathan: 2
-            };
-            for(let [type, num] of Object.entries(counts)) {
-                for(let i=0; i<num; i++) spawnCreature(type);
-            }
-            // ambient decor particles: bubbles + plankton
-            for(let i=0;i<400;i++){
-                decorations.push({
-                    x: Math.random()*WORLD_SIZE,
-                    y: Math.random()*WORLD_SIZE,
-                    type: 'bubble',
-                    size: 1+Math.random()*4,
-                    speedY: 0.3+Math.random()*1.2
-                });
-            }
-            for(let i=0;i<120;i++){
-                decorations.push({
-                    x: Math.random()*WORLD_SIZE,
-                    y: Math.random()*WORLD_SIZE,
-                    type: 'plankton',
-                    size: 2+Math.random()*5,
-                    alpha: 0.3+Math.random()*0.5
-                });
-            }
-        }
-        
-        // update player growth (time alive + kills = exponential small boost)
-        let lastTimeUpdate = performance.now();
-        function updateGrowthAndStats(now) {
-            let dt = Math.min(0.05, (now - lastTimeUpdate)/1000);
-            if(dt<=0) return;
-            lastTimeUpdate = now;
-            player.totalAliveSeconds += dt;
-            // passive size growth from living (tiny permanent growth per minute)
-            let aliveGrowth = Math.floor(player.totalAliveSeconds / 90) * 0.4;  // every 90 sec +0.4 size
-            let killsGrowth = player.kills * 0.12;
-            let totalBonus = Math.min(85, aliveGrowth + killsGrowth); // cap max size
-            let newSize = player.baseSize + totalBonus;
-            player.size = Math.min(150, newSize);
-            // adjust speed & max HP proportionally
-            let sizeFactor = 0.7 + (player.size/130);
-            player.speed = Math.min(5.2, player.baseSpeed + (player.size/60));
-            player.maxHp = Math.floor(player.baseMaxHp + (player.size * 1.8) + (player.lvl * 12));
-            if(player.hp > player.maxHp) player.hp = player.maxHp;
-            // scaling damage aura
-            player.damageAura = 1.2 + (player.lvl * 0.45) + (player.size / 85);
-            player.regenRate = 0.9 + (player.lvl * 0.12);
-        }
-        
-        // XP & Leveling
-        function addXP(amount) {
-            player.xp += amount;
-            let required = player.lvl * 180;
-            while(player.xp >= required) {
-                player.xp -= required;
-                player.lvl++;
-                required = player.lvl * 180;
-                player.baseMaxHp += 38;
-                player.maxHp = player.baseMaxHp + Math.floor(player.size * 1.2);
-                player.hp = player.maxHp;
-                player.baseSpeed += 0.09;
-                // visual joy
-                applyVisualImpact("kill", player.x, player.y);
-            }
-            document.getElementById('nextXpReq').innerText = required;
-        }
-        
-        // enemy interaction + aura damage + collision
-        function processCombat(deltaTime) {
-            let auraRange = player.size * 3.2 + 35;
-            let threatNearby = 0;
-            for(let i=0; i<entities.length; i++) {
-                let e = entities[i];
-                let dx = e.x - player.x, dy = e.y - player.y;
-                let dist = Math.hypot(dx, dy);
-                // AURA damage on enemies
-                if(dist < auraRange && e.hp > 0) {
-                    let auraDmgVal = player.damageAura * deltaTime * 2.2;
-                    e.hp -= auraDmgVal;
-                    // visual particle on damage tick
-                    if(Math.random()<0.12) {
-                        particles.push({
-                            x: e.x + (Math.random()-0.5)*e.size,
-                            y: e.y + (Math.random()-0.5)*e.size,
-                            vx: (Math.random()-0.5)*2,
-                            vy: (Math.random()-0.5)*2,
-                            life: 0.4,
-                            size: 2,
-                            color: "#ffaa66"
-                        });
-                    }
-                    if(e.hp <= 0) {
-                        // kill reward!
-                        player.kills++;
-                        let gainExp = e.exp + Math.floor(e.size/4);
-                        addXP(gainExp);
-                        applyVisualImpact("kill", e.x, e.y);
-                        // respawn to keep ocean lively
-                        let newType = Object.keys(CREATURE_TYPES)[Math.floor(Math.random()*Object.keys(CREATURE_TYPES).length)];
-                        spawnCreature(newType, Math.random()*WORLD_SIZE, Math.random()*WORLD_SIZE);
-                        entities.splice(i,1);
-                        i--;
-                        continue;
-                    }
-                }
-                // enemy aggression: threats chase player if close
-                if(e.threat && e.hp > 0) {
-                    let aggroRange = 400 + player.size*0.6;
-                    let distToPlayer = Math.hypot(e.x - player.x, e.y - player.y);
-                    if(distToPlayer < aggroRange) {
-                        threatNearby++;
-                        let angleTo = Math.atan2(player.y - e.y, player.x - e.x);
-                        e.angle += (angleTo - e.angle) * 0.045;
-                        // attack player on collision
-                        if(distToPlayer < (player.size + e.size)*0.8 && (performance.now() - (e.lastAttack||0)) > 700) {
-                            let dmgTaken = e.dmg * (0.7 + Math.random()*0.6);
-                            player.hp -= dmgTaken;
-                            e.lastAttack = performance.now();
-                            applyVisualImpact("medium", player.x, player.y);
-                            // apply special effect
-                            if(e.effect === "shock") {
-                                fxDiv.style.backgroundColor = "rgba(200, 230, 255, 0.7)";
-                                fxDiv.style.opacity = "0.8";
-                                setTimeout(()=>fxDiv.style.opacity="0", 150);
-                                player.angle += 0.3;
-                            } else if(e.effect === "sting") {
-                                player.speed *= 0.85;
-                                setTimeout(()=> player.speed = Math.min(5.2, player.baseSpeed+(player.size/60)), 800);
-                            } else if(e.effect === "spike") {
-                                applyVisualImpact("heavy");
-                            }
-                            if(player.hp <= 0) gameOver();
-                        }
-                    } else {
-                        // wander
-                        e.angle += (Math.random() - 0.5)*0.12;
-                    }
-                } else if(!e.threat) {
-                    // Prey small flee from big player (size matters)
-                    let fleeDist = player.size * 2.2;
-                    let distToPlayer = Math.hypot(e.x - player.x, e.y - player.y);
-                    if(distToPlayer < fleeDist + 90 && player.size > e.size+5) {
-                        let fleeAngle = Math.atan2(e.y - player.y, e.x - player.x);
-                        e.angle = fleeAngle + (Math.random()-0.5)*0.8;
-                    } else {
-                        e.angle += (Math.random() - 0.5)*0.08;
-                    }
-                }
-                // movement & boundaries
-                e.x += Math.cos(e.angle) * e.speed * deltaTime * 2.2;
-                e.y += Math.sin(e.angle) * e.speed * deltaTime * 2.2;
-                e.x = Math.min(WORLD_SIZE-20, Math.max(20, e.x));
-                e.y = Math.min(WORLD_SIZE-20, Math.max(20, e.y));
-            }
-            document.getElementById('threatCount').innerText = threatNearby;
-        }
-        
-        // player health regen
-        function updateRegen(deltaTime) {
-            if(player.hp < player.maxHp) {
-                player.hp += player.regenRate * deltaTime * 1.2;
-                if(player.hp > player.maxHp) player.hp = player.maxHp;
-            }
-        }
-        
-        function gameOver() {
-            alert("💀 THE ABYSS CLAIMED YOU...\n" + "Kills: " + player.kills + " | Level: " + player.lvl + " | Time: " + Math.floor(player.totalAliveSeconds)+"s");
-            location.reload();
-        }
-        
-        // ---- RENDERING with rich underwater FX ----
-        function draw() {
-            if(!ctx) return;
-            ctx.clearRect(0,0, canvas.width, canvas.height);
-            ctx.save();
-            ctx.translate(-cam.x, -cam.y);
-            // Ocean gradient rays
-            for(let i=0;i<12;i++) {
-                ctx.beginPath();
-                ctx.moveTo((i*700)%WORLD_SIZE, 0);
-                ctx.lineTo(((i*700)%WORLD_SIZE)+400, canvas.height+500);
-                ctx.lineTo(((i*700)%WORLD_SIZE)-400, canvas.height+500);
-                ctx.fillStyle = `rgba(70, 180, 240, 0.02)`;
-                ctx.fill();
-            }
-            // plankton & bubbles
-            decorations.forEach(d => {
-                if(d.type === 'bubble') {
-                    ctx.beginPath();
-                    ctx.arc(d.x, d.y, d.size, 0, Math.PI*2);
-                    ctx.fillStyle = `rgba(180, 240, 255, 0.35)`;
-                    ctx.fill();
-                    d.y -= d.speedY * 0.8;
-                    if(d.y < -50) d.y = WORLD_SIZE+50;
-                } else {
-                    ctx.fillStyle = `rgba(100, 210, 150, ${d.alpha})`;
-                    ctx.beginPath();
-                    ctx.arc(d.x, d.y, d.size*0.5, 0, Math.PI*2);
-                    ctx.fill();
-                }
-            });
-            // draw all creatures
-            entities.forEach(e => {
-                let hpPercent = e.hp/e.maxHp;
-                ctx.save();
-                ctx.translate(e.x, e.y);
-                ctx.rotate(e.angle);
-                ctx.fillStyle = e.color;
-                ctx.shadowBlur = e.threat ? 12 : 3;
-                ctx.shadowColor = e.threat ? "#ff3300" : "#00aaff";
-                // fish body shapes vary
-                if(e.type === "jellyfish" || e.type === "giant_squid") {
-                    ctx.beginPath();
-                    ctx.ellipse(0, 0, e.size, e.size*0.7, 0, 0, Math.PI*2);
-                    ctx.fill();
-                    for(let i=0;i<4;i++) ctx.fillRect(-e.size+4, i*5-8, 2, e.size*0.6);
-                } else if(e.type === "leviathan") {
-                    ctx.fillStyle = "#1a2a3f";
-                    ctx.beginPath();
-                    ctx.ellipse(0, 0, e.size, e.size*0.5, 0, 0, Math.PI*2);
-                    ctx.fill();
-                    ctx.fillStyle = "#ff6600";
-                    ctx.fillRect(e.size*0.5,-5,12,10);
-                } else {
-                    ctx.beginPath();
-                    ctx.ellipse(0, 0, e.size, e.size*0.6, 0, 0, Math.PI*2);
-                    ctx.fill();
-                    ctx.fillStyle = "black";
-                    ctx.fillRect(e.size*0.4, -3, 3, 6);
-                }
-                // hp bar
-                if(e.hp < e.maxHp) {
-                    ctx.fillStyle = "#ff5555";
-                    ctx.fillRect(-e.size*0.8, -e.size-4, e.size*1.6 * hpPercent, 4);
-                }
-                ctx.restore();
-            });
-            
-            // player draw with glowing aura
-            ctx.save();
-            ctx.translate(player.x, player.y);
-            ctx.rotate(player.angle);
-            ctx.shadowBlur = 28;
-            ctx.shadowColor = "#ffaa44";
-            ctx.fillStyle = player.color;
-            ctx.beginPath();
-            ctx.ellipse(0, 0, player.size, player.size*0.65, 0, 0, Math.PI*2);
-            ctx.fill();
-            ctx.fillStyle = "#000";
-            ctx.fillRect(player.size*0.5, -4, 5, 8);
-            ctx.fillStyle = "white";
-            ctx.beginPath();
-            ctx.arc(player.size*0.25, -4, 3, 0, Math.PI*2);
-            ctx.fill();
-            ctx.restore();
-            
-            // particles effects
-            for(let i=0;i<particles.length;i++) {
-                let p = particles[i];
-                ctx.fillStyle = p.color;
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
-                ctx.fill();
-                p.x += p.vx;
-                p.y += p.vy;
-                p.life -= 0.02;
-                if(p.life<=0) particles.splice(i,1);
-            }
-            ctx.restore();
-        }
-        
-        let lastFrameTime = 0;
-        let deltaAcc = 0;
-        function gameLoop(nowMs) {
-            let delta = Math.min(0.033, (nowMs - lastFrameTime)/1000);
-            if(delta <= 0) { lastFrameTime = nowMs; requestAnimationFrame(gameLoop); return; }
-            lastFrameTime = nowMs;
-            updateGrowthAndStats(nowMs);
-            processCombat(delta);
-            updateRegen(delta);
-            // player movement
-            if(!player.manualControl) {
-                player.targetAngle += (Math.random() - 0.5) * 0.12;
-            }
-            player.angle += (player.targetAngle - player.angle) * 0.09;
-            player.x += Math.cos(player.angle) * player.speed * delta * 5;
-            player.y += Math.sin(player.angle) * player.speed * delta * 5;
-            player.x = Math.min(WORLD_SIZE-15, Math.max(15, player.x));
-            player.y = Math.min(WORLD_SIZE-15, Math.max(15, player.y));
-            cam.x += (player.x - canvas.width/2 - cam.x) * 0.08;
-            cam.y += (player.y - canvas.height/2 - cam.y) * 0.08;
-            cam.x = Math.min(WORLD_SIZE-canvas.width, Math.max(0, cam.x));
-            cam.y = Math.min(WORLD_SIZE-canvas.height, Math.max(0, cam.y));
-            
-            draw();
-            // update UI
-            document.getElementById('lvlVal').innerText = player.lvl;
-            document.getElementById('killCount').innerText = player.kills;
-            document.getElementById('surviveSeconds').innerText = Math.floor(player.totalAliveSeconds);
-            document.getElementById('sizeStat').innerText = Math.floor(player.size);
-            document.getElementById('speedStat').innerText = player.speed.toFixed(1);
-            document.getElementById('auraDmg').innerText = player.damageAura.toFixed(1);
-            document.getElementById('regenStat').innerText = player.regenRate.toFixed(1);
-            document.getElementById('hpText').innerText = Math.floor(player.hp);
-            document.getElementById('maxHpText').innerText = player.maxHp;
-            document.getElementById('hpFill').style.width = (player.hp/player.maxHp*100)+"%";
-            document.getElementById('xpCurr').innerText = player.xp;
-            let xpPercent = (player.xp / (player.lvl*180))*100;
-            document.getElementById('xpFill').style.width = Math.min(100, xpPercent)+"%";
-            let zone = (player.y < 3500) ? "☀️ Coral Reef" : (player.y > 9500 ? "🌋 Abyss Trench" : "🌊 Open Ocean");
-            document.getElementById('depthZone').innerText = zone;
-            requestAnimationFrame(gameLoop);
-        }
-        
-        function init() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            window.addEventListener('resize', () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; });
-            populateOcean();
-            // touch controls
-            canvas.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                player.manualControl = true;
-                let rect = canvas.getBoundingClientRect();
-                let touchX = e.touches[0].clientX - rect.left;
-                let touchY = e.touches[0].clientY - rect.top;
-                let targetAng = Math.atan2(touchY - canvas.height/2, touchX - canvas.width/2);
-                player.targetAngle = targetAng;
-                clearTimeout(player.autoTimeout);
-                player.autoTimeout = setTimeout(() => { player.manualControl = false; }, 2800);
-            });
-            canvas.addEventListener('touchmove', (e) => {
-                e.preventDefault();
-                let rect = canvas.getBoundingClientRect();
-                let touchX = e.touches[0].clientX - rect.left;
-                let touchY = e.touches[0].clientY - rect.top;
-                player.targetAngle = Math.atan2(touchY - canvas.height/2, touchX - canvas.width/2);
-            });
-            canvas.addEventListener('touchend', () => {
-                setTimeout(() => { if(!player.manualControl) player.manualControl = false; }, 100);
-            });
-            lastFrameTime = performance.now();
-            requestAnimationFrame(gameLoop);
-        }
-        init();
-    })();
+  // ========== ENERGY ZAPS BETWEEN PILLARS ==========
+  const energyCanvas = document.getElementById('energy-canvas');
+  let energyCtx = energyCanvas.getContext('2d');
+  
+  function resizeEnergyCanvas() {
+    energyCanvas.width = window.innerWidth;
+    energyCanvas.height = window.innerHeight;
+  }
+
+  let zapPhase = 0;
+  function drawLightning() {
+    if (!energyCtx) return;
+    energyCtx.clearRect(0, 0, energyCanvas.width, energyCanvas.height);
+    
+    const leftX = 24;    // pillar left edge approx
+    const rightX = energyCanvas.width - 24;
+    const topY = 20;
+    const bottomY = energyCanvas.height - 20;
+    
+    // draw multiple random arcs (zaps) from left to right pillar, and bottom to top
+    for (let i = 0; i < 4; i++) {
+      let startY = 50 + Math.sin(Date.now() * 0.003 + i) * 30 + i * 80;
+      let endY = energyCanvas.height - 80 + Math.cos(Date.now() * 0.004 + i) * 40;
+      
+      energyCtx.beginPath();
+      energyCtx.moveTo(leftX + 8, startY);
+      // chaotic zap line
+      let midX = (leftX + rightX) / 2 + (Math.sin(Date.now() * 0.008 + i) * 35);
+      let midY = (startY + endY) / 2 + (Math.cos(Date.now() * 0.01) * 45);
+      energyCtx.quadraticCurveTo(midX, midY, rightX - 8, endY);
+      energyCtx.strokeStyle = `rgba(255, 140, 30, ${0.3 + Math.sin(Date.now() * 0.01) * 0.2})`;
+      energyCtx.lineWidth = 2.5;
+      energyCtx.shadowBlur = 12;
+      energyCtx.shadowColor = '#ff9933';
+      energyCtx.stroke();
+      
+      // secondary mini zaps
+      energyCtx.beginPath();
+      energyCtx.moveTo(leftX + 4, startY + 15);
+      energyCtx.lineTo(rightX - 12, endY - 25);
+      energyCtx.strokeStyle = `rgba(255,100,20,0.5)`;
+      energyCtx.lineWidth = 1.5;
+      energyCtx.stroke();
+    }
+    
+    // cross zaps top-bottom
+    energyCtx.beginPath();
+    energyCtx.moveTo(leftX + 12, 30);
+    energyCtx.lineTo(rightX - 12, 50);
+    energyCtx.lineTo(leftX + 20, 90);
+    energyCtx.strokeStyle = `rgba(255, 180, 60, 0.6)`;
+    energyCtx.stroke();
+    
+    energyCtx.shadowBlur = 0;
+    requestAnimationFrame(drawLightning);
+  }
+
+  // ========== COPPER PARTICLES ==========
+  const canvas = document.getElementById('particle-canvas');
+  let ctx = canvas.getContext('2d');
+  let particles = [];
+
+  function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+
+  class CopperParticle {
+    constructor() {
+      this.x = Math.random() * canvas.width;
+      this.y = Math.random() * canvas.height;
+      this.size = Math.random() * 4 + 1;
+      this.speedX = (Math.random() - 0.5) * 0.5;
+      this.speedY = (Math.random() - 0.5) * 0.4 + 0.2;
+      this.opacity = Math.random() * 0.7 + 0.3;
+      this.glow = Math.random() > 0.6;
+    }
+    update() {
+      this.x += this.speedX;
+      this.y += this.speedY;
+      if (this.x < -20) this.x = canvas.width + 20;
+      if (this.x > canvas.width + 20) this.x = -20;
+      if (this.y < -20) this.y = canvas.height + 20;
+      if (this.y > canvas.height + 20) this.y = -20;
+    }
+    draw() {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+      if (this.glow) ctx.shadowBlur = 10;
+      ctx.fillStyle = `rgba(255, 150, 50, ${this.opacity})`;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+  }
+
+  function initParticles(count = 120) {
+    particles = [];
+    for (let i = 0; i < count; i++) particles.push(new CopperParticle());
+  }
+
+  function animateParticles() {
+    if (!ctx) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for (let p of particles) {
+      p.update();
+      p.draw();
+    }
+    requestAnimationFrame(animateParticles);
+  }
+
+  function startParticles() {
+    resizeCanvas();
+    initParticles(130);
+    animateParticles();
+  }
+
+  window.addEventListener('resize', () => {
+    resizeCanvas();
+    resizeEnergyCanvas();
+    initParticles(130);
+  });
+
+  // ========== APP LOGIC ==========
+  const STORAGE = {
+    lastDate: "copper_lastDate",
+    dailyReceived: "copper_dailyReceived",
+    dailyRefined: "copper_dailyRefined",
+    totalBanked: "copper_totalBanked",
+  };
+  function getTodayStr() { return new Date().toISOString().split('T')[0]; }
+  let state = { dailyReceived: 0, dailyRefined: 0, totalBanked: 0 };
+
+  function loadData() {
+    let lastDate = localStorage.getItem(STORAGE.lastDate);
+    let today = getTodayStr();
+    let totalBanked = parseFloat(localStorage.getItem(STORAGE.totalBanked)) || 0;
+    if (lastDate === today) {
+      state.dailyReceived = parseFloat(localStorage.getItem(STORAGE.dailyReceived)) || 0;
+      state.dailyRefined = parseFloat(localStorage.getItem(STORAGE.dailyRefined)) || 0;
+    } else {
+      state.dailyReceived = 0; state.dailyRefined = 0;
+      localStorage.setItem(STORAGE.lastDate, today);
+      localStorage.setItem(STORAGE.dailyReceived, 0);
+      localStorage.setItem(STORAGE.dailyRefined, 0);
+    }
+    state.totalBanked = totalBanked;
+  }
+  function saveDaily() {
+    localStorage.setItem(STORAGE.dailyReceived, state.dailyReceived);
+    localStorage.setItem(STORAGE.dailyRefined, state.dailyRefined);
+    localStorage.setItem(STORAGE.totalBanked, state.totalBanked);
+    localStorage.setItem(STORAGE.lastDate, getTodayStr());
+  }
+  function updateUI() {
+    document.getElementById('receivedValue').innerText = Math.floor(state.dailyReceived);
+    document.getElementById('refinedValue').innerText = Math.floor(state.dailyRefined);
+    document.getElementById('bankedValue').innerText = Math.floor(state.totalBanked);
+  }
+  function addReceived(amt) { state.dailyReceived += amt; if(state.dailyReceived<0) state.dailyReceived=0; saveDaily(); updateUI(); triggerParticleBurst(); }
+  function addRefined(amt) {
+    let newRef = state.dailyRefined + amt;
+    if (newRef <= state.dailyReceived) state.dailyRefined = newRef;
+    else { state.dailyRefined = state.dailyReceived; showToast("⚠️ Refined can't exceed received", "#b6491a"); }
+    if(state.dailyRefined<0) state.dailyRefined=0;
+    saveDaily(); updateUI(); triggerParticleBurst();
+  }
+  function resetReceived() { state.dailyReceived=0; if(state.dailyRefined>0) state.dailyRefined=0; saveDaily(); updateUI(); }
+  function resetRefined() { state.dailyRefined=0; saveDaily(); updateUI(); }
+  function addRefinedToBank() {
+    if(state.dailyRefined>0) {
+      state.totalBanked += state.dailyRefined;
+      state.dailyRefined=0;
+      saveDaily(); updateUI(); showToast(`✅ Banked! Total: ${Math.floor(state.totalBanked)} lbs`, "#2a752a");
+      triggerParticleBurst(25);
+    } else showToast("No refined copper to bank", "#b4551a");
+  }
+  function resetDaily() { state.dailyReceived=0; state.dailyRefined=0; saveDaily(); updateUI(); showToast("Today's data reset","#ad6733"); }
+  function fullReset() { if(confirm("NUKE ALL DATA? Total Banked will be lost")) { state.dailyReceived=0; state.dailyRefined=0; state.totalBanked=0; localStorage.setItem(STORAGE.lastDate, getTodayStr()); saveDaily(); updateUI(); showToast("System wiped","#8a3a14"); } }
+  function showToast(msg,bg) {
+    let t=document.createElement('div'); t.innerText=msg; t.style.position='fixed'; t.style.bottom='25px'; t.style.left='20px'; t.style.right='20px'; t.style.backgroundColor=bg; t.style.color='#fff0cf'; t.style.padding='14px'; t.style.borderRadius='60px'; t.style.textAlign='center'; t.style.fontWeight='bold'; t.style.zIndex='9999'; t.style.backdropFilter='blur(8px)'; document.body.appendChild(t); setTimeout(()=>t.remove(),1600);
+  }
+  function checkDateChange() {
+    let stored = localStorage.getItem(STORAGE.lastDate);
+    let today = getTodayStr();
+    if(stored !== today) { state.dailyReceived=0; state.dailyRefined=0; localStorage.setItem(STORAGE.lastDate, today); localStorage.setItem(STORAGE.dailyReceived,0); localStorage.setItem(STORAGE.dailyRefined,0); updateUI(); showToast("🪙 New day - received & refined reset","#d48a38"); }
+  }
+  function triggerParticleBurst(extra=14) { for(let i=0;i<extra;i++) particles.push(new CopperParticle()); if(particles.length>250) particles=particles.slice(-200); }
+  function updateDateTime() {
+    const now=new Date();
+    document.getElementById('dateDisplay').innerText = now.toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});
+    document.getElementById('timeDisplay').innerText = now.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  }
+  function bindEvents() {
+    document.getElementById('addReceived1').onclick=()=>addReceived(1);
+    document.getElementById('addReceived5').onclick=()=>addReceived(5);
+    document.getElementById('addReceived10').onclick=()=>addReceived(10);
+    document.getElementById('addReceived50').onclick=()=>addReceived(50);
+    document.getElementById('resetReceivedBtn').onclick=resetReceived;
+    document.getElementById('addRefined1').onclick=()=>addRefined(1);
+    document.getElementById('addRefined5').onclick=()=>addRefined(5);
+    document.getElementById('addRefined10').onclick=()=>addRefined(10);
+    document.getElementById('addRefined50').onclick=()=>addRefined(50);
+    document.getElementById('resetRefinedBtn').onclick=resetRefined;
+    document.getElementById('addToBankBtn').onclick=addRefinedToBank;
+    document.getElementById('resetDailyBtn').onclick=resetDaily;
+    document.getElementById('fullResetBtn').onclick=fullReset;
+  }
+
+  function init() {
+    startParticles();
+    resizeEnergyCanvas();
+    drawLightning();
+    bindEvents();
+    loadData();
+    updateUI();
+    updateDateTime();
+    setInterval(()=>{ updateDateTime(); checkDateChange(); },1000);
+  }
+  init();
 </script>
 </body>
 </html>
